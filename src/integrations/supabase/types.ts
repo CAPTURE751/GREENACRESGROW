@@ -14,16 +14,438 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      crops: {
+        Row: {
+          created_at: string
+          created_by: string
+          farm_location: string
+          harvest_date: string | null
+          id: string
+          name: string
+          notes: string | null
+          planting_date: string | null
+          season: string | null
+          status: string | null
+          type: string
+          updated_at: string
+          yield_quantity: number | null
+          yield_unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          farm_location: string
+          harvest_date?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          planting_date?: string | null
+          season?: string | null
+          status?: string | null
+          type: string
+          updated_at?: string
+          yield_quantity?: number | null
+          yield_unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          farm_location?: string
+          harvest_date?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          planting_date?: string | null
+          season?: string | null
+          status?: string | null
+          type?: string
+          updated_at?: string
+          yield_quantity?: number | null
+          yield_unit?: string | null
+        }
+        Relationships: []
+      }
+      equipment: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          created_by: string
+          id: string
+          maintenance_date: string | null
+          name: string
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string
+          created_by: string
+          id?: string
+          maintenance_date?: string | null
+          name: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          maintenance_date?: string | null
+          name?: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          id: string
+          item_name: string
+          last_updated: string
+          location: string | null
+          min_threshold: number | null
+          quantity: number
+          supplier: string | null
+          unit: string
+          unit_cost: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by: string
+          id?: string
+          item_name: string
+          last_updated?: string
+          location?: string | null
+          min_threshold?: number | null
+          quantity?: number
+          supplier?: string | null
+          unit: string
+          unit_cost?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          item_name?: string
+          last_updated?: string
+          location?: string | null
+          min_threshold?: number | null
+          quantity?: number
+          supplier?: string | null
+          unit?: string
+          unit_cost?: number | null
+        }
+        Relationships: []
+      }
+      livestock: {
+        Row: {
+          age: number | null
+          breed: string | null
+          created_at: string
+          created_by: string
+          date_of_arrival_at_farm: string | null
+          date_of_birth: string | null
+          date_of_birth_on_farm: string | null
+          farm_location: string
+          gender: string | null
+          health_status: string | null
+          id: string
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          type: string
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          age?: number | null
+          breed?: string | null
+          created_at?: string
+          created_by: string
+          date_of_arrival_at_farm?: string | null
+          date_of_birth?: string | null
+          date_of_birth_on_farm?: string | null
+          farm_location: string
+          gender?: string | null
+          health_status?: string | null
+          id?: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          type: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          age?: number | null
+          breed?: string | null
+          created_at?: string
+          created_by?: string
+          date_of_arrival_at_farm?: string | null
+          date_of_birth?: string | null
+          date_of_birth_on_farm?: string | null
+          farm_location?: string
+          gender?: string | null
+          health_status?: string | null
+          id?: string
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          type?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          farm_location: string | null
+          id: string
+          name: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          farm_location?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          farm_location?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          id: string
+          item_name: string
+          notes: string | null
+          payment_status: string | null
+          purchase_date: string
+          quantity: number
+          received_date: string | null
+          supplier: string
+          supplier_contact: string | null
+          total_cost: number | null
+          unit: string
+          unit_cost: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by: string
+          id?: string
+          item_name: string
+          notes?: string | null
+          payment_status?: string | null
+          purchase_date?: string
+          quantity: number
+          received_date?: string | null
+          supplier: string
+          supplier_contact?: string | null
+          total_cost?: number | null
+          unit: string
+          unit_cost: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          item_name?: string
+          notes?: string | null
+          payment_status?: string | null
+          purchase_date?: string
+          quantity?: number
+          received_date?: string | null
+          supplier?: string
+          supplier_contact?: string | null
+          total_cost?: number | null
+          unit?: string
+          unit_cost?: number
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          content: Json | null
+          created_at: string
+          created_by: string
+          file_url: string | null
+          id: string
+          period_end: string | null
+          period_start: string | null
+          report_type: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string
+          created_by: string
+          file_url?: string | null
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          report_type: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string
+          created_by?: string
+          file_url?: string | null
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          report_type?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      sales: {
+        Row: {
+          buyer: string
+          buyer_contact: string | null
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          payment_status: string | null
+          product_id: string
+          product_name: string
+          product_type: string
+          quantity: number
+          sale_date: string
+          total_amount: number | null
+          unit: string
+          unit_price: number
+        }
+        Insert: {
+          buyer: string
+          buyer_contact?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          product_id: string
+          product_name: string
+          product_type: string
+          quantity: number
+          sale_date?: string
+          total_amount?: number | null
+          unit: string
+          unit_price: number
+        }
+        Update: {
+          buyer?: string
+          buyer_contact?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          payment_status?: string | null
+          product_id?: string
+          product_name?: string
+          product_type?: string
+          quantity?: number
+          sale_date?: string
+          total_amount?: number | null
+          unit?: string
+          unit_price?: number
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          completed: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          priority: string
+          task_date: string
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          priority?: string
+          task_date: string
+          task_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          task_date?: string
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "staff" | "farmer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +572,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "staff", "farmer"],
+    },
   },
 } as const
