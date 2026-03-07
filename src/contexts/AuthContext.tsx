@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string, role: string = 'farmer') => {
+  const signUp = async (email: string, password: string, name: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
@@ -111,7 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailRedirectTo: redirectUrl,
           data: {
             name,
-            role
           }
         }
       });
