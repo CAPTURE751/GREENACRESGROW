@@ -5,21 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Sprout, ShieldCheck } from 'lucide-react';
+import { Loader2, Sprout } from 'lucide-react';
 
 export default function Auth() {
   const { user, loading, signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('farmer');
 
-  // Redirect if already authenticated
   if (user && !loading) {
     return <Navigate to="/" replace />;
   }
 
-  // Show loading state while checking auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -31,52 +27,16 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    await signIn(email, password);
+    await signIn(formData.get('email') as string, formData.get('password') as string);
     setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const name = formData.get('name') as string;
-
-    await signUp(email, password, name, selectedRole);
-    setIsLoading(false);
-  };
-
-  const handleQuickAdminLogin = async () => {
-    setIsLoading(true);
-    
-    // Use a valid email format for admin
-    const adminEmail = 'admin@jefftricksfarm.com';
-    const adminPassword = 'admin123';
-    
-    // Try to sign in first
-    const { error: signInError } = await signIn(adminEmail, adminPassword);
-    
-    if (signInError) {
-      // If sign in fails, create the admin user
-      const { error: signUpError } = await signUp(adminEmail, adminPassword, 'Administrator', 'admin');
-      
-      if (signUpError && !signUpError.message.includes('already registered')) {
-        console.error('Failed to create admin:', signUpError);
-        setIsLoading(false);
-        return;
-      }
-      
-      // After signup, try to sign in again
-      await signIn(adminEmail, adminPassword);
-    }
-    
+    await signUp(formData.get('email') as string, formData.get('password') as string, formData.get('name') as string);
     setIsLoading(false);
   };
 
@@ -90,9 +50,7 @@ export default function Auth() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Farm Management</CardTitle>
-          <p className="text-muted-foreground">
-            Access your farm dashboard
-          </p>
+          <p className="text-muted-foreground">Access your farm dashboard</p>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -100,120 +58,48 @@ export default function Auth() {
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    required
-                    disabled={isLoading}
-                  />
+                  <Input id="signin-email" name="email" type="email" placeholder="Enter your email" required disabled={isLoading} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    name="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    required
-                    disabled={isLoading}
-                  />
+                  <Input id="signin-password" name="password" type="password" placeholder="Enter your password" required disabled={isLoading} />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Full Name</Label>
-                  <Input
-                    id="signup-name"
-                    name="name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    required
-                    disabled={isLoading}
-                  />
+                  <Input id="signup-name" name="name" type="text" placeholder="Enter your full name" required disabled={isLoading} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    required
-                    disabled={isLoading}
-                  />
+                  <Input id="signup-email" name="email" type="email" placeholder="Enter your email" required disabled={isLoading} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    name="password"
-                    type="password"
-                    placeholder="Create a password"
-                    required
-                    disabled={isLoading}
-                    minLength={6}
-                  />
+                  <Input id="signup-password" name="password" type="password" placeholder="Create a password (min 6 characters)" required disabled={isLoading} minLength={6} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={selectedRole} onValueChange={setSelectedRole} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="farmer">Farmer</SelectItem>
-                      <SelectItem value="staff">Staff</SelectItem>
-                      <SelectItem value="admin">Administrator</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isLoading}
-                >
+                <p className="text-xs text-muted-foreground">
+                  All new accounts start with the Farmer role. Contact an administrator to request elevated access.
+                </p>
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign Up
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
-          
-          <div className="mt-6 pt-6 border-t">
-            <div className="text-center mb-3">
-              <p className="text-sm text-muted-foreground">Quick Admin Access</p>
-            </div>
-            <Button 
-              onClick={handleQuickAdminLogin}
-              variant="outline" 
-              className="w-full"
-              disabled={isLoading}
-            >
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              Login as Administrator
-            </Button>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Demo: admin@jefftricksfarm.com / admin123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
