@@ -67,6 +67,11 @@ const App = () => (
                 <Settings />
               </ProtectedRoute>
             } />
+            <Route path="/users" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UserManagement />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
