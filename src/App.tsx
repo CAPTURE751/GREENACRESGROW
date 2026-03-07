@@ -15,7 +15,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
-
+import UserManagement from "./pages/UserManagement";
 const queryClient = new QueryClient();
 
 const App = () => (
