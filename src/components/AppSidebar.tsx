@@ -7,7 +7,8 @@ import {
   Calendar,
   Settings,
   FileText,
-  Home
+  Home,
+  Users
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
