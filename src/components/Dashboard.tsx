@@ -12,7 +12,8 @@ import {
   Calendar,
   AlertTriangle,
   CheckCircle,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
 import { useCrops } from "@/hooks/useCrops";
@@ -270,13 +271,22 @@ export function Dashboard() {
             <Button 
               variant="outline" 
               className="w-full justify-start"
-              onClick={() => generateReport.mutate({
-                report_type: 'comprehensive',
-                include_charts: true
-              })}
+              onClick={() => {
+                const now = new Date();
+                const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                generateReport.mutate({
+                  report_type: 'monthly',
+                  start_date: thirtyDaysAgo.toISOString().split('T')[0],
+                  end_date: now.toISOString().split('T')[0],
+                });
+              }}
               disabled={generateReport.isPending}
             >
-              <DollarSign className="h-4 w-4 mr-2" />
+              {generateReport.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <DollarSign className="h-4 w-4 mr-2" />
+              )}
               Generate Report
             </Button>
             
@@ -289,7 +299,11 @@ export function Dashboard() {
               })}
               disabled={calculateProfitLoss.isPending}
             >
-              <TrendingUp className="h-4 w-4 mr-2" />
+              {calculateProfitLoss.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <TrendingUp className="h-4 w-4 mr-2" />
+              )}
               Calculate P&L (30d)
             </Button>
             
@@ -299,7 +313,11 @@ export function Dashboard() {
               onClick={() => inventoryAlerts.mutate()}
               disabled={inventoryAlerts.isPending}
             >
-              <AlertTriangle className="h-4 w-4 mr-2" />
+              {inventoryAlerts.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 mr-2" />
+              )}
               Run Inventory Check
             </Button>
             
