@@ -277,9 +277,10 @@ export default function Finances() {
               </Button>
             </div>
 
-            {/* P&L Report Results */}
-            {showPnL && pnlReport && (
-              <div id="pnl-report-preview" className="mt-6 space-y-6 print:mt-0">
+            {/* P&L Report Results - Modal */}
+            <Dialog open={showPnL && !!pnlReport} onOpenChange={(open) => { if (!open) setShowPnL(false); }}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div id="pnl-report-preview" className="space-y-6">
                 {/* === REPORT HEADER === */}
                 <div className="bg-farm-green/5 border border-farm-green/20 rounded-lg p-4">
                   <div className="flex items-start justify-between">
