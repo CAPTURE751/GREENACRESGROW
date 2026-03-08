@@ -25,8 +25,8 @@ import {
   X,
   Download,
   FileSpreadsheet,
-  Printer,
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
 import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
