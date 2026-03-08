@@ -104,7 +104,7 @@ export async function exportModulePnLToPDF(
 
   // Title
   const title = moduleType === "crop" ? "Crop Profit & Loss Report" : "Livestock Profit & Loss Report";
-  const icon = moduleType === "crop" ? "🌾" : "🐄";
+  // No emoji icons in PDF
   doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
   doc.text(title, pw / 2, y, { align: "center" });
   y += 7;
@@ -128,11 +128,26 @@ export async function exportModulePnLToPDF(
     ],
     theme: "grid",
     headStyles: { fillColor: hc },
-    styles: { fontSize: 9 },
+    styles: { fontSize: 10 },
     didParseCell: (data: any) => {
-      if (data.row.index === 2 && data.section === "body") {
+      if (data.section === "body" && data.column.index === 1) {
+        if (data.row.index === 0) {
+          data.cell.styles.textColor = [40, 120, 40];
+          data.cell.styles.fontStyle = "bold";
+        }
+        if (data.row.index === 1) {
+          data.cell.styles.textColor = [180, 30, 30];
+          data.cell.styles.fontStyle = "bold";
+        }
+        if (data.row.index === 2) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.textColor = totals.netProfit >= 0 ? [40, 120, 40] : [180, 30, 30];
+          data.cell.styles.fillColor = totals.netProfit >= 0 ? [230, 245, 230] : [245, 230, 230];
+        }
+      }
+      if (data.section === "body" && data.row.index === 2 && data.column.index === 0) {
         data.cell.styles.fontStyle = "bold";
-        data.cell.styles.textColor = totals.netProfit >= 0 ? [40, 120, 40] : [180, 30, 30];
+        data.cell.styles.fillColor = totals.netProfit >= 0 ? [230, 245, 230] : [245, 230, 230];
       }
     },
   });
@@ -146,15 +161,19 @@ export async function exportModulePnLToPDF(
     const margin = data.revenue > 0 ? (profit / data.revenue) * 100 : 0;
 
     checkPage(30);
-    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...hc);
-    doc.text(`${sectionNum}. ${icon} ${productName}`, 14, y); y += 4;
+    doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(...hc);
+    doc.text(`${sectionNum}. ${productName}`, 14, y); y += 5;
 
-    // Status badge
-    const statusText = profit >= 0 ? "✅ PROFITABLE" : "❌ LOSS-MAKING";
+    // Status line with color coding
+    const statusText = profit >= 0 ? "PROFITABLE" : "LOSS-MAKING";
     const statusColor: [number, number, number] = profit >= 0 ? [40, 120, 40] : [180, 30, 30];
-    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...statusColor);
-    doc.text(`${statusText}  |  Net: ${formatKES(profit)}  |  Margin: ${margin.toFixed(1)}%`, 14, y);
-    y += 8;
+    
+    // Draw colored status bar
+    doc.setFillColor(...statusColor);
+    doc.roundedRect(14, y - 2, pw - 28, 10, 2, 2, "F");
+    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+    doc.text(`${statusText}  |  Net: ${formatKES(profit)}  |  Margin: ${margin.toFixed(1)}%`, 18, y + 4);
+    y += 14;
 
     // Sales table
     if (data.salesDetails.length > 0) {

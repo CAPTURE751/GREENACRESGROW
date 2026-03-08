@@ -133,38 +133,44 @@ export function CropProfitLoss() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
+        <Card className="border-l-4 border-l-green-500 shadow-sm">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold text-green-600">{formatKES(totals.totalRevenue)}</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Revenue</p>
+                <p className="text-2xl font-bold text-green-600 mt-1">{formatKES(totals.totalRevenue)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
+              <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-green-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        <Card className="border-l-4 border-l-red-500 shadow-sm">
+          <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Costs</p>
-                <p className="text-2xl font-bold text-red-600">{formatKES(totals.totalCosts)}</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Costs</p>
+                <p className="text-2xl font-bold text-red-600 mt-1">{formatKES(totals.totalCosts)}</p>
               </div>
-              <TrendingDown className="h-8 w-8 text-red-600" />
+              <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center">
+                <TrendingDown className="h-6 w-6 text-red-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        <Card className={`border-l-4 shadow-sm ${totals.netProfit >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
+          <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Net Profit</p>
-                <p className={`text-2xl font-bold ${totals.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Net Profit</p>
+                <p className={`text-2xl font-bold mt-1 ${totals.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatKES(totals.netProfit)}
                 </p>
               </div>
-              <DollarSign className={`h-8 w-8 ${totals.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+              <div className={`h-12 w-12 rounded-full flex items-center justify-center ${totals.netProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                <DollarSign className={`h-6 w-6 ${totals.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -186,17 +192,17 @@ export function CropProfitLoss() {
           const margin = data.revenue > 0 ? (profit / data.revenue) * 100 : 0;
 
           return (
-            <Card key={cropName}>
+            <Card key={cropName} className={`shadow-sm border-t-4 ${profit >= 0 ? 'border-t-green-500' : 'border-t-red-500'}`}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    🌾 {cropName}
-                    <Badge variant={profit >= 0 ? "default" : "destructive"} className={profit >= 0 ? "bg-green-600" : ""}>
+                  <CardTitle className="text-lg flex items-center gap-3">
+                    {cropName}
+                    <Badge variant={profit >= 0 ? "default" : "destructive"} className={profit >= 0 ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}>
                       {profit >= 0 ? "Profitable" : "Loss"}
                     </Badge>
                   </CardTitle>
                   <div className="text-right">
-                    <p className={`text-lg font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-xl font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatKES(profit)}
                     </p>
                     <p className="text-xs text-muted-foreground">Margin: {margin.toFixed(1)}%</p>
