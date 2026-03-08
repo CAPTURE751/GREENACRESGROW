@@ -98,7 +98,70 @@ export default function Analytics() {
   const [timeRange, setTimeRange] = useState<'month' | 'quarter' | 'year'>('month');
   const [selectedMetric, setSelectedMetric] = useState('productivity');
 
-  const timeRanges = [
+  // Fetch real sales & purchases for break-even chart
+  const [salesData, setSalesData] = useState<any[]>([]);
+  const [purchasesData, setPurchasesData] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [{ data: sales }, { data: purchases }] = await Promise.all([
+        supabase.from('sales').select('total_amount, sale_date, product_type').order('sale_date'),
+        supabase.from('purchases').select('total_cost, purchase_date, category').order('purchase_date'),
+      ]);
+      setSalesData(sales || []);
+      setPurchasesData(purchases || []);
+    };
+    fetchData();
+  }, []);
+
+  // Build monthly break-even data
+  const breakEvenData = useMemo(() => {
+    const monthlyMap = new Map<string, { revenue: number; fixedCosts: number; variableCosts: number }>();
+
+    const opexKeys = ['permanent_labour', 'salaries', 'salary', 'machinery', 'equipment', 'maintenance',
+      'utilities', 'electricity', 'water', 'transport', 'insurance', 'administration', 'marketing',
+      'communication', 'land_costs', 'farm_supplies', 'loan_interest', 'bank_charges', 'depreciation', 'taxes'];
+
+    salesData.forEach((s: any) => {
+      const month = s.sale_date?.substring(0, 7);
+      if (!month) return;
+      if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, fixedCosts: 0, variableCosts: 0 });
+      monthlyMap.get(month)!.revenue += s.total_amount || 0;
+    });
+
+    purchasesData.forEach((p: any) => {
+      const month = p.purchase_date?.substring(0, 7);
+      if (!month) return;
+      if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, fixedCosts: 0, variableCosts: 0 });
+      const isFixed = opexKeys.some(k => (p.category || '').toLowerCase().includes(k));
+      if (isFixed) {
+        monthlyMap.get(month)!.fixedCosts += p.total_cost || 0;
+      } else {
+        monthlyMap.get(month)!.variableCosts += p.total_cost || 0;
+      }
+    });
+
+    // Calculate cumulative + break-even line
+    let cumRevenue = 0, cumFixed = 0, cumVariable = 0;
+    return Array.from(monthlyMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, d]) => {
+        cumRevenue += d.revenue;
+        cumFixed += d.fixedCosts;
+        cumVariable += d.variableCosts;
+        const cmRatio = cumRevenue > 0 ? (cumRevenue - cumVariable) / cumRevenue : 0;
+        const breakEvenRev = cmRatio > 0 ? cumFixed / cmRatio : cumFixed + cumVariable;
+        return {
+          month,
+          revenue: cumRevenue,
+          totalCosts: cumFixed + cumVariable,
+          breakEven: Math.round(breakEvenRev),
+        };
+      });
+  }, [salesData, purchasesData]);
+
+  const latestBE = breakEvenData.length > 0 ? breakEvenData[breakEvenData.length - 1] : null;
+  const isAboveBreakEven = latestBE ? latestBE.revenue >= latestBE.breakEven : false;
     { id: 'month', label: 'This Month' },
     { id: 'quarter', label: 'This Quarter' },
     { id: 'year', label: 'This Year' }
