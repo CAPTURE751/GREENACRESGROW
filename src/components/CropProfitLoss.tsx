@@ -146,7 +146,7 @@ export function CropProfitLoss() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-orange-500 shadow-sm">
+        <Card className="border-l-4 border-l-gray-600 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
