@@ -195,10 +195,10 @@ export async function exportModulePnLToPDF(
           formatKES(s.total_amount),
         ]),
         theme: "grid",
-        headStyles: { fillColor: [200, 220, 200], textColor: [30, 30, 30] },
+        headStyles: { fillColor: [200, 210, 240], textColor: [30, 30, 30] },
         styles: { fontSize: 8 },
         foot: [["", "", "", "Total Revenue", formatKES(data.revenue)]],
-        footStyles: { fillColor: [230, 245, 230], textColor: [40, 120, 40], fontStyle: "bold" },
+        footStyles: { fillColor: [220, 230, 250], textColor: [30, 80, 180], fontStyle: "bold" },
       });
       y = (doc as any).lastAutoTable.finalY + 6;
     }
