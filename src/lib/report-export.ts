@@ -289,28 +289,6 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
     y = (doc as any).lastAutoTable.finalY + 12;
   }
 
-  // === AUTO-GENERATED STAMP ===
-  const stampY = Math.min(y + 5, pageHeight - 50);
-  // Stamp circle
-  doc.setDrawColor(76, 111, 60);
-  doc.setLineWidth(1.5);
-  doc.circle(pageWidth / 2, stampY + 12, 18);
-  doc.circle(pageWidth / 2, stampY + 12, 15);
-
-  // Stamp text
-  doc.setFontSize(6);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(76, 111, 60);
-  doc.text("JEFF TRICKS FARM LTD", pageWidth / 2, stampY + 4, { align: "center" });
-
-  doc.setFontSize(7);
-  doc.text("VERIFIED", pageWidth / 2, stampY + 10, { align: "center" });
-
-  doc.setFontSize(5);
-  doc.setFont("helvetica", "normal");
-  doc.text(stampCode, pageWidth / 2, stampY + 15, { align: "center" });
-  doc.text(now.toLocaleDateString(), pageWidth / 2, stampY + 19, { align: "center" });
-
   // === FOOTER on every page ===
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
