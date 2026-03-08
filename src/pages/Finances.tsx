@@ -422,24 +422,6 @@ export default function Finances() {
                   </div>
                 )}
 
-                {/* === AUTO-GENERATED STAMP === */}
-                <div className="flex justify-center py-4">
-                  <div className="relative w-36 h-36">
-                    {/* Outer ring */}
-                    <div className="absolute inset-0 rounded-full border-[3px] border-farm-green/60" />
-                    {/* Inner ring */}
-                    <div className="absolute inset-2 rounded-full border-[2px] border-farm-green/40" />
-                    {/* Content */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-farm-green">
-                      <span className="text-[8px] font-bold tracking-wider">JEFF TRICKS FARM LTD</span>
-                      <Shield className="h-5 w-5 my-1 text-farm-green/70" />
-                      <span className="text-xs font-bold tracking-widest">VERIFIED</span>
-                      <span className="text-[8px] font-mono mt-1">{stampCode}</span>
-                      <span className="text-[7px] text-muted-foreground">{new Date().toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* === REPORT FOOTER === */}
                 <Separator />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -448,7 +430,6 @@ export default function Finances() {
                     <p className="italic">"Nurturing the Land, Feeding the Future"</p>
                   </div>
                   <div className="text-right">
-                    <p>Ref: {stampCode}</p>
                     <p>Generated: {new Date(pnlReport.generated_at).toLocaleString()}</p>
                   </div>
                 </div>
