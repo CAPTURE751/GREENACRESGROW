@@ -136,9 +136,9 @@ export async function exportModulePnLToPDF(
           data.cell.styles.textColor = [30, 80, 180];
           data.cell.styles.fontStyle = "bold";
         }
-        // Costs = Orange
+        // Costs = Charcoal Gray
         if (data.row.index === 1) {
-          data.cell.styles.textColor = [200, 120, 20];
+          data.cell.styles.textColor = [70, 70, 70];
           data.cell.styles.fontStyle = "bold";
         }
         // Net Profit = Green, Net Loss = Red
@@ -223,7 +223,7 @@ export async function exportModulePnLToPDF(
         headStyles: { fillColor: [240, 220, 200], textColor: [30, 30, 30] },
         styles: { fontSize: 8 },
         foot: [["", "", "", "Total Costs", formatKES(data.costs)]],
-        footStyles: { fillColor: [250, 235, 220], textColor: [200, 120, 20], fontStyle: "bold" },
+        footStyles: { fillColor: [235, 235, 235], textColor: [70, 70, 70], fontStyle: "bold" },
       });
       y = (doc as any).lastAutoTable.finalY + 6;
     }

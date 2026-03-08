@@ -152,15 +152,15 @@ export function LivestockProfitLoss() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-orange-500 shadow-sm">
+        <Card className="border-l-4 border-l-gray-600 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Costs</p>
-                <p className="text-2xl font-bold text-orange-600 mt-1">{formatKES(totals.totalCosts)}</p>
+                <p className="text-2xl font-bold text-gray-700 mt-1">{formatKES(totals.totalCosts)}</p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-orange-50 flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-orange-600" />
+              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <TrendingDown className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
@@ -267,12 +267,12 @@ export function LivestockProfitLoss() {
                             <TableCell>{purchase.item_name}</TableCell>
                             <TableCell className="capitalize">{purchase.category}</TableCell>
                             <TableCell>{purchase.supplier}</TableCell>
-                            <TableCell className="text-right font-medium text-orange-600">{formatKES(purchase.total_cost)}</TableCell>
+                            <TableCell className="text-right font-medium text-gray-700">{formatKES(purchase.total_cost)}</TableCell>
                           </TableRow>
                         ))}
                         <TableRow className="font-bold border-t-2">
                           <TableCell colSpan={4}>Total Costs</TableCell>
-                          <TableCell className="text-right text-orange-600">{formatKES(data.costs)}</TableCell>
+                          <TableCell className="text-right text-gray-700">{formatKES(data.costs)}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
