@@ -45,20 +45,14 @@ serve(async (req) => {
 
     console.log(`Calculating P&L from ${start_date} to ${end_date}${category ? ` for category: ${category}` : ''} by user ${userId}`);
 
-    // Build date filters
-    const dateFilter = (query: any) => {
-      if (start_date) query = query.gte('created_at', start_date);
-      if (end_date) query = query.lte('created_at', end_date);
-      return query;
-    };
-
     // Get sales data
     let salesQuery = supabase
       .from('sales')
       .select('total_amount, unit_price, quantity, product_type, sale_date, payment_status');
     
     if (category) salesQuery = salesQuery.eq('product_type', category);
-    salesQuery = dateFilter(salesQuery);
+    if (start_date) salesQuery = salesQuery.gte('sale_date', start_date);
+    if (end_date) salesQuery = salesQuery.lte('sale_date', end_date);
     const { data: sales, error: salesError } = await salesQuery;
     if (salesError) throw salesError;
 
@@ -68,7 +62,8 @@ serve(async (req) => {
       .select('total_cost, unit_cost, quantity, category, purchase_date, payment_status');
     
     if (category) purchasesQuery = purchasesQuery.eq('category', category);
-    purchasesQuery = dateFilter(purchasesQuery);
+    if (start_date) purchasesQuery = purchasesQuery.gte('purchase_date', start_date);
+    if (end_date) purchasesQuery = purchasesQuery.lte('purchase_date', end_date);
     const { data: purchases, error: purchasesError } = await purchasesQuery;
     if (purchasesError) throw purchasesError;
 
