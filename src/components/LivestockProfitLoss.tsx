@@ -139,28 +139,28 @@ export function LivestockProfitLoss() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-l-4 border-l-green-500 shadow-sm">
+        <Card className="border-l-4 border-l-blue-500 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold text-green-600 mt-1">{formatKES(totals.totalRevenue)}</p>
+                <p className="text-2xl font-bold text-blue-600 mt-1">{formatKES(totals.totalRevenue)}</p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-red-500 shadow-sm">
+        <Card className="border-l-4 border-l-orange-500 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Costs</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">{formatKES(totals.totalCosts)}</p>
+                <p className="text-2xl font-bold text-orange-600 mt-1">{formatKES(totals.totalCosts)}</p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-red-600" />
+              <div className="h-12 w-12 rounded-full bg-orange-50 flex items-center justify-center">
+                <TrendingDown className="h-6 w-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
@@ -169,9 +169,11 @@ export function LivestockProfitLoss() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Net Profit</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  {totals.netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
+                </p>
                 <p className={`text-2xl font-bold mt-1 ${totals.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {formatKES(totals.netProfit)}
+                  {formatKES(Math.abs(totals.netProfit))}
                 </p>
               </div>
               <div className={`h-12 w-12 rounded-full flex items-center justify-center ${totals.netProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
