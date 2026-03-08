@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
+import Equipment from "./pages/Equipment";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -65,6 +66,11 @@ const App = () => (
             <Route path="/settings" element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            } />
+            <Route path="/equipment" element={
+              <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                <Equipment />
               </ProtectedRoute>
             } />
             <Route path="/users" element={

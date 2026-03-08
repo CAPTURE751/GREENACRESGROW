@@ -8,7 +8,8 @@ import {
   Settings,
   FileText,
   Home,
-  Users
+  Users,
+  Wrench
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -29,6 +30,7 @@ const navigationItems = [
   { title: "Crops", url: "/crops", icon: Wheat },
   { title: "Livestock", url: "/livestock", icon: Beef },
   { title: "Finances", url: "/finances", icon: DollarSign },
+  { title: "Equipment", url: "/equipment", icon: Wrench },
   { title: "Calendar", url: "/calendar", icon: Calendar },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
