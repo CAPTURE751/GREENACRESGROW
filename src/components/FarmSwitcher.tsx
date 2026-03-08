@@ -87,7 +87,7 @@ export function FarmSwitcher() {
     setSaving(true);
     const { error } = await supabase
       .from('farms' as any)
-      .update({ name: editName.trim(), location: editLocation.trim() } as any)
+      .update({ name: editName.trim(), location: editLocation.trim(), logo_url: editLogoUrl } as any)
       .eq('id', farmToEdit.id);
     if (error) {
       toast({ variant: "destructive", title: "Error", description: error.message });
