@@ -30,7 +30,7 @@ interface CropFormProps {
   initialData?: Partial<CropFormData>;
 }
 
-export function CropForm({ onSubmit, isLoading, initialData }: CropFormProps) {
+export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFormProps) {
   const [formData, setFormData] = useState<CropFormData>({
     name: initialData?.name || "",
     type: initialData?.type || "",
