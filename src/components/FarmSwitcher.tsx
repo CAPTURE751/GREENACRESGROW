@@ -100,6 +100,25 @@ export function FarmSwitcher() {
     setFarmToEdit(null);
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !farmToEdit) return;
+    setUploading(true);
+    const ext = file.name.split('.').pop();
+    const path = `${farmToEdit.id}/logo.${ext}`;
+    await supabase.storage.from('farm-logo').remove([path]);
+    const { error } = await supabase.storage.from('farm-logo').upload(path, file, { upsert: true });
+    if (error) {
+      toast({ variant: "destructive", title: "Upload failed", description: error.message });
+    } else {
+      const { data: urlData } = supabase.storage.from('farm-logo').getPublicUrl(path);
+      setEditLogoUrl(urlData.publicUrl);
+      toast({ title: "Logo uploaded", description: "Save changes to apply." });
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
