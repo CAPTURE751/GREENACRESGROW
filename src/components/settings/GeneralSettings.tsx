@@ -6,18 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Save, Upload, Image, Loader2, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFarmSettings } from '@/hooks/useFarmSettings';
+import { useFarm } from '@/contexts/FarmContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export function GeneralSettings() {
-  const { hasRole } = useAuth();
-  const { settings, isLoading, updateSettings, uploadLogo } = useFarmSettings();
+  const { user, hasRole } = useAuth();
+  const { activeFarm, refetchFarms, loading } = useFarm();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isAdmin = hasRole('admin');
+  const isOwner = activeFarm?.owner_id === user?.id;
+  const canEdit = isOwner || hasRole('admin');
 
   const [farmName, setFarmName] = useState('');
-  const [ownerName, setOwnerName] = useState('');
   const [location, setLocation] = useState('');
   const [slogan, setSlogan] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -25,14 +26,13 @@ export function GeneralSettings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (settings) {
-      setFarmName(settings.farm_name);
-      setOwnerName(settings.owner_name);
-      setLocation(settings.location);
-      setSlogan(settings.slogan);
-      setLogoPreview(settings.logo_url);
+    if (activeFarm) {
+      setFarmName(activeFarm.name);
+      setLocation(activeFarm.location);
+      setSlogan(activeFarm.slogan);
+      setLogoPreview(activeFarm.logo_url);
     }
-  }, [settings]);
+  }, [activeFarm]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -46,29 +46,38 @@ export function GeneralSettings() {
   };
 
   const handleSave = async () => {
-    if (!isAdmin) return;
+    if (!canEdit || !activeFarm) return;
     setSaving(true);
     try {
-      let logoUrl = settings?.logo_url ?? null;
+      let logoUrl = activeFarm.logo_url;
       if (logoFile) {
-        logoUrl = await uploadLogo(logoFile);
+        const ext = logoFile.name.split('.').pop();
+        const path = `${activeFarm.id}/logo.${ext}`;
+        await supabase.storage.from('farm-logo').remove([path]);
+        const { error: uploadError } = await supabase.storage.from('farm-logo').upload(path, logoFile, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('farm-logo').getPublicUrl(path);
+        logoUrl = urlData.publicUrl;
       }
-      await updateSettings.mutateAsync({
-        farm_name: farmName,
-        owner_name: ownerName,
-        location,
-        slogan,
-        logo_url: logoUrl,
-      });
+
+      const { error } = await supabase
+        .from('farms')
+        .update({ name: farmName.trim(), location: location.trim(), slogan: slogan.trim(), logo_url: logoUrl })
+        .eq('id', activeFarm.id);
+
+      if (error) throw error;
+
+      await refetchFarms();
       setLogoFile(null);
-    } catch {
-      // error handled by hook
+      toast({ title: 'Settings saved', description: 'Farm settings updated successfully.' });
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
     } finally {
       setSaving(false);
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
@@ -82,10 +91,10 @@ export function GeneralSettings() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>General Settings</CardTitle>
-        {!isAdmin && (
+        {!canEdit && (
           <Badge variant="outline" className="text-muted-foreground">
             <Lock className="h-3 w-3 mr-1" />
-            Admin Only
+            Owner Only
           </Badge>
         )}
       </CardHeader>
@@ -102,7 +111,7 @@ export function GeneralSettings() {
                 <Image className="h-8 w-8 text-muted-foreground/50" />
               )}
             </div>
-            {isAdmin && (
+            {canEdit && (
               <div>
                 <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={saving}>
                   <Upload className="h-4 w-4 mr-2" />
@@ -123,22 +132,13 @@ export function GeneralSettings() {
 
         {/* Form Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
+          <div className="space-y-2 md:col-span-2">
             <Label htmlFor="farm-name">Farm Name</Label>
             <Input
               id="farm-name"
               value={farmName}
               onChange={(e) => setFarmName(e.target.value)}
-              disabled={!isAdmin}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="owner-name">Owner Name</Label>
-            <Input
-              id="owner-name"
-              value={ownerName}
-              onChange={(e) => setOwnerName(e.target.value)}
-              disabled={!isAdmin}
+              disabled={!canEdit}
             />
           </div>
           <div className="space-y-2 md:col-span-2">
@@ -147,7 +147,7 @@ export function GeneralSettings() {
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              disabled={!isAdmin}
+              disabled={!canEdit}
             />
           </div>
           <div className="space-y-2 md:col-span-2">
@@ -156,15 +156,15 @@ export function GeneralSettings() {
               id="slogan"
               value={slogan}
               onChange={(e) => setSlogan(e.target.value)}
-              disabled={!isAdmin}
+              disabled={!canEdit}
               placeholder="e.g. Nurturing the Land, Feeding the Future"
             />
             <p className="text-xs text-muted-foreground">Appears on all exported reports as a tagline.</p>
           </div>
         </div>
 
-        {isAdmin && (
-          <Button onClick={handleSave} disabled={saving} className="bg-farm-green hover:bg-farm-green/90">
+        {canEdit && (
+          <Button onClick={handleSave} disabled={saving || !farmName.trim()} className="bg-farm-green hover:bg-farm-green/90">
             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             Save Changes
           </Button>
