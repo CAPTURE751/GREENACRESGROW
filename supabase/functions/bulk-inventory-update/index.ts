@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface BulkUpdateItem {
@@ -16,14 +16,45 @@ interface BulkUpdateItem {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Authenticate via JWT
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // Verify the JWT token
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const userId = claimsData.claims.sub;
+
+    // Use service role client for DB operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     // Get request body
-    const { updates, user_id } = await req.json();
+    const { updates } = await req.json();
 
     if (!updates || !Array.isArray(updates)) {
       return new Response(JSON.stringify({ 
@@ -35,30 +66,23 @@ serve(async (req) => {
       });
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log(`Processing bulk update for ${updates.length} items by user ${userId}`);
 
-    console.log(`Processing bulk update for ${updates.length} items by user ${user_id}`);
+    // Check role from DB using authenticated user ID
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
 
-    // Validate user permissions (admin or staff only)
-    if (user_id) {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', user_id)
-        .single();
-
-      if (profileError || !['admin', 'staff'].includes(profile?.role)) {
-        return new Response(JSON.stringify({ 
-          error: 'Insufficient permissions for bulk updates',
-          success: false 
-        }), {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+    if (profileError || !['admin', 'staff'].includes(profile?.role)) {
+      return new Response(JSON.stringify({ 
+        error: 'Insufficient permissions for bulk updates',
+        success: false 
+      }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Process updates in batches
@@ -75,7 +99,7 @@ serve(async (req) => {
             ...update,
             last_updated: new Date().toISOString(),
           };
-          delete updateData.id; // Remove id from update data
+          delete updateData.id;
 
           const { data, error } = await supabase
             .from('inventory')

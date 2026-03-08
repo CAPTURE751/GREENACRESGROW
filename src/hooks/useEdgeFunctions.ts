@@ -48,13 +48,8 @@ export function useBulkInventoryUpdate() {
       location?: string;
       supplier?: string;
     }>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       const { data, error } = await supabase.functions.invoke('bulk-inventory-update', {
-        body: {
-          updates,
-          user_id: user?.id,
-        }
+        body: { updates },
       });
       
       if (error) throw error;
