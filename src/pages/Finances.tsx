@@ -454,7 +454,7 @@ export default function Finances() {
           <div className="flex gap-2">
             <Button
               variant={filter === 'all' ? 'default' : 'outline'}
-              onClick={() => setFilter('all')}
+              onClick={() => { setFilter('all'); setCurrentPage(1); }}
             >
               All Transactions
             </Button>
