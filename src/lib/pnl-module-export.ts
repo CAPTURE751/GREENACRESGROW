@@ -123,7 +123,7 @@ export async function exportModulePnLToPDF(
     body: [
       ["Total Revenue", formatKES(totals.totalRevenue)],
       ["Total Costs", formatKES(totals.totalCosts)],
-      ["Net Profit / (Loss)", formatKES(totals.netProfit)],
+      [totals.netProfit >= 0 ? "Net Profit" : "Net Loss", formatKES(Math.abs(totals.netProfit))],
       ["Profit Margin", totals.totalRevenue > 0 ? `${((totals.netProfit / totals.totalRevenue) * 100).toFixed(1)}%` : "N/A"],
     ],
     theme: "grid",
@@ -131,14 +131,17 @@ export async function exportModulePnLToPDF(
     styles: { fontSize: 10 },
     didParseCell: (data: any) => {
       if (data.section === "body" && data.column.index === 1) {
+        // Revenue = Blue
         if (data.row.index === 0) {
-          data.cell.styles.textColor = [40, 120, 40];
+          data.cell.styles.textColor = [30, 80, 180];
           data.cell.styles.fontStyle = "bold";
         }
+        // Costs = Orange
         if (data.row.index === 1) {
-          data.cell.styles.textColor = [180, 30, 30];
+          data.cell.styles.textColor = [200, 120, 20];
           data.cell.styles.fontStyle = "bold";
         }
+        // Net Profit = Green, Net Loss = Red
         if (data.row.index === 2) {
           data.cell.styles.fontStyle = "bold";
           data.cell.styles.textColor = totals.netProfit >= 0 ? [40, 120, 40] : [180, 30, 30];
