@@ -145,6 +145,9 @@ export async function exportPnLToCSV(report: PnLReport, printedBy?: string) {
 }
 
 export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
+  const settings = await getFarmSettings();
+  const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
+  const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -152,10 +155,11 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   const stampCode = generateStampCode();
   let y = 14;
 
-  // Load logo
+  // Load logo - prefer dynamic logo, fallback to bundled
+  const logoSrc = settings?.logo_url || fallbackLogoUrl;
   let logoBase64: string | null = null;
   try {
-    logoBase64 = await loadImageAsBase64(farmLogoUrl);
+    logoBase64 = await loadImageAsBase64(logoSrc);
   } catch {
     // continue without logo
   }
