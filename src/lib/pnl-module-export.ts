@@ -223,7 +223,7 @@ export async function exportModulePnLToPDF(
         headStyles: { fillColor: [240, 220, 200], textColor: [30, 30, 30] },
         styles: { fontSize: 8 },
         foot: [["", "", "", "Total Costs", formatKES(data.costs)]],
-        footStyles: { fillColor: [250, 235, 220], textColor: [200, 120, 20], fontStyle: "bold" },
+        footStyles: { fillColor: [235, 235, 235], textColor: [70, 70, 70], fontStyle: "bold" },
       });
       y = (doc as any).lastAutoTable.finalY + 6;
     }

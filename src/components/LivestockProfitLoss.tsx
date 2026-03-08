@@ -272,7 +272,7 @@ export function LivestockProfitLoss() {
                         ))}
                         <TableRow className="font-bold border-t-2">
                           <TableCell colSpan={4}>Total Costs</TableCell>
-                          <TableCell className="text-right text-orange-600">{formatKES(data.costs)}</TableCell>
+                          <TableCell className="text-right text-gray-700">{formatKES(data.costs)}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
