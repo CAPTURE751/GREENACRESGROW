@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       crops: {
         Row: {
+          acreage: number | null
           created_at: string
           created_by: string
           farm_location: string
@@ -32,6 +33,7 @@ export type Database = {
           yield_unit: string | null
         }
         Insert: {
+          acreage?: number | null
           created_at?: string
           created_by: string
           farm_location: string
@@ -48,6 +50,7 @@ export type Database = {
           yield_unit?: string | null
         }
         Update: {
+          acreage?: number | null
           created_at?: string
           created_by?: string
           farm_location?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.crops ADD COLUMN acreage numeric NULL;
