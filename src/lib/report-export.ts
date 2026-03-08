@@ -148,6 +148,7 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   const settings = await getFarmSettings();
   const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
   const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
+  const FARM_SLOGAN = (settings as any)?.slogan || DEFAULT_SLOGAN;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
