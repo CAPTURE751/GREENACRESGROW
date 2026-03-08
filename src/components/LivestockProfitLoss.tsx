@@ -6,7 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatKES } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Loader2 } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Loader2, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
+import { toast } from "sonner";
 
 export function LivestockProfitLoss() {
   const [selectedProduct, setSelectedProduct] = useState<string>("all");
@@ -107,7 +110,21 @@ export function LivestockProfitLoss() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
+        <Button
+          variant="outline"
+          onClick={async () => {
+            try {
+              await exportModulePnLToPDF("livestock", filteredData, totals, selectedProduct);
+              toast.success("Livestock P&L PDF downloaded successfully");
+            } catch (e) {
+              toast.error("Failed to generate PDF");
+            }
+          }}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download PDF
+        </Button>
         <Select value={selectedProduct} onValueChange={setSelectedProduct}>
           <SelectTrigger className="w-[220px]">
             <SelectValue placeholder="Filter by product" />
