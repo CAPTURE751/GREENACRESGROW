@@ -368,134 +368,163 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   // ============================================================
   sectionHeader("2", "COST OF PRODUCTION (DIRECT COSTS)");
 
-  // Map purchase categories to P&L sections
-  const costMappings: { label: string; keywords: string[] }[] = [
-    { label: "Seeds and Planting Materials", keywords: ["seed", "seedling", "nursery", "planting"] },
-    { label: "Fertilizers", keywords: ["fertilizer", "manure", "compost"] },
-    { label: "Chemicals and Crop Protection", keywords: ["pesticide", "herbicide", "fungicide", "chemical", "spray"] },
-    { label: "Irrigation Costs", keywords: ["irrigation", "water", "pump", "drip"] },
-    { label: "Livestock Feed", keywords: ["feed", "supplement", "mineral", "hay", "fodder"] },
-    { label: "Veterinary Costs", keywords: ["vet", "vaccine", "vaccination", "medicine", "drug", "health"] },
-    { label: "Casual Labour", keywords: ["labour", "labor", "casual", "worker", "planting", "weeding", "harvesting"] },
+  // Direct cost category mappings (match purchase category keys)
+  const directCostMappings: { label: string; keys: string[] }[] = [
+    { label: "Seeds and Planting Materials", keys: ["seeds", "seed", "seedling", "nursery", "planting"] },
+    { label: "Fertilizers", keys: ["fertilizer", "manure", "compost"] },
+    { label: "Chemicals and Crop Protection", keys: ["chemicals", "pesticide", "herbicide", "fungicide", "chemical", "spray"] },
+    { label: "Irrigation Costs", keys: ["irrigation", "water", "pump", "drip"] },
+    { label: "Livestock Feed", keys: ["feed", "supplement", "mineral", "hay", "fodder"] },
+    { label: "Veterinary Costs", keys: ["veterinary", "vet", "vaccine", "vaccination", "medicine", "drug"] },
+    { label: "Casual Labour", keys: ["casual_labour", "casual labour", "casual"] },
   ];
 
-  let mappedTotal = 0;
-  const unmappedPurchases: Array<[string, { total: number; items: Record<string, number> }]> = [];
+  // Operating expense category mappings
+  const opexMappings: { label: string; keys: string[] }[] = [
+    { label: "Labour Costs (Permanent Workers / Farm Manager)", keys: ["permanent_labour", "permanent labour", "salaries", "salary", "farm manager"] },
+    { label: "Machinery & Equipment (Fuel, Maintenance, Repairs)", keys: ["machinery", "equipment", "maintenance", "tractor fuel", "repairs"] },
+    { label: "Utilities (Electricity, Water)", keys: ["utilities", "electricity"] },
+    { label: "Transport & Distribution", keys: ["transport", "distribution", "delivery", "fuel"] },
+    { label: "Farm Supplies (Tools, Packaging, Storage)", keys: ["farm_supplies", "farm supplies", "tools", "packaging", "storage"] },
+    { label: "Communication (Internet, Phone)", keys: ["communication", "internet", "phone"] },
+    { label: "Land Costs (Lease, Rates)", keys: ["land_costs", "land costs", "lease", "land rates"] },
+    { label: "Insurance (Crop, Livestock)", keys: ["insurance"] },
+    { label: "Administration (Office, Software, Accounting)", keys: ["administration", "admin", "office", "software", "accounting"] },
+    { label: "Marketing (Advertising, Branding, Market Fees)", keys: ["marketing", "advertising", "branding", "market fees"] },
+  ];
 
-  costMappings.forEach(mapping => {
-    const matched = Object.entries(purchasesBk).filter(([cat]) =>
-      mapping.keywords.some(kw => cat.toLowerCase().includes(kw))
-    );
-    subHeader(mapping.label);
-    if (matched.length > 0) {
-      matched.forEach(([cat, data]) => {
-        Object.entries(data.items).forEach(([name, amt]) => {
-          lineItem(name, amt);
-          mappedTotal += amt;
+  // Financial cost category mappings
+  const financialMappings: { label: string; keys: string[] }[] = [
+    { label: "Loan Interest", keys: ["loan_interest", "loan interest", "interest"] },
+    { label: "Bank Charges", keys: ["bank_charges", "bank charges", "bank"] },
+    { label: "Equipment Financing", keys: ["equipment_financing", "equipment financing", "financing"] },
+  ];
+
+  // Adjustment category mappings
+  const adjustmentMappings: { label: string; keys: string[] }[] = [
+    { label: "Depreciation", keys: ["depreciation"] },
+    { label: "Taxes", keys: ["taxes", "tax"] },
+  ];
+
+  // All non-direct keys for filtering
+  const nonDirectKeys = [...opexMappings, ...financialMappings, ...adjustmentMappings]
+    .flatMap(m => m.keys);
+
+  // Helper to sum matched purchases
+  const renderCostSection = (mappings: { label: string; keys: string[] }[]): number => {
+    let sectionTotal = 0;
+    mappings.forEach(mapping => {
+      const matched = Object.entries(purchasesBk).filter(([cat]) =>
+        mapping.keys.some(kw => cat.toLowerCase() === kw || cat.toLowerCase().includes(kw))
+      );
+      subHeader(mapping.label);
+      if (matched.length > 0) {
+        matched.forEach(([, data]) => {
+          Object.entries(data.items).forEach(([name, amt]) => {
+            lineItem(name, amt);
+            sectionTotal += amt;
+          });
         });
-      });
-    } else {
-      lineItem(`No ${mapping.label.toLowerCase()} recorded`, 0);
-    }
-  });
+      } else {
+        lineItem(`—`, 0);
+      }
+    });
+    return sectionTotal;
+  };
 
-  // Unmapped purchases
-  Object.entries(purchasesBk).forEach(([cat, data]) => {
-    const isMapped = costMappings.some(m => m.keywords.some(kw => cat.toLowerCase().includes(kw)));
-    if (!isMapped) unmappedPurchases.push([cat, data]);
-  });
+  const directCostsTotal = renderCostSection(directCostMappings);
 
+  // Check for unmapped purchases that don't fit any category
+  const allMappedKeys = [...directCostMappings, ...opexMappings, ...financialMappings, ...adjustmentMappings]
+    .flatMap(m => m.keys);
+  const unmappedPurchases = Object.entries(purchasesBk).filter(([cat]) =>
+    !allMappedKeys.some(kw => cat.toLowerCase() === kw || cat.toLowerCase().includes(kw))
+  );
+  let unmappedDirectTotal = 0;
   if (unmappedPurchases.length > 0) {
     subHeader("Other Direct Costs");
     unmappedPurchases.forEach(([cat, data]) => {
       Object.entries(data.items).forEach(([name, amt]) => {
         lineItem(`${name} (${cat})`, amt);
+        unmappedDirectTotal += amt;
       });
     });
   }
 
-  totalLine("Total Direct Costs", report.summary.total_costs, true);
+  const totalDirectCosts = directCostsTotal + unmappedDirectTotal;
+  totalLine("Total Direct Costs", totalDirectCosts, true);
 
   // ============================================================
   // 3. GROSS PROFIT
   // ============================================================
+  const grossProfit = report.summary.total_revenue - totalDirectCosts;
   sectionHeader("3", "GROSS PROFIT");
   doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
   doc.text("Gross Profit = Total Farm Revenue – Total Direct Costs", 18, y);
   y += 6;
-  totalLine("Gross Profit", report.summary.gross_profit, true);
+  totalLine("Gross Profit", grossProfit, true);
 
   // ============================================================
   // 4. OPERATING EXPENSES
   // ============================================================
   sectionHeader("4", "OPERATING EXPENSES");
-  
-  const opexCategories = [
-    "Labour Costs (Permanent Workers / Farm Manager)",
-    "Machinery & Equipment (Fuel, Maintenance, Repairs)",
-    "Utilities (Electricity, Water)",
-    "Transport & Distribution (Fuel, Market Delivery)",
-    "Farm Supplies (Tools, Packaging, Storage)",
-    "Communication (Internet, Phone)",
-    "Land Costs (Lease, Rates)",
-    "Insurance (Crop, Livestock)",
-    "Administration (Office Supplies, Software, Accounting)",
-    "Marketing (Advertising, Branding, Market Fees)",
-  ];
-
-  opexCategories.forEach(cat => {
-    lineItem(cat, 0, 18);
-  });
-  
-  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(140, 140, 140);
-  doc.text("* Operating expenses not yet tracked in the system — add them via Purchases with matching categories", 18, y);
-  y += 6;
-
-  totalLine("Total Operating Expenses", 0);
+  const opexTotal = renderCostSection(opexMappings);
+  totalLine("Total Operating Expenses", opexTotal, true);
 
   // ============================================================
   // 5. OPERATING PROFIT
   // ============================================================
+  const operatingProfit = grossProfit - opexTotal;
   sectionHeader("5", "OPERATING PROFIT");
   doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
   doc.text("Operating Profit = Gross Profit – Operating Expenses", 18, y);
   y += 6;
-  totalLine("Operating Profit", report.summary.gross_profit);
+  totalLine("Operating Profit", operatingProfit, true);
 
   // ============================================================
   // 6. FINANCIAL COSTS
   // ============================================================
   sectionHeader("6", "FINANCIAL COSTS");
-  lineItem("Loan Interest", 0, 18);
-  lineItem("Bank Charges", 0, 18);
-  lineItem("Equipment Financing", 0, 18);
-  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(140, 140, 140);
-  doc.text("* Financial costs not yet tracked — add them via Purchases", 18, y);
-  y += 6;
-  totalLine("Total Financial Costs", 0);
+  const financialTotal = renderCostSection(financialMappings);
+  totalLine("Total Financial Costs", financialTotal, true);
 
   // ============================================================
   // 7. NET FARM PROFIT
   // ============================================================
+  const netFarmProfit = operatingProfit - financialTotal;
   sectionHeader("7", "NET FARM PROFIT");
   doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
   doc.text("Net Profit = Operating Profit – Financial Costs", 18, y);
   y += 6;
-  totalLine("Net Farm Profit", report.summary.gross_profit);
+  totalLine("Net Farm Profit", netFarmProfit, true);
 
   // ============================================================
   // 8. OTHER ADJUSTMENTS
   // ============================================================
   sectionHeader("8", "OTHER ADJUSTMENTS");
-  subHeader("Depreciation");
-  lineItem("Tractor Depreciation", 0);
-  lineItem("Irrigation System Depreciation", 0);
-  lineItem("Farm Equipment Depreciation", 0);
-  subHeader("Taxes");
-  lineItem("Farm Taxes", 0);
-  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(140, 140, 140);
-  doc.text("* Depreciation and taxes not yet tracked — add them via Purchases", 18, y);
-  y += 6;
+  let adjustmentTotal = 0;
+  adjustmentMappings.forEach(mapping => {
+    const matched = Object.entries(purchasesBk).filter(([cat]) =>
+      mapping.keys.some(kw => cat.toLowerCase() === kw || cat.toLowerCase().includes(kw))
+    );
+    subHeader(mapping.label);
+    if (matched.length > 0) {
+      matched.forEach(([, data]) => {
+        Object.entries(data.items).forEach(([name, amt]) => {
+          lineItem(name, amt);
+          adjustmentTotal += amt;
+        });
+      });
+    } else {
+      lineItem(`—`, 0);
+    }
+  });
+  totalLine("Total Adjustments", adjustmentTotal);
+
+  // ============================================================
+  // FINAL NET PROFIT / LOSS
+  // ============================================================
+  const finalNetProfit = netFarmProfit - adjustmentTotal;
 
   // ============================================================
   // FINAL NET PROFIT / LOSS
