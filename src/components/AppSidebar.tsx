@@ -75,7 +75,7 @@ export function AppSidebar() {
                   <p className="text-xs text-muted-foreground">Management</p>
                 </div>
               </div>
-              <FarmSwitcherWrapper />
+              <FarmSwitcher />
             </div>
           ) : (
             <div className="w-8 h-8 bg-farm-gradient rounded-lg flex items-center justify-center mx-auto">
