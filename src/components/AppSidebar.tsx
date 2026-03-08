@@ -8,7 +8,8 @@ import {
   Settings,
   FileText,
   Home,
-  Users
+  Users,
+  Wrench
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
