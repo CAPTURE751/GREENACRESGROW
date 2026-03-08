@@ -110,6 +110,36 @@ export type Database = {
         }
         Relationships: []
       }
+      farm_settings: {
+        Row: {
+          created_at: string
+          farm_name: string
+          id: string
+          location: string
+          logo_url: string | null
+          owner_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          farm_name?: string
+          id?: string
+          location?: string
+          logo_url?: string | null
+          owner_name?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          farm_name?: string
+          id?: string
+          location?: string
+          logo_url?: string | null
+          owner_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           category: string
