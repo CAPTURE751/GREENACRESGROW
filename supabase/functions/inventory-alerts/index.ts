@@ -20,18 +20,22 @@ serve(async (req) => {
 
     console.log('Checking inventory for low stock items...');
 
-    // Get all inventory items with low stock
-    const { data: lowStockItems, error: inventoryError } = await supabase
+    // Get all inventory items
+    const { data: allItems, error: inventoryError } = await supabase
       .from('inventory')
-      .select('*')
-      .filter('quantity', 'lte', 'min_threshold');
+      .select('*');
 
     if (inventoryError) {
       console.error('Error fetching inventory:', inventoryError);
       throw inventoryError;
     }
 
-    console.log(`Found ${lowStockItems?.length || 0} low stock items`);
+    // Filter in code: items where quantity <= min_threshold
+    const lowStockItems = allItems?.filter(item => 
+      item.min_threshold != null && item.min_threshold > 0 && item.quantity <= item.min_threshold
+    ) || [];
+
+    console.log(`Found ${lowStockItems.length} low stock items`);
 
     // Auto-flag items that are critically low (less than 25% of min threshold)
     const criticalItems = lowStockItems?.filter(item => 
