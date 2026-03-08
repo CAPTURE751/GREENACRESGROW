@@ -1,4 +1,4 @@
-
+import { FarmSwitcher } from "@/components/FarmSwitcher";
 import { 
   BarChart3, 
   Wheat, 

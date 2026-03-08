@@ -3,14 +3,14 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/NotificationCenter";
-import { useFarmSettings } from "@/hooks/useFarmSettings";
+import { useFarm } from "@/contexts/FarmContext";
 import { FARM_BRANDING } from "@/lib/constants";
 
 export function Header() {
-  const { settings } = useFarmSettings();
-  const farmName = settings?.farm_name || FARM_BRANDING.name;
-  const farmLocation = settings?.location || FARM_BRANDING.location;
-  const logoUrl = settings?.logo_url;
+  const { activeFarm } = useFarm();
+  const farmName = activeFarm?.name || FARM_BRANDING.name;
+  const farmLocation = activeFarm?.location || FARM_BRANDING.location;
+  const logoUrl = activeFarm?.logo_url;
 
   return (
     <header className="h-16 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 flex items-center justify-between px-4 sticky top-0 z-50">
