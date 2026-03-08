@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.inventory-alerts]
 verify_jwt = false
+
+[functions.venture-ai-advisor]
+verify_jwt = false

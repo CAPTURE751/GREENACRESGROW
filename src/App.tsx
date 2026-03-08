@@ -17,6 +17,7 @@ import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
 import Equipment from "./pages/Equipment";
+import BudgetSimulator from "./pages/BudgetSimulator";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -76,6 +77,11 @@ const App = () => (
             <Route path="/users" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <UserManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/budget-simulator" element={
+              <ProtectedRoute>
+                <BudgetSimulator />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
