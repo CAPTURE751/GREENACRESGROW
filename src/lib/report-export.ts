@@ -534,7 +534,7 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   doc.rect(14, y - 2, pageWidth - 28, 12, "F");
   doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
   doc.text("FINAL NET PROFIT / LOSS", 18, y + 5);
-  doc.text(formatKES(report.summary.gross_profit), pageWidth - 18, y + 5, { align: "right" });
+  doc.text(formatKES(finalNetProfit), pageWidth - 18, y + 5, { align: "right" });
   y += 18;
 
   // Paid amounts summary
