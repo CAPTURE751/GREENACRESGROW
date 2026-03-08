@@ -210,6 +210,31 @@ export function FarmSwitcher() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Farm Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Farm</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-farm-name">Farm Name</Label>
+              <Input id="edit-farm-name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-farm-location">Location</Label>
+              <Input id="edit-farm-location" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+            <Button onClick={handleEditFarm} disabled={saving || !editName.trim()}>
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
