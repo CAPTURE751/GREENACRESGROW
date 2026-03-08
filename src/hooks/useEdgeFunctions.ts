@@ -91,11 +91,22 @@ export function useProfitLossCalculation() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      toast({
-        title: "P&L Report Generated",
-        description: "Profit and loss calculation completed successfully.",
-      });
+    onSuccess: (data) => {
+      const summary = data?.data?.summary || data?.profit_loss_report?.summary;
+      if (summary) {
+        const revenue = summary.total_revenue?.toLocaleString() || '0';
+        const costs = summary.total_costs?.toLocaleString() || '0';
+        const profit = summary.gross_profit?.toLocaleString() || '0';
+        toast({
+          title: "P&L Report Generated",
+          description: `Revenue: KES ${revenue} | Costs: KES ${costs} | Profit: KES ${profit}`,
+        });
+      } else {
+        toast({
+          title: "P&L Report Generated",
+          description: "Profit and loss calculation completed. View it in Reports.",
+        });
+      }
     },
     onError: (error) => {
       toast({
