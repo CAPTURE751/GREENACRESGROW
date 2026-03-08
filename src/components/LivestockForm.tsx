@@ -312,6 +312,11 @@ export function LivestockForm({ onSubmit, onCancel, isLoading, initialData }: Li
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+            Cancel
+          </Button>
+        )}
         <Button type="submit" disabled={isLoading} className="bg-farm-barn hover:bg-farm-barn/90 text-white">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {initialData ? "Update Animal" : "Add Animal"}
