@@ -23,7 +23,10 @@ import {
   FileBarChart,
   BarChart3,
   X,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
+import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
 import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -267,9 +270,19 @@ export default function Finances() {
               <div className="mt-6 space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-foreground">Report Results</h3>
-                  <Button variant="ghost" size="sm" onClick={() => setShowPnL(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => exportPnLToCSV(pnlReport)}>
+                      <FileSpreadsheet className="h-4 w-4 mr-1" />
+                      CSV
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => exportPnLToPDF(pnlReport)}>
+                      <Download className="h-4 w-4 mr-1" />
+                      PDF
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setShowPnL(false)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <Separator />
