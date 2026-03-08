@@ -68,50 +68,7 @@ export default function Settings() {
 
           {/* Settings Content */}
           <div className="lg:col-span-3 space-y-6">
-            {activeTab === 'general' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>General Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Farm Name</label>
-                      <input 
-                        type="text" 
-                        defaultValue="Green Acres Farm"
-                        className="w-full p-2 border rounded-md"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Owner Name</label>
-                      <input 
-                        type="text" 
-                        defaultValue="John Smith"
-                        className="w-full p-2 border rounded-md"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Location</label>
-                      <input 
-                        type="text" 
-                        defaultValue="Iowa, USA"
-                        className="w-full p-2 border rounded-md"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Time Zone</label>
-                      <select className="w-full p-2 border rounded-md">
-                        <option>UTC-6 (Central Time)</option>
-                        <option>UTC-5 (Eastern Time)</option>
-                        <option>UTC-7 (Mountain Time)</option>
-                        <option>UTC-8 (Pacific Time)</option>
-                      </select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {activeTab === 'general' && <GeneralSettings />}
 
             {activeTab === 'users' && (
               <Card>
