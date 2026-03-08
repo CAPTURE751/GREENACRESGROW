@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Loader2 } from "lucide-react";
@@ -103,7 +103,7 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div key={transactionType} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {transactionType === 'income' ? (
           <>
             <div className="space-y-2">
@@ -124,26 +124,31 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Crop Sales */}
-                  <SelectItem value="crop">Crop</SelectItem>
-                  <SelectItem value="maize">Maize</SelectItem>
-                  <SelectItem value="beans">Beans</SelectItem>
-                  <SelectItem value="onion">Onion</SelectItem>
-                  <SelectItem value="vegetable">Vegetable</SelectItem>
-                  <SelectItem value="fruit">Fruit</SelectItem>
-                  {/* Livestock Income */}
-                  <SelectItem value="livestock">Livestock</SelectItem>
-                  <SelectItem value="milk">Milk</SelectItem>
-                  <SelectItem value="eggs">Eggs</SelectItem>
-                  <SelectItem value="meat">Meat</SelectItem>
-                  {/* Value Added */}
-                  <SelectItem value="honey">Honey</SelectItem>
-                  <SelectItem value="seeds">Seeds</SelectItem>
-                  <SelectItem value="processed">Processed Products</SelectItem>
-                  {/* Other */}
-                  <SelectItem value="dairy">Dairy</SelectItem>
-                  <SelectItem value="poultry">Poultry</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectGroup>
+                    <SelectLabel>Crop Sales</SelectLabel>
+                    <SelectItem value="crop">Crop</SelectItem>
+                    <SelectItem value="maize">Maize</SelectItem>
+                    <SelectItem value="beans">Beans</SelectItem>
+                    <SelectItem value="onion">Onion</SelectItem>
+                    <SelectItem value="vegetable">Vegetable</SelectItem>
+                    <SelectItem value="fruit">Fruit</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Livestock</SelectLabel>
+                    <SelectItem value="livestock">Livestock</SelectItem>
+                    <SelectItem value="milk">Milk</SelectItem>
+                    <SelectItem value="eggs">Eggs</SelectItem>
+                    <SelectItem value="meat">Meat</SelectItem>
+                    <SelectItem value="dairy">Dairy</SelectItem>
+                    <SelectItem value="poultry">Poultry</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Other</SelectLabel>
+                    <SelectItem value="honey">Honey</SelectItem>
+                    <SelectItem value="seeds">Seeds</SelectItem>
+                    <SelectItem value="processed">Processed Products</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
@@ -189,33 +194,41 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Direct Costs */}
-                  <SelectItem value="seeds">Seeds & Planting Materials</SelectItem>
-                  <SelectItem value="fertilizer">Fertilizer</SelectItem>
-                  <SelectItem value="chemicals">Chemicals & Crop Protection</SelectItem>
-                  <SelectItem value="irrigation">Irrigation Costs</SelectItem>
-                  <SelectItem value="feed">Livestock Feed</SelectItem>
-                  <SelectItem value="veterinary">Veterinary Costs</SelectItem>
-                  <SelectItem value="casual_labour">Casual Labour</SelectItem>
-                  {/* Operating Expenses */}
-                  <SelectItem value="permanent_labour">Permanent Labour / Salaries</SelectItem>
-                  <SelectItem value="machinery">Machinery & Equipment</SelectItem>
-                  <SelectItem value="utilities">Utilities (Electricity/Water)</SelectItem>
-                  <SelectItem value="transport">Transport & Distribution</SelectItem>
-                  <SelectItem value="farm_supplies">Farm Supplies (Tools/Packaging)</SelectItem>
-                  <SelectItem value="communication">Communication (Internet/Phone)</SelectItem>
-                  <SelectItem value="land_costs">Land Costs (Lease/Rates)</SelectItem>
-                  <SelectItem value="insurance">Insurance (Crop/Livestock)</SelectItem>
-                  <SelectItem value="administration">Administration</SelectItem>
-                  <SelectItem value="marketing">Marketing & Advertising</SelectItem>
-                  {/* Financial Costs */}
-                  <SelectItem value="loan_interest">Loan Interest</SelectItem>
-                  <SelectItem value="bank_charges">Bank Charges</SelectItem>
-                  <SelectItem value="equipment_financing">Equipment Financing</SelectItem>
-                  {/* Other */}
-                  <SelectItem value="depreciation">Depreciation</SelectItem>
-                  <SelectItem value="taxes">Taxes</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectGroup>
+                    <SelectLabel>Direct Costs</SelectLabel>
+                    <SelectItem value="seeds">Seeds & Planting Materials</SelectItem>
+                    <SelectItem value="fertilizer">Fertilizer</SelectItem>
+                    <SelectItem value="chemicals">Chemicals & Crop Protection</SelectItem>
+                    <SelectItem value="irrigation">Irrigation Costs</SelectItem>
+                    <SelectItem value="feed">Livestock Feed</SelectItem>
+                    <SelectItem value="veterinary">Veterinary Costs</SelectItem>
+                    <SelectItem value="casual_labour">Casual Labour</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Operating Expenses</SelectLabel>
+                    <SelectItem value="permanent_labour">Permanent Labour / Salaries</SelectItem>
+                    <SelectItem value="machinery">Machinery & Equipment</SelectItem>
+                    <SelectItem value="utilities">Utilities (Electricity/Water)</SelectItem>
+                    <SelectItem value="transport">Transport & Distribution</SelectItem>
+                    <SelectItem value="farm_supplies">Farm Supplies (Tools/Packaging)</SelectItem>
+                    <SelectItem value="communication">Communication (Internet/Phone)</SelectItem>
+                    <SelectItem value="land_costs">Land Costs (Lease/Rates)</SelectItem>
+                    <SelectItem value="insurance">Insurance (Crop/Livestock)</SelectItem>
+                    <SelectItem value="administration">Administration</SelectItem>
+                    <SelectItem value="marketing">Marketing & Advertising</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Financial Costs</SelectLabel>
+                    <SelectItem value="loan_interest">Loan Interest</SelectItem>
+                    <SelectItem value="bank_charges">Bank Charges</SelectItem>
+                    <SelectItem value="equipment_financing">Equipment Financing</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Other</SelectLabel>
+                    <SelectItem value="depreciation">Depreciation</SelectItem>
+                    <SelectItem value="taxes">Taxes</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
