@@ -526,42 +526,84 @@ export default function Finances() {
                 {filteredTransactions.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No transactions found</p>
                 ) : (
-                  filteredTransactions.map((transaction) => (
-                    <div key={`${transaction.type}-${transaction.id}`} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
-                          {transaction.type === 'income' ? (
-                            <TrendingUp className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <TrendingDown className="h-4 w-4 text-red-600" />
-                          )}
+                  <>
+                    {filteredTransactions
+                      .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                      .map((transaction) => (
+                      <div key={`${transaction.type}-${transaction.id}`} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
+                            {transaction.type === 'income' ? (
+                              <TrendingUp className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 text-red-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium">{transaction.description}</p>
+                            <p className="text-sm text-muted-foreground">{transaction.category}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(transaction.date).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{transaction.description}</p>
-                          <p className="text-sm text-muted-foreground">{transaction.category}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Calendar className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(transaction.date).toLocaleDateString()}
-                            </span>
+                        <div className="text-right">
+                          <p className={`text-lg font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                            {transaction.type === 'income' ? '+' : '-'}{formatKES(transaction.amount).replace('KSh ', '')}
+                          </p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge className={getTypeColor(transaction.type)}>
+                              {transaction.type}
+                            </Badge>
+                            <Badge className={getStatusColor(transaction.status)}>
+                              {transaction.status}
+                            </Badge>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-lg font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                          {transaction.type === 'income' ? '+' : '-'}{formatKES(transaction.amount).replace('KSh ', '')}
+                    ))}
+
+                    {/* Pagination Controls */}
+                    {filteredTransactions.length > ITEMS_PER_PAGE && (
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">
+                          Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length}
                         </p>
-                        <div className="flex gap-2 mt-1">
-                          <Badge className={getTypeColor(transaction.type)}>
-                            {transaction.type}
-                          </Badge>
-                          <Badge className={getStatusColor(transaction.status)}>
-                            {transaction.status}
-                          </Badge>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((p) => p - 1)}
+                          >
+                            Previous
+                          </Button>
+                          {Array.from({ length: Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE) }, (_, i) => (
+                            <Button
+                              key={i + 1}
+                              variant={currentPage === i + 1 ? 'default' : 'outline'}
+                              size="sm"
+                              className="w-9"
+                              onClick={() => setCurrentPage(i + 1)}
+                            >
+                              {i + 1}
+                            </Button>
+                          ))}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage >= Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)}
+                            onClick={() => setCurrentPage((p) => p + 1)}
+                          >
+                            Next
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    )}
+                  </>
                 )}
               </div>
             )}
