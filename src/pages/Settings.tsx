@@ -81,6 +81,8 @@ export default function Settings() {
 
             {activeTab === 'security' && <SecuritySettings />}
 
+            {activeTab === 'appearance' && <AppearanceSettings />}
+
             {activeTab === 'backup' && (
               <Card>
                 <CardHeader>
