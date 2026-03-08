@@ -1,16 +1,19 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatKES } from "./currency";
-import farmLogoUrl from "@/assets/farm-logo.png";
+import fallbackLogoUrl from "@/assets/farm-logo.png";
+import { getFarmSettings } from "./farm-settings-cache";
 
-const FARM_NAME = "JEFF TRICKS FARM LTD";
-const FARM_LOCATION = "Nyeri, Kenya";
+const DEFAULT_FARM_NAME = "JEFF TRICKS FARM LTD";
+const DEFAULT_LOCATION = "Nyeri, Kenya";
 const FARM_SLOGAN = "Nurturing the Land, Feeding the Future";
 
-/** Generate a standardized filename with farm prefix: "JEFF TRICKS FARM LTD <docName>-YYYY-MM-DD.<ext>" */
-export function farmFileName(docName: string, ext: string): string {
+/** Generate a standardized filename with farm prefix */
+export async function farmFileName(docName: string, ext: string): Promise<string> {
+  const settings = await getFarmSettings();
+  const name = settings?.farm_name || DEFAULT_FARM_NAME;
   const date = new Date().toISOString().slice(0, 10);
-  return `${FARM_NAME} ${docName}-${date}.${ext}`;
+  return `${name} ${docName}-${date}.${ext}`;
 }
 
 interface PnLReport {
@@ -78,7 +81,10 @@ function loadImageAsBase64(url: string): Promise<string> {
   });
 }
 
-export function exportPnLToCSV(report: PnLReport, printedBy?: string) {
+export async function exportPnLToCSV(report: PnLReport, printedBy?: string) {
+  const settings = await getFarmSettings();
+  const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
+  const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
   const lines: string[] = [];
   const now = new Date();
   const stampCode = generateStampCode();
@@ -133,12 +139,15 @@ export function exportPnLToCSV(report: PnLReport, printedBy?: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = farmFileName('PNL-report', 'csv');
+  a.download = await farmFileName('PNL-report', 'csv');
   a.click();
   URL.revokeObjectURL(url);
 }
 
 export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
+  const settings = await getFarmSettings();
+  const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
+  const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -146,10 +155,11 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   const stampCode = generateStampCode();
   let y = 14;
 
-  // Load logo
+  // Load logo - prefer dynamic logo, fallback to bundled
+  const logoSrc = settings?.logo_url || fallbackLogoUrl;
   let logoBase64: string | null = null;
   try {
-    logoBase64 = await loadImageAsBase64(farmLogoUrl);
+    logoBase64 = await loadImageAsBase64(logoSrc);
   } catch {
     // continue without logo
   }
@@ -325,5 +335,5 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
     doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
   }
 
-  doc.save(farmFileName('PNL-report', 'pdf'));
+  doc.save(await farmFileName('PNL-report', 'pdf'));
 }

@@ -161,7 +161,7 @@ export default function Reports() {
   }, [livestock]);
 
   // Export full overview as CSV
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const lines: string[] = [];
     lines.push(FARM_BRANDING.name);
     lines.push(FARM_BRANDING.location);
@@ -205,7 +205,7 @@ export default function Reports() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = farmFileName('Farm-Overview-Report', 'csv');
+    a.download = await farmFileName('Farm-Overview-Report', 'csv');
     a.click();
     URL.revokeObjectURL(url);
   };
