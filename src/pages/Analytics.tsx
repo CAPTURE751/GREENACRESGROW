@@ -282,6 +282,7 @@ export default function Analytics() {
     { id: "6m" as const, label: "6 Months" },
     { id: "12m" as const, label: "12 Months" },
     { id: "all" as const, label: "All Time" },
+    { id: "custom" as const, label: "Custom" },
   ];
 
   if (isLoading) {
