@@ -103,7 +103,7 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div key={transactionType} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {transactionType === 'income' ? (
           <>
             <div className="space-y-2">
