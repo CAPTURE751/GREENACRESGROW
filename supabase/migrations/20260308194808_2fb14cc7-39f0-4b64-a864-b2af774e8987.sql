@@ -1,0 +1,1 @@
+ALTER TABLE public.farm_settings ADD COLUMN slogan text NOT NULL DEFAULT 'Nurturing the Land, Feeding the Future';
