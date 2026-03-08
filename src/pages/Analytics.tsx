@@ -369,7 +369,7 @@ export default function Analytics() {
                       sales: filteredSales.length,
                       purchases: filteredPurchases.length,
                     },
-                    timeRange: timeRange === "6m" ? "Last 6 Months" : timeRange === "12m" ? "Last 12 Months" : "All Time",
+                    timeRange: timeRange === "6m" ? "Last 6 Months" : timeRange === "12m" ? "Last 12 Months" : timeRange === "custom" ? `${customStart ? format(customStart, "dd/MM/yyyy") : "?"} – ${customEnd ? format(customEnd, "dd/MM/yyyy") : "?"}` : "All Time",
                   });
                   toast.success("Analytics PDF downloaded successfully");
                 } catch (e: any) {
