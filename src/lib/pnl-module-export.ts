@@ -104,7 +104,7 @@ export async function exportModulePnLToPDF(
 
   // Title
   const title = moduleType === "crop" ? "Crop Profit & Loss Report" : "Livestock Profit & Loss Report";
-  const icon = moduleType === "crop" ? "🌾" : "🐄";
+  // No emoji icons in PDF
   doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
   doc.text(title, pw / 2, y, { align: "center" });
   y += 7;
