@@ -24,7 +24,6 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Authenticate user
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -41,7 +40,6 @@ serve(async (req) => {
 
     const { start_date, end_date, category } = await req.json();
 
-    // Validate type param
     if (start_date && isNaN(Date.parse(start_date))) {
       return new Response(JSON.stringify({ error: 'Invalid start_date format', success: false }), {
         status: 400,
@@ -60,7 +58,7 @@ serve(async (req) => {
     // Get sales data
     let salesQuery = supabase
       .from('sales')
-      .select('total_amount, unit_price, quantity, product_type, sale_date, payment_status');
+      .select('total_amount, unit_price, quantity, product_type, product_name, sale_date, payment_status');
     if (category) salesQuery = salesQuery.eq('product_type', category);
     if (start_date) salesQuery = salesQuery.gte('sale_date', start_date);
     if (end_date) salesQuery = salesQuery.lte('sale_date', end_date);
@@ -70,7 +68,7 @@ serve(async (req) => {
     // Get purchases data
     let purchasesQuery = supabase
       .from('purchases')
-      .select('total_cost, unit_cost, quantity, category, purchase_date, payment_status');
+      .select('total_cost, unit_cost, quantity, category, item_name, purchase_date, payment_status');
     if (category) purchasesQuery = purchasesQuery.eq('category', category);
     if (start_date) purchasesQuery = purchasesQuery.gte('purchase_date', start_date);
     if (end_date) purchasesQuery = purchasesQuery.lte('purchase_date', end_date);
@@ -90,6 +88,42 @@ serve(async (req) => {
     const grossProfit = totalRevenue - totalCosts;
     const netProfit = paidRevenue - paidCosts;
     const profitMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+    // Detailed sales breakdown by product_type and product_name
+    const salesByType = new Map<string, { total: number; items: Map<string, number> }>();
+    sales?.forEach(sale => {
+      const type = sale.product_type || 'Other';
+      if (!salesByType.has(type)) salesByType.set(type, { total: 0, items: new Map() });
+      const entry = salesByType.get(type)!;
+      entry.total += sale.total_amount || 0;
+      const name = sale.product_name || 'Unknown';
+      entry.items.set(name, (entry.items.get(name) || 0) + (sale.total_amount || 0));
+    });
+
+    const salesBreakdown: Record<string, { total: number; items: Record<string, number> }> = {};
+    salesByType.forEach((val, key) => {
+      const items: Record<string, number> = {};
+      val.items.forEach((amt, name) => { items[name] = amt; });
+      salesBreakdown[key] = { total: val.total, items };
+    });
+
+    // Detailed purchases breakdown by category and item_name
+    const purchasesByCategory = new Map<string, { total: number; items: Map<string, number> }>();
+    purchases?.forEach(p => {
+      const cat = p.category || 'Other';
+      if (!purchasesByCategory.has(cat)) purchasesByCategory.set(cat, { total: 0, items: new Map() });
+      const entry = purchasesByCategory.get(cat)!;
+      entry.total += p.total_cost || 0;
+      const name = p.item_name || 'Unknown';
+      entry.items.set(name, (entry.items.get(name) || 0) + (p.total_cost || 0));
+    });
+
+    const purchasesBreakdown: Record<string, { total: number; items: Record<string, number> }> = {};
+    purchasesByCategory.forEach((val, key) => {
+      const items: Record<string, number> = {};
+      val.items.forEach((amt, name) => { items[name] = amt; });
+      purchasesBreakdown[key] = { total: val.total, items };
+    });
 
     // Monthly trends
     const monthlyData = new Map();
@@ -141,13 +175,15 @@ serve(async (req) => {
         total_sales_transactions: sales?.length || 0,
         total_purchase_transactions: purchases?.length || 0,
       },
+      sales_breakdown: salesBreakdown,
+      purchases_breakdown: purchasesBreakdown,
       monthly_trends: monthlyTrends,
       category_performance: topCategories,
       generated_at: new Date().toISOString(),
       generated_by: userId,
     };
 
-    // Persist the generated report in the reports table
+    // Persist the generated report
     const { error: insertError } = await supabase
       .from('reports')
       .insert({
@@ -162,7 +198,6 @@ serve(async (req) => {
 
     if (insertError) {
       console.error('Failed to persist report:', insertError);
-      // Don't fail the request, just log it
     }
 
     return new Response(JSON.stringify({
