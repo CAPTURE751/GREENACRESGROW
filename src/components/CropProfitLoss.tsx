@@ -10,6 +10,7 @@ import { TrendingUp, TrendingDown, DollarSign, BarChart3, Loader2, Download } fr
 import { Button } from "@/components/ui/button";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
 import { toast } from "sonner";
+import { useFarm } from "@/contexts/FarmContext";
 
 export function CropProfitLoss() {
   const [selectedCrop, setSelectedCrop] = useState<string>("all");
