@@ -29,6 +29,7 @@ export function GeneralSettings() {
       setFarmName(settings.farm_name);
       setOwnerName(settings.owner_name);
       setLocation(settings.location);
+      setSlogan(settings.slogan);
       setLogoPreview(settings.logo_url);
     }
   }, [settings]);
