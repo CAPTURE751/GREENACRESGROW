@@ -267,7 +267,7 @@ export function LivestockProfitLoss() {
                             <TableCell>{purchase.item_name}</TableCell>
                             <TableCell className="capitalize">{purchase.category}</TableCell>
                             <TableCell>{purchase.supplier}</TableCell>
-                            <TableCell className="text-right font-medium text-orange-600">{formatKES(purchase.total_cost)}</TableCell>
+                            <TableCell className="text-right font-medium text-gray-700">{formatKES(purchase.total_cost)}</TableCell>
                           </TableRow>
                         ))}
                         <TableRow className="font-bold border-t-2">
