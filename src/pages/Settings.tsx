@@ -18,6 +18,7 @@ import { Layout } from "@/components/Layout";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { UserSettings } from "@/components/settings/UserSettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { SecuritySettings } from "@/components/settings/SecuritySettings";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
