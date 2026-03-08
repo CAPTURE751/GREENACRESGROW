@@ -242,6 +242,32 @@ export function FarmSwitcher() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
+              <Label>Farm Logo</Label>
+              <div className="flex items-center gap-3">
+                {editLogoUrl ? (
+                  <div className="relative">
+                    <img src={editLogoUrl} alt="Farm logo" className="h-16 w-16 rounded-lg object-contain border" />
+                    <button
+                      onClick={() => setEditLogoUrl(null)}
+                      className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-16 w-16 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground">
+                    <Upload className="h-5 w-5" />
+                  </div>
+                )}
+                <div>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                    {uploading ? "Uploading..." : editLogoUrl ? "Change Logo" : "Upload Logo"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="edit-farm-name">Farm Name</Label>
               <Input id="edit-farm-name" value={editName} onChange={(e) => setEditName(e.target.value)} />
             </div>
