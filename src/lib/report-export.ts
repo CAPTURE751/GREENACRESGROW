@@ -373,10 +373,11 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
     { label: "Seeds and Planting Materials", keys: ["seeds", "seed", "seedling", "nursery", "planting"] },
     { label: "Fertilizers", keys: ["fertilizer", "manure", "compost"] },
     { label: "Chemicals and Crop Protection", keys: ["chemicals", "pesticide", "herbicide", "fungicide", "chemical", "spray"] },
-    { label: "Irrigation Costs", keys: ["irrigation", "water", "pump", "drip"] },
-    { label: "Livestock Feed", keys: ["feed", "supplement", "mineral", "hay", "fodder"] },
-    { label: "Veterinary Costs", keys: ["veterinary", "vet", "vaccine", "vaccination", "medicine", "drug"] },
-    { label: "Casual Labour", keys: ["casual_labour", "casual labour", "casual"] },
+    { label: "Irrigation Costs", keys: ["irrigation", "pump", "drip"] },
+    { label: "Livestock Feed", keys: ["feed", "feeds", "supplement", "mineral", "hay", "fodder"] },
+    { label: "Veterinary Costs", keys: ["veterinary", "vet", "vaccine", "vaccination", "medicine", "medical", "drug"] },
+    { label: "Casual Labour", keys: ["casual_labour", "casual labour", "casual", "labor", "labour"] },
+    { label: "Fuel & Energy", keys: ["fuel", "diesel", "petrol", "energy", "gas"] },
   ];
 
   // Operating expense category mappings
