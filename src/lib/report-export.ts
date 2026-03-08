@@ -339,3 +339,275 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
 
   doc.save(await farmFileName('PNL-report', 'pdf'));
 }
+
+/** Export a comprehensive farm report to PDF */
+export async function exportFarmReportToPDF(report: any, printedBy?: string) {
+  const settings = await getFarmSettings();
+  const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
+  const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
+  const FARM_SLOGAN = (settings as any)?.slogan || DEFAULT_SLOGAN;
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const now = new Date();
+  const headerColor: [number, number, number] = [76, 111, 60];
+  let y = 14;
+
+  // Load logo
+  const logoSrc = settings?.logo_url || fallbackLogoUrl;
+  let logoBase64: string | null = null;
+  try { logoBase64 = await loadImageAsBase64(logoSrc); } catch { /* continue */ }
+
+  // Header
+  doc.setFillColor(...headerColor);
+  doc.rect(0, 0, pageWidth, 3, "F");
+  if (logoBase64) doc.addImage(logoBase64, "PNG", 14, y - 2, 22, 22);
+  const textX = logoBase64 ? 40 : 14;
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(...headerColor);
+  doc.text(FARM_NAME, textX, y + 6);
+  doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
+  doc.text(FARM_LOCATION, textX, y + 12);
+  doc.text(`"${FARM_SLOGAN}"`, textX, y + 17);
+  doc.setFontSize(8); doc.setTextColor(120, 120, 120);
+  doc.text(`Date: ${now.toLocaleDateString()}`, pageWidth - 14, y + 4, { align: "right" });
+  doc.text(`Time: ${now.toLocaleTimeString()}`, pageWidth - 14, y + 9, { align: "right" });
+  doc.text(`Printed By: ${printedBy || "System User"}`, pageWidth - 14, y + 14, { align: "right" });
+  y += 26;
+  doc.setDrawColor(...headerColor); doc.setLineWidth(0.8);
+  doc.line(14, y, pageWidth - 14, y);
+  y += 8;
+
+  // Title
+  const title = report?.report?.title || "Farm Report";
+  doc.setFontSize(15); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+  doc.text(title, pageWidth / 2, y, { align: "center" });
+  y += 10;
+
+  const content = report?.report?.content || {};
+  const summary = content.summary || {};
+
+  // Summary table
+  if (Object.keys(summary).length > 0) {
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+    doc.text("Summary", 14, y); y += 2;
+
+    const summaryRows: string[][] = [];
+    if (summary.period) summaryRows.push(["Period", String(summary.period)]);
+    if (summary.revenue !== undefined) summaryRows.push(["Revenue", formatKES(summary.revenue)]);
+    if (summary.expenses !== undefined) summaryRows.push(["Expenses", formatKES(summary.expenses)]);
+    if (summary.profit !== undefined) summaryRows.push(["Profit", formatKES(summary.profit)]);
+    if (summary.totalLivestock !== undefined) summaryRows.push(["Total Livestock", String(summary.totalLivestock)]);
+    if (summary.totalCrops !== undefined) summaryRows.push(["Total Crops", String(summary.totalCrops)]);
+    if (summary.inventoryItems !== undefined) summaryRows.push(["Inventory Items", String(summary.inventoryItems)]);
+    if (summary.totalItems !== undefined) summaryRows.push(["Total Items", String(summary.totalItems)]);
+    if (summary.lowStockItems !== undefined) summaryRows.push(["Low Stock Items", String(summary.lowStockItems)]);
+    if (summary.totalInventoryValue !== undefined) summaryRows.push(["Inventory Value", formatKES(summary.totalInventoryValue)]);
+    if (summary.totalSales !== undefined) summaryRows.push(["Total Sales", String(summary.totalSales)]);
+    if (summary.totalRevenue !== undefined) summaryRows.push(["Total Revenue", formatKES(summary.totalRevenue)]);
+
+    if (summaryRows.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [["Metric", "Value"]],
+        body: summaryRows,
+        theme: "grid",
+        headStyles: { fillColor: headerColor },
+        styles: { fontSize: 9 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 12;
+    }
+  }
+
+  // Sales section
+  if (content.sales && Object.keys(content.sales).length > 0) {
+    if (y > 230) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+    doc.text("Sales Overview", 14, y); y += 2;
+    const salesRows = [
+      ["Total Sales", String(content.sales.totalSales || 0)],
+      ["Revenue", formatKES(content.sales.revenue || 0)],
+    ];
+    autoTable(doc, {
+      startY: y, head: [["Metric", "Value"]], body: salesRows,
+      theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 9 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 12;
+  }
+
+  // Purchases section
+  if (content.purchases && Object.keys(content.purchases).length > 0) {
+    if (y > 230) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+    doc.text("Purchases Overview", 14, y); y += 2;
+    const purchaseRows = [
+      ["Total Purchases", String(content.purchases.totalPurchases || 0)],
+      ["Total Cost", formatKES(content.purchases.totalCost || 0)],
+    ];
+    autoTable(doc, {
+      startY: y, head: [["Metric", "Value"]], body: purchaseRows,
+      theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 9 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 12;
+  }
+
+  // Livestock section
+  if (content.livestock && content.livestock.total > 0) {
+    if (y > 230) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+    doc.text("Livestock", 14, y); y += 2;
+    const livestockRows: string[][] = [["Total", String(content.livestock.total)]];
+    if (content.livestock.byType) {
+      Object.entries(content.livestock.byType).forEach(([type, count]) => {
+        livestockRows.push([type.charAt(0).toUpperCase() + type.slice(1), String(count)]);
+      });
+    }
+    autoTable(doc, {
+      startY: y, head: [["Type", "Count"]], body: livestockRows,
+      theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 9 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 12;
+  }
+
+  // Crops section
+  if (content.crops && content.crops.total > 0) {
+    if (y > 230) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+    doc.text("Crops", 14, y); y += 2;
+    const cropRows: string[][] = [["Total", String(content.crops.total)]];
+    if (content.crops.byType) {
+      Object.entries(content.crops.byType).forEach(([type, count]) => {
+        cropRows.push([type.charAt(0).toUpperCase() + type.slice(1), String(count)]);
+      });
+    }
+    autoTable(doc, {
+      startY: y, head: [["Type", "Count"]], body: cropRows,
+      theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 9 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 12;
+  }
+
+  // Footer on every page
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(...headerColor); doc.setLineWidth(0.5);
+    doc.line(14, pageHeight - 18, pageWidth - 14, pageHeight - 18);
+    doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...headerColor);
+    doc.text(FARM_NAME, 14, pageHeight - 12);
+    doc.setFont("helvetica", "italic"); doc.setFontSize(7); doc.setTextColor(120, 120, 120);
+    doc.text(`"${FARM_SLOGAN}"`, 14, pageHeight - 8);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 14, pageHeight - 12, { align: "right" });
+    doc.setFillColor(...headerColor);
+    doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
+  }
+
+  doc.save(await farmFileName('Farm-Report', 'pdf'));
+}
+
+/** Export inventory alerts to PDF */
+export async function exportInventoryAlertsToPDF(alertData: any, printedBy?: string) {
+  const settings = await getFarmSettings();
+  const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
+  const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
+  const FARM_SLOGAN = (settings as any)?.slogan || DEFAULT_SLOGAN;
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const now = new Date();
+  const headerColor: [number, number, number] = [76, 111, 60];
+  let y = 14;
+
+  const logoSrc = settings?.logo_url || fallbackLogoUrl;
+  let logoBase64: string | null = null;
+  try { logoBase64 = await loadImageAsBase64(logoSrc); } catch { /* continue */ }
+
+  // Header
+  doc.setFillColor(...headerColor);
+  doc.rect(0, 0, pageWidth, 3, "F");
+  if (logoBase64) doc.addImage(logoBase64, "PNG", 14, y - 2, 22, 22);
+  const textX = logoBase64 ? 40 : 14;
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(...headerColor);
+  doc.text(FARM_NAME, textX, y + 6);
+  doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
+  doc.text(FARM_LOCATION, textX, y + 12);
+  doc.text(`"${FARM_SLOGAN}"`, textX, y + 17);
+  doc.setFontSize(8); doc.setTextColor(120, 120, 120);
+  doc.text(`Date: ${now.toLocaleDateString()}`, pageWidth - 14, y + 4, { align: "right" });
+  doc.text(`Time: ${now.toLocaleTimeString()}`, pageWidth - 14, y + 9, { align: "right" });
+  doc.text(`Printed By: ${printedBy || "System User"}`, pageWidth - 14, y + 14, { align: "right" });
+  y += 26;
+  doc.setDrawColor(...headerColor); doc.setLineWidth(0.8);
+  doc.line(14, y, pageWidth - 14, y);
+  y += 8;
+
+  // Title
+  doc.setFontSize(15); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+  doc.text("Inventory Check Report", pageWidth / 2, y, { align: "center" });
+  y += 10;
+
+  const summary = alertData?.alert_summary || alertData;
+
+  // Summary
+  doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+  doc.text("Summary", 14, y); y += 2;
+  
+  const totalLow = summary?.total_low_stock || 0;
+  const critical = summary?.critical_items || 0;
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Metric", "Value"]],
+    body: [
+      ["Check Date", now.toLocaleString()],
+      ["Total Low Stock Items", String(totalLow)],
+      ["Critical Items", String(critical)],
+      ["Status", totalLow === 0 ? "✅ All inventory levels are good" : `⚠️ ${totalLow} items need attention`],
+    ],
+    theme: "grid",
+    headStyles: { fillColor: headerColor },
+    styles: { fontSize: 9 },
+  });
+  y = (doc as any).lastAutoTable.finalY + 12;
+
+  // Low stock items detail
+  const lowStockItems = summary?.low_stock_items || [];
+  if (lowStockItems.length > 0) {
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+    doc.text("Low Stock Items", 14, y); y += 2;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Item", "Current Qty", "Min Threshold", "Category", "Critical?"]],
+      body: lowStockItems.map((item: any) => [
+        item.item_name,
+        String(item.current_quantity),
+        String(item.min_threshold),
+        item.category,
+        item.is_critical ? "YES" : "No",
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: headerColor },
+      styles: { fontSize: 9 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 12;
+  }
+
+  // Footer
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(...headerColor); doc.setLineWidth(0.5);
+    doc.line(14, pageHeight - 18, pageWidth - 14, pageHeight - 18);
+    doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...headerColor);
+    doc.text(FARM_NAME, 14, pageHeight - 12);
+    doc.setFont("helvetica", "italic"); doc.setFontSize(7); doc.setTextColor(120, 120, 120);
+    doc.text(`"${FARM_SLOGAN}"`, 14, pageHeight - 8);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 14, pageHeight - 12, { align: "right" });
+    doc.setFillColor(...headerColor);
+    doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
+  }
+
+  doc.save(await farmFileName('Inventory-Check', 'pdf'));
+}

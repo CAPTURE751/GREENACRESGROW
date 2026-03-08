@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { exportPnLToPDF, exportFarmReportToPDF, exportInventoryAlertsToPDF } from '@/lib/report-export';
 
 export function useInventoryAlerts() {
   const { toast } = useToast();
@@ -12,18 +13,24 @@ export function useInventoryAlerts() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.alert_summary.total_low_stock > 0) {
         toast({
           title: "Inventory Alert",
-          description: `Found ${data.alert_summary.total_low_stock} low stock items (${data.alert_summary.critical_items} critical).`,
+          description: `Found ${data.alert_summary.total_low_stock} low stock items (${data.alert_summary.critical_items} critical). Downloading PDF...`,
           variant: data.alert_summary.critical_items > 0 ? "destructive" : "default",
         });
       } else {
         toast({
           title: "Inventory Check Complete",
-          description: "All inventory levels are good.",
+          description: "All inventory levels are good. Downloading PDF...",
         });
+      }
+      // Auto-download PDF
+      try {
+        await exportInventoryAlertsToPDF(data);
+      } catch (e) {
+        console.error('PDF export failed:', e);
       }
     },
     onError: (error) => {
@@ -91,21 +98,30 @@ export function useProfitLossCalculation() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
-      const summary = data?.data?.summary || data?.profit_loss_report?.summary;
+    onSuccess: async (data) => {
+      const report = data?.data || data?.profit_loss_report;
+      const summary = report?.summary;
       if (summary) {
         const revenue = summary.total_revenue?.toLocaleString() || '0';
         const costs = summary.total_costs?.toLocaleString() || '0';
         const profit = summary.gross_profit?.toLocaleString() || '0';
         toast({
           title: "P&L Report Generated",
-          description: `Revenue: KES ${revenue} | Costs: KES ${costs} | Profit: KES ${profit}`,
+          description: `Revenue: KES ${revenue} | Costs: KES ${costs} | Profit: KES ${profit}. Downloading PDF...`,
         });
       } else {
         toast({
           title: "P&L Report Generated",
-          description: "Profit and loss calculation completed. View it in Reports.",
+          description: "Profit and loss calculation completed. Downloading PDF...",
         });
+      }
+      // Auto-download PDF
+      try {
+        if (report) {
+          await exportPnLToPDF(report);
+        }
+      } catch (e) {
+        console.error('PDF export failed:', e);
       }
     },
     onError: (error) => {
@@ -145,11 +161,17 @@ export function useGenerateFarmReport() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast({
         title: "Report Generated",
-        description: data?.message || "Farm report has been generated successfully. View it in the Reports page.",
+        description: (data?.message || "Farm report generated successfully") + ". Downloading PDF...",
       });
+      // Auto-download PDF
+      try {
+        await exportFarmReportToPDF(data);
+      } catch (e) {
+        console.error('PDF export failed:', e);
+      }
     },
     onError: (error) => {
       toast({
