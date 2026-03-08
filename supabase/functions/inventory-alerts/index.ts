@@ -30,7 +30,12 @@ serve(async (req) => {
       throw inventoryError;
     }
 
-    console.log(`Found ${lowStockItems?.length || 0} low stock items`);
+    // Filter in code: items where quantity <= min_threshold
+    const lowStockItems = allItems?.filter(item => 
+      item.min_threshold != null && item.min_threshold > 0 && item.quantity <= item.min_threshold
+    ) || [];
+
+    console.log(`Found ${lowStockItems.length} low stock items`);
 
     // Auto-flag items that are critically low (less than 25% of min threshold)
     const criticalItems = lowStockItems?.filter(item => 
