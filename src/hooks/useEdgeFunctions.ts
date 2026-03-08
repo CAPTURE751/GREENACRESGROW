@@ -84,15 +84,8 @@ export function useProfitLossCalculation() {
       end_date?: string;
       category?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       const { data, error } = await supabase.functions.invoke('calculate-profit-loss', {
-        body: {
-          start_date,
-          end_date,
-          category,
-          user_id: user?.id,
-        }
+        body: { start_date, end_date, category },
       });
       
       if (error) throw error;
