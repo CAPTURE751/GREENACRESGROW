@@ -248,6 +248,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          audit_reminders: boolean
+          created_at: string
+          financial_reports: boolean
+          id: string
+          low_stock_alerts: boolean
+          payment_confirmations: boolean
+          system_updates: boolean
+          task_reminders: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audit_reminders?: boolean
+          created_at?: string
+          financial_reports?: boolean
+          id?: string
+          low_stock_alerts?: boolean
+          payment_confirmations?: boolean
+          system_updates?: boolean
+          task_reminders?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audit_reminders?: boolean
+          created_at?: string
+          financial_reports?: boolean
+          id?: string
+          low_stock_alerts?: boolean
+          payment_confirmations?: boolean
+          system_updates?: boolean
+          task_reminders?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

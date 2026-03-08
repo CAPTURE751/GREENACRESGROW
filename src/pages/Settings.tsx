@@ -17,6 +17,7 @@ import {
 import { Layout } from "@/components/Layout";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { UserSettings } from "@/components/settings/UserSettings";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
@@ -74,36 +75,7 @@ export default function Settings() {
 
             {activeTab === 'users' && <UserSettings />}
 
-            {activeTab === 'notifications' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notification Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Task Reminders</p>
-                      <p className="text-sm text-muted-foreground">Get notified about upcoming tasks</p>
-                    </div>
-                    <input type="checkbox" defaultChecked className="toggle" />
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Weather Alerts</p>
-                      <p className="text-sm text-muted-foreground">Receive weather-related notifications</p>
-                    </div>
-                    <input type="checkbox" defaultChecked className="toggle" />
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Financial Reports</p>
-                      <p className="text-sm text-muted-foreground">Weekly financial summary emails</p>
-                    </div>
-                    <input type="checkbox" className="toggle" />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {activeTab === 'notifications' && <NotificationSettings />}
 
             {activeTab === 'backup' && (
               <Card>
