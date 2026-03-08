@@ -1,4 +1,4 @@
-
+import { FarmSwitcher } from "@/components/FarmSwitcher";
 import { 
   BarChart3, 
   Wheat, 
@@ -63,16 +63,23 @@ export function AppSidebar() {
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarContent className="py-6">
-        <div className="px-6 mb-6">
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-farm-gradient rounded-lg flex items-center justify-center">
-                <Wheat className="h-5 w-5 text-white" />
+        <div className="px-4 mb-6">
+          {!collapsed ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-farm-gradient rounded-lg flex items-center justify-center">
+                  <Wheat className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-farm-green">FarmOS</h2>
+                  <p className="text-xs text-muted-foreground">Management</p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-farm-green">FarmOS</h2>
-                <p className="text-xs text-muted-foreground">Management</p>
-              </div>
+              <FarmSwitcher />
+            </div>
+          ) : (
+            <div className="w-8 h-8 bg-farm-gradient rounded-lg flex items-center justify-center mx-auto">
+              <Wheat className="h-5 w-5 text-white" />
             </div>
           )}
         </div>
