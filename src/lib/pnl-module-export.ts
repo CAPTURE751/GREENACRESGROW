@@ -220,10 +220,10 @@ export async function exportModulePnLToPDF(
           formatKES(p.total_cost),
         ]),
         theme: "grid",
-        headStyles: { fillColor: [220, 200, 200], textColor: [30, 30, 30] },
+        headStyles: { fillColor: [240, 220, 200], textColor: [30, 30, 30] },
         styles: { fontSize: 8 },
         foot: [["", "", "", "Total Costs", formatKES(data.costs)]],
-        footStyles: { fillColor: [245, 230, 230], textColor: [180, 30, 30], fontStyle: "bold" },
+        footStyles: { fillColor: [250, 235, 220], textColor: [200, 120, 20], fontStyle: "bold" },
       });
       y = (doc as any).lastAutoTable.finalY + 6;
     }
