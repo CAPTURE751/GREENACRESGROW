@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useFarm } from "@/contexts/FarmContext";
-import { Check, ChevronsUpDown, Plus, Trash2, Pencil } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Trash2, Pencil, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -31,9 +31,12 @@ export function FarmSwitcher() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [farmToDelete, setFarmToDelete] = useState<{ id: string; name: string } | null>(null);
-  const [farmToEdit, setFarmToEdit] = useState<{ id: string; name: string; location: string } | null>(null);
+  const [farmToEdit, setFarmToEdit] = useState<{ id: string; name: string; location: string; logo_url: string | null } | null>(null);
   const [editName, setEditName] = useState("");
   const [editLocation, setEditLocation] = useState("");
+  const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [newFarmName, setNewFarmName] = useState("");
   const [newFarmLocation, setNewFarmLocation] = useState("");
   const [creating, setCreating] = useState(false);
@@ -84,7 +87,7 @@ export function FarmSwitcher() {
     setSaving(true);
     const { error } = await supabase
       .from('farms' as any)
-      .update({ name: editName.trim(), location: editLocation.trim() } as any)
+      .update({ name: editName.trim(), location: editLocation.trim(), logo_url: editLogoUrl } as any)
       .eq('id', farmToEdit.id);
     if (error) {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -95,6 +98,25 @@ export function FarmSwitcher() {
     setSaving(false);
     setShowEditDialog(false);
     setFarmToEdit(null);
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !farmToEdit) return;
+    setUploading(true);
+    const ext = file.name.split('.').pop();
+    const path = `${farmToEdit.id}/logo.${ext}`;
+    await supabase.storage.from('farm-logo').remove([path]);
+    const { error } = await supabase.storage.from('farm-logo').upload(path, file, { upsert: true });
+    if (error) {
+      toast({ variant: "destructive", title: "Upload failed", description: error.message });
+    } else {
+      const { data: urlData } = supabase.storage.from('farm-logo').getPublicUrl(path);
+      setEditLogoUrl(urlData.publicUrl);
+      toast({ title: "Logo uploaded", description: "Save changes to apply." });
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -129,9 +151,10 @@ export function FarmSwitcher() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setFarmToEdit({ id: farm.id, name: farm.name, location: farm.location });
+                        setFarmToEdit({ id: farm.id, name: farm.name, location: farm.location, logo_url: farm.logo_url });
                         setEditName(farm.name);
                         setEditLocation(farm.location);
+                        setEditLogoUrl(farm.logo_url);
                         setShowEditDialog(true);
                         setOpen(false);
                       }}
@@ -218,6 +241,32 @@ export function FarmSwitcher() {
             <DialogTitle>Edit Farm</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Farm Logo</Label>
+              <div className="flex items-center gap-3">
+                {editLogoUrl ? (
+                  <div className="relative">
+                    <img src={editLogoUrl} alt="Farm logo" className="h-16 w-16 rounded-lg object-contain border" />
+                    <button
+                      onClick={() => setEditLogoUrl(null)}
+                      className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-16 w-16 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground">
+                    <Upload className="h-5 w-5" />
+                  </div>
+                )}
+                <div>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                    {uploading ? "Uploading..." : editLogoUrl ? "Change Logo" : "Upload Logo"}
+                  </Button>
+                </div>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="edit-farm-name">Farm Name</Label>
               <Input id="edit-farm-name" value={editName} onChange={(e) => setEditName(e.target.value)} />
