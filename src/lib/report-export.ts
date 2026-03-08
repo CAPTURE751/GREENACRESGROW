@@ -81,7 +81,10 @@ function loadImageAsBase64(url: string): Promise<string> {
   });
 }
 
-export function exportPnLToCSV(report: PnLReport, printedBy?: string) {
+export async function exportPnLToCSV(report: PnLReport, printedBy?: string) {
+  const settings = await getFarmSettings();
+  const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
+  const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
   const lines: string[] = [];
   const now = new Date();
   const stampCode = generateStampCode();
