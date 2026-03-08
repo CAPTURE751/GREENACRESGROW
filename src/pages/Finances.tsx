@@ -66,6 +66,8 @@ interface PnLReport {
 export default function Finances() {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [txnStartDate, setTxnStartDate] = useState('');
+  const [txnEndDate, setTxnEndDate] = useState('');
   const [showPnL, setShowPnL] = useState(false);
   const [pnlReport, setPnlReport] = useState<PnLReport | null>(null);
   const [pnlStartDate, setPnlStartDate] = useState('');
