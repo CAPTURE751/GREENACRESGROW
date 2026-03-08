@@ -628,6 +628,71 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   }
 
   // ============================================================
+  // BREAK-EVEN ANALYSIS
+  // ============================================================
+  checkPage(60);
+  sectionHeader("", "BREAK-EVEN ANALYSIS");
+
+  const totalFixedCosts = opexTotal + financialTotal + adjustmentTotal;
+  const totalVariableCosts = totalDirectCosts;
+  const totalAllCosts = totalFixedCosts + totalVariableCosts;
+  const revenue = report.summary.total_revenue;
+
+  // Contribution margin approach
+  const contributionMarginRatio = revenue > 0
+    ? (revenue - totalVariableCosts) / revenue
+    : 0;
+  const breakEvenRevenue = contributionMarginRatio > 0
+    ? totalFixedCosts / contributionMarginRatio
+    : totalAllCosts; // fallback: need to cover all costs
+
+  const revenueAboveBelow = revenue - breakEvenRevenue;
+  const breakEvenReached = revenue >= breakEvenRevenue;
+
+  // Summary items
+  doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(70, 70, 70);
+
+  const beRows = [
+    ["Fixed Costs (Operating + Financial + Adjustments)", formatKES(totalFixedCosts)],
+    ["Variable Costs (Direct / Production Costs)", formatKES(totalVariableCosts)],
+    ["Total Costs", formatKES(totalAllCosts)],
+    ["Actual Revenue", formatKES(revenue)],
+    ["Contribution Margin Ratio", contributionMarginRatio > 0 ? `${(contributionMarginRatio * 100).toFixed(1)}%` : "N/A"],
+    ["Break-Even Revenue Required", formatKES(breakEvenRevenue)],
+    [
+      breakEvenReached ? "Revenue Above Break-Even" : "Revenue Below Break-Even (Shortfall)",
+      formatKES(Math.abs(revenueAboveBelow)),
+    ],
+    ["Status", breakEvenReached ? "✓ BREAK-EVEN ACHIEVED" : "✗ BELOW BREAK-EVEN"],
+  ];
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Metric", "Value"]],
+    body: beRows,
+    theme: "grid",
+    headStyles: { fillColor: headerColor },
+    styles: { fontSize: 8 },
+    columnStyles: { 0: { cellWidth: 110 } },
+    didParseCell: (data: any) => {
+      // Highlight the status row
+      if (data.row.index === beRows.length - 1 && data.section === "body") {
+        data.cell.styles.fontStyle = "bold";
+        data.cell.styles.textColor = breakEvenReached ? [40, 120, 40] : [180, 30, 30];
+      }
+    },
+  });
+  y = (doc as any).lastAutoTable.finalY + 6;
+
+  // Explanation note
+  checkPage(14);
+  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(120, 120, 120);
+  doc.text("Break-Even Revenue = Fixed Costs ÷ Contribution Margin Ratio", 18, y);
+  y += 4;
+  doc.text("Contribution Margin Ratio = (Revenue − Variable Costs) ÷ Revenue", 18, y);
+  y += 8;
+
+  // ============================================================
   // FOOTER on every page
   // ============================================================
   const totalPages = doc.getNumberOfPages();
