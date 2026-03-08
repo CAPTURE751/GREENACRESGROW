@@ -158,110 +158,375 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   const now = new Date();
   const stampCode = generateStampCode();
   let y = 14;
+  const headerColor: [number, number, number] = [76, 111, 60];
+  const sectionColor: [number, number, number] = [40, 80, 30];
 
-  // Load logo - prefer dynamic logo, fallback to bundled
+  // Load logo
   const logoSrc = settings?.logo_url || fallbackLogoUrl;
   let logoBase64: string | null = null;
-  try {
-    logoBase64 = await loadImageAsBase64(logoSrc);
-  } catch {
-    // continue without logo
-  }
+  try { logoBase64 = await loadImageAsBase64(logoSrc); } catch { /* continue */ }
+
+  // Helper: check page break
+  const checkPage = (needed: number) => {
+    if (y > pageHeight - needed - 25) { doc.addPage(); y = 20; }
+  };
+
+  // Helper: section header
+  const sectionHeader = (num: string, title: string) => {
+    checkPage(20);
+    doc.setFillColor(240, 245, 235);
+    doc.rect(14, y - 5, pageWidth - 28, 8, "F");
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...sectionColor);
+    doc.text(`${num}. ${title}`, 16, y);
+    y += 8;
+  };
+
+  // Helper: sub-section header
+  const subHeader = (title: string) => {
+    checkPage(12);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(60, 60, 60);
+    doc.text(title, 18, y);
+    y += 5;
+  };
+
+  // Helper: line item row
+  const lineItem = (label: string, amount: number, indent = 22) => {
+    checkPage(7);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(70, 70, 70);
+    doc.text(label, indent, y);
+    doc.text(formatKES(amount), pageWidth - 18, y, { align: "right" });
+    y += 5;
+  };
+
+  // Helper: total line (bold with line above)
+  const totalLine = (label: string, amount: number, isGrand = false) => {
+    checkPage(10);
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.3);
+    doc.line(14, y - 1, pageWidth - 14, y - 1);
+    y += 2;
+    doc.setFontSize(isGrand ? 10 : 9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(isGrand ? 0 : 30, isGrand ? 0 : 30, isGrand ? 0 : 30);
+    doc.text(label, 16, y);
+    doc.text(formatKES(amount), pageWidth - 18, y, { align: "right" });
+    y += isGrand ? 8 : 6;
+  };
+
+  // Helper: double-line total (for final result)
+  const doubleTotalLine = (label: string, amount: number) => {
+    checkPage(14);
+    doc.setDrawColor(40, 80, 30);
+    doc.setLineWidth(0.5);
+    doc.line(14, y - 1, pageWidth - 14, y - 1);
+    doc.line(14, y + 1, pageWidth - 14, y + 1);
+    y += 5;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(amount >= 0 ? 40 : 180, amount >= 0 ? 80 : 30, amount >= 0 ? 30 : 30);
+    doc.text(label, 16, y);
+    doc.text(formatKES(amount), pageWidth - 18, y, { align: "right" });
+    y += 10;
+  };
 
   // === HEADER ===
-  const headerColor: [number, number, number] = [76, 111, 60];
-
-  // Top green bar
   doc.setFillColor(...headerColor);
   doc.rect(0, 0, pageWidth, 3, "F");
-
-  // Logo
-  if (logoBase64) {
-    doc.addImage(logoBase64, "PNG", 14, y - 2, 22, 22);
-  }
-
-  // Farm name & location
+  if (logoBase64) doc.addImage(logoBase64, "PNG", 14, y - 2, 22, 22);
   const textX = logoBase64 ? 40 : 14;
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...headerColor);
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(...headerColor);
   doc.text(FARM_NAME, textX, y + 6);
-
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
   doc.text(FARM_LOCATION, textX, y + 12);
   doc.text(`"${FARM_SLOGAN}"`, textX, y + 17);
-
-  // Print info on right side
-  doc.setFontSize(8);
-  doc.setTextColor(120, 120, 120);
+  doc.setFontSize(8); doc.setTextColor(120, 120, 120);
   doc.text(`Date: ${now.toLocaleDateString()}`, pageWidth - 14, y + 4, { align: "right" });
   doc.text(`Time: ${now.toLocaleTimeString()}`, pageWidth - 14, y + 9, { align: "right" });
   doc.text(`Printed By: ${printedBy || "System User"}`, pageWidth - 14, y + 14, { align: "right" });
-
+  doc.text(`Ref: ${stampCode}`, pageWidth - 14, y + 19, { align: "right" });
   y += 26;
-
-  // Header divider
-  doc.setDrawColor(...headerColor);
-  doc.setLineWidth(0.8);
+  doc.setDrawColor(...headerColor); doc.setLineWidth(0.8);
   doc.line(14, y, pageWidth - 14, y);
-  y += 8;
-
-  // === TITLE ===
-  doc.setFontSize(15);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(30, 30, 30);
-  doc.text("Profit & Loss Report", pageWidth / 2, y, { align: "center" });
-  y += 7;
-
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(100, 100, 100);
-  doc.text(
-    `Period: ${report.summary.period.start_date || "All time"} — ${report.summary.period.end_date || "Present"}  |  Category: ${report.summary.category}`,
-    pageWidth / 2,
-    y,
-    { align: "center" }
-  );
   y += 10;
 
-  // === SUMMARY TABLE ===
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(30, 30, 30);
-  doc.text("Summary", 14, y);
-  y += 2;
+  // === TITLE ===
+  doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+  doc.text("Profit and Loss Statement (P&L)", pageWidth / 2, y, { align: "center" });
+  y += 7;
+  doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
+  const periodText = `Period: ${report.summary.period.start_date || "All time"} — ${report.summary.period.end_date || "Present"}`;
+  doc.text(periodText, pageWidth / 2, y, { align: "center" });
+  y += 5;
+  if (report.summary.category !== 'All Categories') {
+    doc.text(`Category: ${report.summary.category}`, pageWidth / 2, y, { align: "center" });
+    y += 5;
+  }
+  y += 5;
 
-  autoTable(doc, {
-    startY: y,
-    head: [["Metric", "Amount"]],
-    body: [
-      ["Total Revenue", formatKES(report.summary.total_revenue)],
-      ["Paid Revenue", formatKES(report.summary.paid_revenue)],
-      ["Total Costs", formatKES(report.summary.total_costs)],
-      ["Paid Costs", formatKES(report.summary.paid_costs)],
-      ["Gross Profit", formatKES(report.summary.gross_profit)],
-      ["Net Profit", formatKES(report.summary.net_profit)],
-      ["Profit Margin", `${report.summary.profit_margin_percent.toFixed(1)}%`],
-      ["Total Sales Transactions", String(report.summary.total_sales_transactions)],
-      ["Total Purchase Transactions", String(report.summary.total_purchase_transactions)],
-    ],
-    theme: "grid",
-    headStyles: { fillColor: headerColor },
-    styles: { fontSize: 9 },
+  // Column headers
+  doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 100, 100);
+  doc.text("DESCRIPTION", 16, y);
+  doc.text("AMOUNT (KES)", pageWidth - 18, y, { align: "right" });
+  doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
+  doc.line(14, y + 2, pageWidth - 14, y + 2);
+  y += 8;
+
+  // Get breakdown data
+  const salesBk = report.sales_breakdown || {};
+  const purchasesBk = report.purchases_breakdown || {};
+
+  // ============================================================
+  // 1. FARM REVENUE (INCOME)
+  // ============================================================
+  sectionHeader("1", "FARM REVENUE (INCOME)");
+
+  // Crop Sales
+  const cropTypes = ['crop', 'crops', 'maize', 'beans', 'onion', 'vegetable', 'fruit'];
+  const cropSalesEntries = Object.entries(salesBk).filter(([k]) => 
+    cropTypes.some(t => k.toLowerCase().includes(t))
+  );
+  const otherSalesEntries = Object.entries(salesBk).filter(([k]) => 
+    !cropTypes.some(t => k.toLowerCase().includes(t)) && 
+    !['livestock', 'milk', 'egg', 'meat', 'honey', 'seed'].some(t => k.toLowerCase().includes(t))
+  );
+  const livestockSalesEntries = Object.entries(salesBk).filter(([k]) =>
+    ['livestock', 'milk', 'egg', 'meat'].some(t => k.toLowerCase().includes(t))
+  );
+  const valueAddedEntries = Object.entries(salesBk).filter(([k]) =>
+    ['honey', 'seed', 'processed'].some(t => k.toLowerCase().includes(t))
+  );
+
+  let cropSalesTotal = 0;
+  if (cropSalesEntries.length > 0 || Object.keys(salesBk).length > 0) {
+    subHeader("Crop Sales");
+    // Show each crop sale sub-item
+    cropSalesEntries.forEach(([type, data]) => {
+      Object.entries(data.items).forEach(([name, amt]) => {
+        lineItem(name, amt);
+        cropSalesTotal += amt;
+      });
+    });
+    // If no crop-specific entries found, check for generic entries
+    if (cropSalesEntries.length === 0) {
+      lineItem("No crop sales recorded", 0);
+    }
+  }
+
+  let livestockIncomeTotal = 0;
+  subHeader("Livestock Income");
+  if (livestockSalesEntries.length > 0) {
+    livestockSalesEntries.forEach(([type, data]) => {
+      Object.entries(data.items).forEach(([name, amt]) => {
+        lineItem(name, amt);
+        livestockIncomeTotal += amt;
+      });
+    });
+  } else {
+    lineItem("No livestock income recorded", 0);
+  }
+
+  let valueAddedTotal = 0;
+  subHeader("Value Added Products");
+  if (valueAddedEntries.length > 0) {
+    valueAddedEntries.forEach(([type, data]) => {
+      Object.entries(data.items).forEach(([name, amt]) => {
+        lineItem(name, amt);
+        valueAddedTotal += amt;
+      });
+    });
+  } else {
+    lineItem("No value added product sales", 0);
+  }
+
+  // Other farm income (anything not categorized above)
+  let otherIncomeTotal = 0;
+  subHeader("Other Farm Income");
+  if (otherSalesEntries.length > 0) {
+    otherSalesEntries.forEach(([type, data]) => {
+      Object.entries(data.items).forEach(([name, amt]) => {
+        lineItem(name, amt);
+        otherIncomeTotal += amt;
+      });
+    });
+  } else {
+    lineItem("Government Subsidies", 0);
+    lineItem("Farm Tours / Training", 0);
+    lineItem("Equipment Rental", 0);
+    lineItem("Grants or Donations", 0);
+  }
+
+  totalLine("Total Farm Revenue", report.summary.total_revenue, true);
+
+  // ============================================================
+  // 2. COST OF PRODUCTION (DIRECT COSTS)
+  // ============================================================
+  sectionHeader("2", "COST OF PRODUCTION (DIRECT COSTS)");
+
+  // Map purchase categories to P&L sections
+  const costMappings: { label: string; keywords: string[] }[] = [
+    { label: "Seeds and Planting Materials", keywords: ["seed", "seedling", "nursery", "planting"] },
+    { label: "Fertilizers", keywords: ["fertilizer", "manure", "compost"] },
+    { label: "Chemicals and Crop Protection", keywords: ["pesticide", "herbicide", "fungicide", "chemical", "spray"] },
+    { label: "Irrigation Costs", keywords: ["irrigation", "water", "pump", "drip"] },
+    { label: "Livestock Feed", keywords: ["feed", "supplement", "mineral", "hay", "fodder"] },
+    { label: "Veterinary Costs", keywords: ["vet", "vaccine", "vaccination", "medicine", "drug", "health"] },
+    { label: "Casual Labour", keywords: ["labour", "labor", "casual", "worker", "planting", "weeding", "harvesting"] },
+  ];
+
+  let mappedTotal = 0;
+  const unmappedPurchases: Array<[string, { total: number; items: Record<string, number> }]> = [];
+
+  costMappings.forEach(mapping => {
+    const matched = Object.entries(purchasesBk).filter(([cat]) =>
+      mapping.keywords.some(kw => cat.toLowerCase().includes(kw))
+    );
+    subHeader(mapping.label);
+    if (matched.length > 0) {
+      matched.forEach(([cat, data]) => {
+        Object.entries(data.items).forEach(([name, amt]) => {
+          lineItem(name, amt);
+          mappedTotal += amt;
+        });
+      });
+    } else {
+      lineItem(`No ${mapping.label.toLowerCase()} recorded`, 0);
+    }
   });
 
-  y = (doc as any).lastAutoTable.finalY + 12;
+  // Unmapped purchases
+  Object.entries(purchasesBk).forEach(([cat, data]) => {
+    const isMapped = costMappings.some(m => m.keywords.some(kw => cat.toLowerCase().includes(kw)));
+    if (!isMapped) unmappedPurchases.push([cat, data]);
+  });
 
-  // === MONTHLY TRENDS ===
+  if (unmappedPurchases.length > 0) {
+    subHeader("Other Direct Costs");
+    unmappedPurchases.forEach(([cat, data]) => {
+      Object.entries(data.items).forEach(([name, amt]) => {
+        lineItem(`${name} (${cat})`, amt);
+      });
+    });
+  }
+
+  totalLine("Total Direct Costs", report.summary.total_costs, true);
+
+  // ============================================================
+  // 3. GROSS PROFIT
+  // ============================================================
+  sectionHeader("3", "GROSS PROFIT");
+  doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+  doc.text("Gross Profit = Total Farm Revenue – Total Direct Costs", 18, y);
+  y += 6;
+  totalLine("Gross Profit", report.summary.gross_profit, true);
+
+  // ============================================================
+  // 4. OPERATING EXPENSES
+  // ============================================================
+  sectionHeader("4", "OPERATING EXPENSES");
+  
+  const opexCategories = [
+    "Labour Costs (Permanent Workers / Farm Manager)",
+    "Machinery & Equipment (Fuel, Maintenance, Repairs)",
+    "Utilities (Electricity, Water)",
+    "Transport & Distribution (Fuel, Market Delivery)",
+    "Farm Supplies (Tools, Packaging, Storage)",
+    "Communication (Internet, Phone)",
+    "Land Costs (Lease, Rates)",
+    "Insurance (Crop, Livestock)",
+    "Administration (Office Supplies, Software, Accounting)",
+    "Marketing (Advertising, Branding, Market Fees)",
+  ];
+
+  opexCategories.forEach(cat => {
+    lineItem(cat, 0, 18);
+  });
+  
+  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(140, 140, 140);
+  doc.text("* Operating expenses not yet tracked in the system — add them via Purchases with matching categories", 18, y);
+  y += 6;
+
+  totalLine("Total Operating Expenses", 0);
+
+  // ============================================================
+  // 5. OPERATING PROFIT
+  // ============================================================
+  sectionHeader("5", "OPERATING PROFIT");
+  doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+  doc.text("Operating Profit = Gross Profit – Operating Expenses", 18, y);
+  y += 6;
+  totalLine("Operating Profit", report.summary.gross_profit);
+
+  // ============================================================
+  // 6. FINANCIAL COSTS
+  // ============================================================
+  sectionHeader("6", "FINANCIAL COSTS");
+  lineItem("Loan Interest", 0, 18);
+  lineItem("Bank Charges", 0, 18);
+  lineItem("Equipment Financing", 0, 18);
+  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(140, 140, 140);
+  doc.text("* Financial costs not yet tracked — add them via Purchases", 18, y);
+  y += 6;
+  totalLine("Total Financial Costs", 0);
+
+  // ============================================================
+  // 7. NET FARM PROFIT
+  // ============================================================
+  sectionHeader("7", "NET FARM PROFIT");
+  doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+  doc.text("Net Profit = Operating Profit – Financial Costs", 18, y);
+  y += 6;
+  totalLine("Net Farm Profit", report.summary.gross_profit);
+
+  // ============================================================
+  // 8. OTHER ADJUSTMENTS
+  // ============================================================
+  sectionHeader("8", "OTHER ADJUSTMENTS");
+  subHeader("Depreciation");
+  lineItem("Tractor Depreciation", 0);
+  lineItem("Irrigation System Depreciation", 0);
+  lineItem("Farm Equipment Depreciation", 0);
+  subHeader("Taxes");
+  lineItem("Farm Taxes", 0);
+  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(140, 140, 140);
+  doc.text("* Depreciation and taxes not yet tracked — add them via Purchases", 18, y);
+  y += 6;
+
+  // ============================================================
+  // FINAL NET PROFIT / LOSS
+  // ============================================================
+  checkPage(20);
+  doc.setFillColor(...headerColor);
+  doc.rect(14, y - 2, pageWidth - 28, 12, "F");
+  doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+  doc.text("FINAL NET PROFIT / LOSS", 18, y + 5);
+  doc.text(formatKES(report.summary.gross_profit), pageWidth - 18, y + 5, { align: "right" });
+  y += 18;
+
+  // Paid amounts summary
+  checkPage(20);
+  doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
+  doc.text("Cash Flow Summary (Paid Only)", 14, y);
+  y += 6;
+  lineItem("Paid Revenue", report.summary.paid_revenue, 18);
+  lineItem("Paid Costs", report.summary.paid_costs, 18);
+  totalLine("Net Cash Profit", report.summary.net_profit);
+
+  // Profit Margin
+  lineItem(`Profit Margin: ${report.summary.profit_margin_percent.toFixed(1)}%`, 0, 18);
+  y += 4;
+
+  // ============================================================
+  // MONTHLY TRENDS
+  // ============================================================
   if (report.monthly_trends.length > 0) {
-    if (y > 230) { doc.addPage(); y = 20; }
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("Monthly Trends", 14, y);
-    y += 2;
+    checkPage(30);
+    sectionHeader("", "MONTHLY PERFORMANCE TRENDS");
 
     autoTable(doc, {
       startY: y,
@@ -276,20 +541,17 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
       ]),
       theme: "grid",
       headStyles: { fillColor: headerColor },
-      styles: { fontSize: 9 },
+      styles: { fontSize: 8 },
     });
-
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = (doc as any).lastAutoTable.finalY + 10;
   }
 
-  // === CATEGORY PERFORMANCE ===
+  // ============================================================
+  // CATEGORY PERFORMANCE
+  // ============================================================
   if (report.category_performance.length > 0) {
-    if (y > 230) { doc.addPage(); y = 20; }
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 30, 30);
-    doc.text("Category Performance", 14, y);
-    y += 2;
+    checkPage(30);
+    sectionHeader("", "CATEGORY PERFORMANCE ANALYSIS");
 
     autoTable(doc, {
       startY: y,
@@ -303,43 +565,57 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
       ]),
       theme: "grid",
       headStyles: { fillColor: headerColor },
-      styles: { fontSize: 9 },
+      styles: { fontSize: 8 },
     });
-
-    y = (doc as any).lastAutoTable.finalY + 12;
+    y = (doc as any).lastAutoTable.finalY + 10;
   }
 
-  // === FOOTER on every page ===
+  // ============================================================
+  // EXTRA: Profit per category
+  // ============================================================
+  if (report.category_performance.length > 0) {
+    checkPage(30);
+    sectionHeader("", "PROFIT PER CATEGORY");
+
+    const catProfitRows = report.category_performance.map(c => {
+      // Find matching cost category
+      const matchingCosts = Object.entries(purchasesBk)
+        .filter(([k]) => k.toLowerCase().includes(c.category.toLowerCase()))
+        .reduce((sum, [, data]) => sum + data.total, 0);
+      const catProfit = c.revenue - matchingCosts;
+      return [c.category, formatKES(c.revenue), formatKES(matchingCosts), formatKES(catProfit)];
+    });
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Category", "Revenue", "Costs", "Profit"]],
+      body: catProfitRows,
+      theme: "grid",
+      headStyles: { fillColor: headerColor },
+      styles: { fontSize: 8 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // ============================================================
+  // FOOTER on every page
+  // ============================================================
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-
-    // Footer divider
-    doc.setDrawColor(...headerColor);
-    doc.setLineWidth(0.5);
+    doc.setDrawColor(...headerColor); doc.setLineWidth(0.5);
     doc.line(14, pageHeight - 18, pageWidth - 14, pageHeight - 18);
-
-    // Footer text
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...headerColor);
+    doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(...headerColor);
     doc.text(FARM_NAME, 14, pageHeight - 12);
-
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
+    doc.setFont("helvetica", "italic"); doc.setFontSize(7); doc.setTextColor(120, 120, 120);
     doc.text(`"${FARM_SLOGAN}"`, 14, pageHeight - 8);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 14, pageHeight - 12, { align: "right" });
-
-    // Bottom green bar
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+    doc.text(`Page ${i} of ${totalPages}  |  Ref: ${stampCode}`, pageWidth - 14, pageHeight - 12, { align: "right" });
     doc.setFillColor(...headerColor);
     doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
   }
 
-  doc.save(await farmFileName('PNL-report', 'pdf'));
+  doc.save(await farmFileName('PNL-Statement', 'pdf'));
 }
 
 /** Export a comprehensive farm report to PDF */
