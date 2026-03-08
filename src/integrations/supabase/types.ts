@@ -118,6 +118,7 @@ export type Database = {
           location: string
           logo_url: string | null
           owner_name: string
+          slogan: string
           updated_at: string
         }
         Insert: {
@@ -127,6 +128,7 @@ export type Database = {
           location?: string
           logo_url?: string | null
           owner_name?: string
+          slogan?: string
           updated_at?: string
         }
         Update: {
@@ -136,6 +138,7 @@ export type Database = {
           location?: string
           logo_url?: string | null
           owner_name?: string
+          slogan?: string
           updated_at?: string
         }
         Relationships: []

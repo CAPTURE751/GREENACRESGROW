@@ -6,7 +6,7 @@ import { getFarmSettings } from "./farm-settings-cache";
 
 const DEFAULT_FARM_NAME = "JEFF TRICKS FARM LTD";
 const DEFAULT_LOCATION = "Nyeri, Kenya";
-const FARM_SLOGAN = "Nurturing the Land, Feeding the Future";
+const DEFAULT_SLOGAN = "Nurturing the Land, Feeding the Future";
 
 /** Generate a standardized filename with farm prefix */
 export async function farmFileName(docName: string, ext: string): Promise<string> {
@@ -85,6 +85,7 @@ export async function exportPnLToCSV(report: PnLReport, printedBy?: string) {
   const settings = await getFarmSettings();
   const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
   const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
+  const FARM_SLOGAN = (settings as any)?.slogan || DEFAULT_SLOGAN;
   const lines: string[] = [];
   const now = new Date();
   const stampCode = generateStampCode();
@@ -148,6 +149,7 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   const settings = await getFarmSettings();
   const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
   const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
+  const FARM_SLOGAN = (settings as any)?.slogan || DEFAULT_SLOGAN;
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();

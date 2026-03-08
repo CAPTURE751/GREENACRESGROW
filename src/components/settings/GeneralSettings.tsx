@@ -19,6 +19,7 @@ export function GeneralSettings() {
   const [farmName, setFarmName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [location, setLocation] = useState('');
+  const [slogan, setSlogan] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -28,6 +29,7 @@ export function GeneralSettings() {
       setFarmName(settings.farm_name);
       setOwnerName(settings.owner_name);
       setLocation(settings.location);
+      setSlogan(settings.slogan);
       setLogoPreview(settings.logo_url);
     }
   }, [settings]);
@@ -55,6 +57,7 @@ export function GeneralSettings() {
         farm_name: farmName,
         owner_name: ownerName,
         location,
+        slogan,
         logo_url: logoUrl,
       });
       setLogoFile(null);
@@ -146,6 +149,17 @@ export function GeneralSettings() {
               onChange={(e) => setLocation(e.target.value)}
               disabled={!isAdmin}
             />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="slogan">Farm Slogan</Label>
+            <Input
+              id="slogan"
+              value={slogan}
+              onChange={(e) => setSlogan(e.target.value)}
+              disabled={!isAdmin}
+              placeholder="e.g. Nurturing the Land, Feeding the Future"
+            />
+            <p className="text-xs text-muted-foreground">Appears on all exported reports as a tagline.</p>
           </div>
         </div>
 
