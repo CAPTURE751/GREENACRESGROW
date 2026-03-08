@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useFarm } from "@/contexts/FarmContext";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,24 +28,20 @@ export function FarmSwitcher() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [showNewFarmDialog, setShowNewFarmDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [farmToDelete, setFarmToDelete] = useState<{ id: string; name: string } | null>(null);
   const [newFarmName, setNewFarmName] = useState("");
   const [newFarmLocation, setNewFarmLocation] = useState("");
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleCreateFarm = async () => {
     if (!newFarmName.trim() || !user) return;
     setCreating(true);
-
     const { data, error } = await supabase
       .from('farms' as any)
-      .insert({
-        name: newFarmName.trim(),
-        location: newFarmLocation.trim(),
-        owner_id: user.id,
-      } as any)
-      .select()
-      .single();
-
+      .insert({ name: newFarmName.trim(), location: newFarmLocation.trim(), owner_id: user.id } as any)
+      .select().single();
     if (error) {
       toast({ variant: "destructive", title: "Error", description: error.message });
     } else if (data) {
@@ -58,48 +55,70 @@ export function FarmSwitcher() {
     setCreating(false);
   };
 
+  const handleDeleteFarm = async () => {
+    if (!farmToDelete) return;
+    if (farms.length <= 1) {
+      toast({ variant: "destructive", title: "Cannot delete", description: "You must have at least one farm." });
+      return;
+    }
+    setDeleting(true);
+    const { error } = await supabase.from('farms' as any).delete().eq('id', farmToDelete.id);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } else {
+      toast({ title: "Farm deleted", description: `${farmToDelete.name} has been deleted.` });
+      await refetchFarms();
+    }
+    setDeleting(false);
+    setShowDeleteDialog(false);
+    setFarmToDelete(null);
+  };
+
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between text-left font-normal"
-          >
+          <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between text-left font-normal">
             <span className="truncate">{activeFarm?.name || "Select farm"}</span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[220px] p-1" align="start">
+        <PopoverContent className="w-[240px] p-1" align="start">
           <div className="space-y-0.5">
             {farms.map((farm) => (
-              <button
-                key={farm.id}
-                onClick={() => {
-                  setActiveFarmId(farm.id);
-                  setOpen(false);
-                }}
-                className={cn(
-                  "flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm hover:bg-accent",
-                  activeFarm?.id === farm.id && "bg-accent"
+              <div key={farm.id} className="flex items-center group">
+                <button
+                  onClick={() => { setActiveFarmId(farm.id); setOpen(false); }}
+                  className={cn(
+                    "flex items-center gap-2 flex-1 rounded-md px-2 py-1.5 text-sm hover:bg-accent",
+                    activeFarm?.id === farm.id && "bg-accent"
+                  )}
+                >
+                  {activeFarm?.id === farm.id ? (
+                    <Check className="h-4 w-4 text-primary shrink-0" />
+                  ) : (
+                    <span className="w-4 shrink-0" />
+                  )}
+                  <span className="truncate">{farm.name}</span>
+                </button>
+                {farms.length > 1 && farm.owner_id === user?.id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFarmToDelete({ id: farm.id, name: farm.name });
+                      setShowDeleteDialog(true);
+                      setOpen(false);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 text-destructive mr-1 transition-opacity"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 )}
-              >
-                {activeFarm?.id === farm.id && (
-                  <Check className="h-4 w-4 text-primary" />
-                )}
-                <span className={cn(activeFarm?.id !== farm.id && "ml-6", "truncate")}>
-                  {farm.name}
-                </span>
-              </button>
+              </div>
             ))}
             <div className="border-t my-1" />
             <button
-              onClick={() => {
-                setOpen(false);
-                setShowNewFarmDialog(true);
-              }}
+              onClick={() => { setOpen(false); setShowNewFarmDialog(true); }}
               className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm hover:bg-accent text-muted-foreground"
             >
               <Plus className="h-4 w-4" />
@@ -109,6 +128,7 @@ export function FarmSwitcher() {
         </PopoverContent>
       </Popover>
 
+      {/* Create Farm Dialog */}
       <Dialog open={showNewFarmDialog} onOpenChange={setShowNewFarmDialog}>
         <DialogContent>
           <DialogHeader>
@@ -117,29 +137,35 @@ export function FarmSwitcher() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="farm-name">Farm Name</Label>
-              <Input
-                id="farm-name"
-                placeholder="e.g. Nyeri Highland Farm"
-                value={newFarmName}
-                onChange={(e) => setNewFarmName(e.target.value)}
-              />
+              <Input id="farm-name" placeholder="e.g. Nyeri Highland Farm" value={newFarmName} onChange={(e) => setNewFarmName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="farm-location">Location</Label>
-              <Input
-                id="farm-location"
-                placeholder="e.g. Nyeri, Kenya"
-                value={newFarmLocation}
-                onChange={(e) => setNewFarmLocation(e.target.value)}
-              />
+              <Input id="farm-location" placeholder="e.g. Nyeri, Kenya" value={newFarmLocation} onChange={(e) => setNewFarmLocation(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewFarmDialog(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setShowNewFarmDialog(false)}>Cancel</Button>
             <Button onClick={handleCreateFarm} disabled={creating || !newFarmName.trim()}>
               {creating ? "Creating..." : "Create Farm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Farm Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Farm</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong>{farmToDelete?.name}</strong>? This will permanently remove all data associated with this farm including crops, livestock, sales, purchases, and inventory. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteFarm} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete Farm"}
             </Button>
           </DialogFooter>
         </DialogContent>
