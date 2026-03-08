@@ -29,6 +29,7 @@ interface LivestockFormData {
 
 interface LivestockFormProps {
   onSubmit: (data: LivestockFormData) => void;
+  onCancel?: () => void;
   isLoading?: boolean;
   initialData?: Partial<LivestockFormData>;
 }
