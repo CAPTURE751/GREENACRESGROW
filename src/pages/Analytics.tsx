@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/currency";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   BarChart3,
   TrendingUp,
@@ -29,7 +30,10 @@ import {
   Pie,
   Cell,
   AreaChart,
-  Area
+  Area,
+  ReferenceLine,
+  Legend,
+  ComposedChart
 } from "recharts";
 
 const productivityData = [
@@ -93,6 +97,71 @@ const performanceMetrics = [
 export default function Analytics() {
   const [timeRange, setTimeRange] = useState<'month' | 'quarter' | 'year'>('month');
   const [selectedMetric, setSelectedMetric] = useState('productivity');
+
+  // Fetch real sales & purchases for break-even chart
+  const [salesData, setSalesData] = useState<any[]>([]);
+  const [purchasesData, setPurchasesData] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [{ data: sales }, { data: purchases }] = await Promise.all([
+        supabase.from('sales').select('total_amount, sale_date, product_type').order('sale_date'),
+        supabase.from('purchases').select('total_cost, purchase_date, category').order('purchase_date'),
+      ]);
+      setSalesData(sales || []);
+      setPurchasesData(purchases || []);
+    };
+    fetchData();
+  }, []);
+
+  // Build monthly break-even data
+  const breakEvenData = useMemo(() => {
+    const monthlyMap = new Map<string, { revenue: number; fixedCosts: number; variableCosts: number }>();
+
+    const opexKeys = ['permanent_labour', 'salaries', 'salary', 'machinery', 'equipment', 'maintenance',
+      'utilities', 'electricity', 'water', 'transport', 'insurance', 'administration', 'marketing',
+      'communication', 'land_costs', 'farm_supplies', 'loan_interest', 'bank_charges', 'depreciation', 'taxes'];
+
+    salesData.forEach((s: any) => {
+      const month = s.sale_date?.substring(0, 7);
+      if (!month) return;
+      if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, fixedCosts: 0, variableCosts: 0 });
+      monthlyMap.get(month)!.revenue += s.total_amount || 0;
+    });
+
+    purchasesData.forEach((p: any) => {
+      const month = p.purchase_date?.substring(0, 7);
+      if (!month) return;
+      if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, fixedCosts: 0, variableCosts: 0 });
+      const isFixed = opexKeys.some(k => (p.category || '').toLowerCase().includes(k));
+      if (isFixed) {
+        monthlyMap.get(month)!.fixedCosts += p.total_cost || 0;
+      } else {
+        monthlyMap.get(month)!.variableCosts += p.total_cost || 0;
+      }
+    });
+
+    // Calculate cumulative + break-even line
+    let cumRevenue = 0, cumFixed = 0, cumVariable = 0;
+    return Array.from(monthlyMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, d]) => {
+        cumRevenue += d.revenue;
+        cumFixed += d.fixedCosts;
+        cumVariable += d.variableCosts;
+        const cmRatio = cumRevenue > 0 ? (cumRevenue - cumVariable) / cumRevenue : 0;
+        const breakEvenRev = cmRatio > 0 ? cumFixed / cmRatio : cumFixed + cumVariable;
+        return {
+          month,
+          revenue: cumRevenue,
+          totalCosts: cumFixed + cumVariable,
+          breakEven: Math.round(breakEvenRev),
+        };
+      });
+  }, [salesData, purchasesData]);
+
+  const latestBE = breakEvenData.length > 0 ? breakEvenData[breakEvenData.length - 1] : null;
+  const isAboveBreakEven = latestBE ? latestBE.revenue >= latestBE.breakEven : false;
 
   const timeRanges = [
     { id: 'month', label: 'This Month' },
@@ -294,6 +363,78 @@ export default function Analytics() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Break-Even Analysis Chart */}
+        {breakEvenData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-farm-green" />
+                  Break-Even Analysis
+                </CardTitle>
+                <Badge className={isAboveBreakEven ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                  {isAboveBreakEven ? '✓ Above Break-Even' : '✗ Below Break-Even'}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Cumulative revenue vs costs with break-even threshold
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Cumulative Revenue</p>
+                  <p className="text-lg font-bold text-foreground">{formatKES(latestBE?.revenue || 0)}</p>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Break-Even Point</p>
+                  <p className="text-lg font-bold text-foreground">{formatKES(latestBE?.breakEven || 0)}</p>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-xs text-muted-foreground">{isAboveBreakEven ? 'Surplus' : 'Shortfall'}</p>
+                  <p className={`text-lg font-bold ${isAboveBreakEven ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatKES(Math.abs((latestBE?.revenue || 0) - (latestBE?.breakEven || 0)))}
+                  </p>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={350}>
+                <ComposedChart data={breakEvenData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value: number) => [formatKES(value), '']} />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="hsl(84 31% 44%)"
+                    fill="hsl(84 31% 44% / 0.3)"
+                    strokeWidth={2}
+                    name="Revenue"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="totalCosts"
+                    stroke="hsl(0 65% 50%)"
+                    fill="hsl(0 65% 50% / 0.15)"
+                    strokeWidth={2}
+                    name="Total Costs"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="breakEven"
+                    stroke="hsl(43 74% 50%)"
+                    strokeWidth={2}
+                    strokeDasharray="8 4"
+                    dot={false}
+                    name="Break-Even Line"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Key Insights */}
         <Card>
