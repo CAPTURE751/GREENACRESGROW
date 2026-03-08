@@ -317,6 +317,33 @@ export default function Analytics() {
                 {r.label}
               </Button>
             ))}
+            {timeRange === "custom" && (
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal", !customStart && "text-muted-foreground")}>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {customStart ? format(customStart, "dd/MM/yyyy") : "Start date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent mode="single" selected={customStart} onSelect={setCustomStart} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-muted-foreground text-sm">to</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal", !customEnd && "text-muted-foreground")}>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {customEnd ? format(customEnd, "dd/MM/yyyy") : "End date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent mode="single" selected={customEnd} onSelect={setCustomEnd} initialFocus className={cn("p-3 pointer-events-auto")} disabled={(date) => customStart ? date < customStart : false} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
             <Button
               size="sm"
               className="bg-farm-green hover:bg-farm-green/90"
