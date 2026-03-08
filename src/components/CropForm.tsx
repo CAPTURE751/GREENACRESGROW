@@ -41,6 +41,7 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
     notes: initialData?.notes || "",
     yield_quantity: initialData?.yield_quantity || undefined,
     yield_unit: initialData?.yield_unit || "",
+    acreage: initialData?.acreage || undefined,
     planting_date: initialData?.planting_date,
     harvest_date: initialData?.harvest_date,
   });
