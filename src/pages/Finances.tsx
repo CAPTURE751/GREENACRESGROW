@@ -291,14 +291,34 @@ export default function Finances() {
             {/* P&L Report Results */}
             {showPnL && pnlReport && (
               <div className="mt-6 space-y-6">
+                {/* === REPORT HEADER === */}
+                <div className="bg-farm-green/5 border border-farm-green/20 rounded-lg p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <img src={farmLogo} alt="JEFF TRICKS FARM LTD" className="h-14 w-14 object-contain" />
+                      <div>
+                        <h3 className="text-lg font-bold text-farm-green">JEFF TRICKS FARM LTD</h3>
+                        <p className="text-xs text-muted-foreground">Nyeri, Kenya</p>
+                        <p className="text-xs text-muted-foreground italic">"Nurturing the Land, Feeding the Future"</p>
+                      </div>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground space-y-0.5">
+                      <p>Date: {new Date().toLocaleDateString()}</p>
+                      <p>Time: {new Date().toLocaleTimeString()}</p>
+                      <p>Printed By: {printedByName}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Title + Export Controls */}
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-foreground">Report Results</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Profit & Loss Report</h3>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => exportPnLToCSV(pnlReport)}>
+                    <Button variant="outline" size="sm" onClick={() => exportPnLToCSV(pnlReport, printedByName)}>
                       <FileSpreadsheet className="h-4 w-4 mr-1" />
                       CSV
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => exportPnLToPDF(pnlReport)}>
+                    <Button variant="outline" size="sm" onClick={() => exportPnLToPDF(pnlReport, printedByName)}>
                       <Download className="h-4 w-4 mr-1" />
                       PDF
                     </Button>
@@ -402,9 +422,36 @@ export default function Finances() {
                   </div>
                 )}
 
-                <p className="text-xs text-muted-foreground text-right">
-                  Generated: {new Date(pnlReport.generated_at).toLocaleString()}
-                </p>
+                {/* === AUTO-GENERATED STAMP === */}
+                <div className="flex justify-center py-4">
+                  <div className="relative w-36 h-36">
+                    {/* Outer ring */}
+                    <div className="absolute inset-0 rounded-full border-[3px] border-farm-green/60" />
+                    {/* Inner ring */}
+                    <div className="absolute inset-2 rounded-full border-[2px] border-farm-green/40" />
+                    {/* Content */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-farm-green">
+                      <span className="text-[8px] font-bold tracking-wider">JEFF TRICKS FARM LTD</span>
+                      <Shield className="h-5 w-5 my-1 text-farm-green/70" />
+                      <span className="text-xs font-bold tracking-widest">VERIFIED</span>
+                      <span className="text-[8px] font-mono mt-1">{stampCode}</span>
+                      <span className="text-[7px] text-muted-foreground">{new Date().toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* === REPORT FOOTER === */}
+                <Separator />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div>
+                    <p className="font-semibold text-farm-green">JEFF TRICKS FARM LTD</p>
+                    <p className="italic">"Nurturing the Land, Feeding the Future"</p>
+                  </div>
+                  <div className="text-right">
+                    <p>Ref: {stampCode}</p>
+                    <p>Generated: {new Date(pnlReport.generated_at).toLocaleString()}</p>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
