@@ -25,6 +25,7 @@ interface CropFormData {
 
 interface CropFormProps {
   onSubmit: (data: CropFormData) => void;
+  onCancel?: () => void;
   isLoading?: boolean;
   initialData?: Partial<CropFormData>;
 }
