@@ -162,6 +162,8 @@ export default function Analytics() {
 
   const latestBE = breakEvenData.length > 0 ? breakEvenData[breakEvenData.length - 1] : null;
   const isAboveBreakEven = latestBE ? latestBE.revenue >= latestBE.breakEven : false;
+
+  const timeRanges = [
     { id: 'month', label: 'This Month' },
     { id: 'quarter', label: 'This Quarter' },
     { id: 'year', label: 'This Year' }
