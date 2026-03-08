@@ -445,7 +445,8 @@ export default function Finances() {
                   </div>
                 </div>
               </div>
-            )}
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
 
