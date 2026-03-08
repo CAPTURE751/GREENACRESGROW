@@ -25,8 +25,8 @@ import {
   X,
   Download,
   FileSpreadsheet,
-  Printer,
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
 import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
@@ -303,33 +303,6 @@ export default function Finances() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-foreground">Profit & Loss Report</h3>
                   <div className="flex gap-2 print:hidden">
-                    <Button variant="outline" size="sm" onClick={() => {
-                      const printContents = document.getElementById('pnl-report-preview');
-                      if (!printContents) return;
-                      const win = window.open('', '_blank');
-                      if (!win) return;
-                      win.document.write(`
-                        <html><head><title>P&L Report - JEFF TRICKS FARM LTD</title>
-                        <style>
-                          body { font-family: Arial, sans-serif; padding: 20px; color: #1e1e1e; }
-                          table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-                          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
-                          th { background-color: #4c6f3c; color: white; }
-                          h3 { margin: 0; } h4 { margin: 8px 0 4px; }
-                          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-                          .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0; }
-                          .summary-card { padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
-                          .footer { border-top: 1px solid #4c6f3c; padding-top: 8px; margin-top: 24px; font-size: 11px; color: #888; }
-                        </style></head><body>
-                        ${printContents.innerHTML}
-                        </body></html>
-                      `);
-                      win.document.close();
-                      win.print();
-                    }}>
-                      <Printer className="h-4 w-4 mr-1" />
-                      Print
-                    </Button>
                     <Button variant="outline" size="sm" onClick={() => exportPnLToCSV(pnlReport, printedByName)}>
                       <FileSpreadsheet className="h-4 w-4 mr-1" />
                       CSV
@@ -382,7 +355,28 @@ export default function Finances() {
                   </div>
                 </div>
 
-                {/* Monthly Trends */}
+                {/* Revenue vs Costs Chart */}
+                {pnlReport.monthly_trends.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Revenue vs Costs</h4>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={pnlReport.monthly_trends} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                          <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                          <Tooltip formatter={(value: number) => formatKES(value)} />
+                          <Legend />
+                          <Bar dataKey="revenue" name="Revenue" fill="#16a34a" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="costs" name="Costs" fill="#dc2626" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="profit" name="Profit" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {/* Monthly Trends Table */}
                 {pnlReport.monthly_trends.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-foreground mb-3">Monthly Trends</h4>
