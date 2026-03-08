@@ -443,7 +443,7 @@ export default function Finances() {
                     <p>Generated: {new Date(pnlReport.generated_at).toLocaleString()}</p>
                   </div>
                 </div>
-              </div>
+              </div>}
               </DialogContent>
             </Dialog>
           </CardContent>
