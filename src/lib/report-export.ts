@@ -325,5 +325,5 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
     doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
   }
 
-  doc.save(`JEFF TRICKS FARM LTD PNL-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+  doc.save(farmFileName('PNL-report', 'pdf'));
 }
