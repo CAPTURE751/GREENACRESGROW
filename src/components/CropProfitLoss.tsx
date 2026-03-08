@@ -232,12 +232,12 @@ export function CropProfitLoss() {
                           <TableCell>{sale.buyer}</TableCell>
                           <TableCell>{sale.quantity} {sale.unit}</TableCell>
                           <TableCell>{formatKES(sale.unit_price)}</TableCell>
-                          <TableCell className="text-right font-medium text-green-600">{formatKES(sale.total_amount)}</TableCell>
+                          <TableCell className="text-right font-medium text-blue-600">{formatKES(sale.total_amount)}</TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="font-bold border-t-2">
                         <TableCell colSpan={4}>Total Revenue</TableCell>
-                        <TableCell className="text-right text-green-600">{formatKES(data.revenue)}</TableCell>
+                        <TableCell className="text-right text-blue-600">{formatKES(data.revenue)}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
