@@ -20,6 +20,7 @@ interface CropFormData {
   yield_quantity?: number;
   yield_unit?: string;
   season?: string;
+  acreage?: number;
   notes?: string;
 }
 
@@ -40,6 +41,7 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
     notes: initialData?.notes || "",
     yield_quantity: initialData?.yield_quantity || undefined,
     yield_unit: initialData?.yield_unit || "",
+    acreage: initialData?.acreage || undefined,
     planting_date: initialData?.planting_date,
     harvest_date: initialData?.harvest_date,
   });
@@ -185,17 +187,31 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="yield_quantity">Yield Quantity</Label>
-        <Input
-          id="yield_quantity"
-          type="number"
-          value={formData.yield_quantity || ""}
-          onChange={(e) => handleInputChange("yield_quantity", e.target.value ? Number(e.target.value) : undefined)}
-          placeholder="Expected or actual yield"
-          min="0"
-          step="0.1"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="acreage">Acreage (Acres) </Label>
+          <Input
+            id="acreage"
+            type="number"
+            value={formData.acreage || ""}
+            onChange={(e) => handleInputChange("acreage", e.target.value ? Number(e.target.value) : undefined)}
+            placeholder="e.g., 5.5"
+            min="0"
+            step="0.1"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="yield_quantity">Yield Quantity</Label>
+          <Input
+            id="yield_quantity"
+            type="number"
+            value={formData.yield_quantity || ""}
+            onChange={(e) => handleInputChange("yield_quantity", e.target.value ? Number(e.target.value) : undefined)}
+            placeholder="Expected or actual yield"
+            min="0"
+            step="0.1"
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
