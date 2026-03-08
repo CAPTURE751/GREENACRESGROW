@@ -115,21 +115,18 @@ export function useGenerateFarmReport() {
       report_type,
       start_date,
       end_date,
-      include_charts,
     }: {
       report_type: string;
       start_date?: string;
       end_date?: string;
-      include_charts?: boolean;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       const { data, error } = await supabase.functions.invoke('generate-farm-report', {
         body: {
-          report_type,
-          start_date,
-          end_date,
-          include_charts: include_charts || false,
+          reportType: report_type,
+          periodStart: start_date,
+          periodEnd: end_date,
           user_id: user?.id,
         }
       });
@@ -137,10 +134,10 @@ export function useGenerateFarmReport() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Report Generated",
-        description: "Farm report has been generated successfully.",
+        description: data?.message || "Farm report has been generated successfully. View it in the Reports page.",
       });
     },
     onError: (error) => {
