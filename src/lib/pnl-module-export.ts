@@ -128,11 +128,26 @@ export async function exportModulePnLToPDF(
     ],
     theme: "grid",
     headStyles: { fillColor: hc },
-    styles: { fontSize: 9 },
+    styles: { fontSize: 10 },
     didParseCell: (data: any) => {
-      if (data.row.index === 2 && data.section === "body") {
+      if (data.section === "body" && data.column.index === 1) {
+        if (data.row.index === 0) {
+          data.cell.styles.textColor = [40, 120, 40];
+          data.cell.styles.fontStyle = "bold";
+        }
+        if (data.row.index === 1) {
+          data.cell.styles.textColor = [180, 30, 30];
+          data.cell.styles.fontStyle = "bold";
+        }
+        if (data.row.index === 2) {
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.textColor = totals.netProfit >= 0 ? [40, 120, 40] : [180, 30, 30];
+          data.cell.styles.fillColor = totals.netProfit >= 0 ? [230, 245, 230] : [245, 230, 230];
+        }
+      }
+      if (data.section === "body" && data.row.index === 2 && data.column.index === 0) {
         data.cell.styles.fontStyle = "bold";
-        data.cell.styles.textColor = totals.netProfit >= 0 ? [40, 120, 40] : [180, 30, 30];
+        data.cell.styles.fillColor = totals.netProfit >= 0 ? [230, 245, 230] : [245, 230, 230];
       }
     },
   });
