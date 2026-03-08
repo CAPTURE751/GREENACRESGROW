@@ -1,5 +1,7 @@
 
 import { useState, useMemo } from "react";
+import { exportAnalyticsPDF } from "@/lib/analytics-export";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -286,7 +288,7 @@ export default function Analytics() {
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Analytics Dashboard</h1>
             <p className="text-muted-foreground mt-1">Real-time insights from your farm data</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {timeRanges.map((r) => (
               <Button
                 key={r.id}
@@ -298,6 +300,42 @@ export default function Analytics() {
                 {r.label}
               </Button>
             ))}
+            <Button
+              size="sm"
+              className="bg-farm-green hover:bg-farm-green/90"
+              onClick={async () => {
+                try {
+                  const beData = breakEvenData.length > 0 ? {
+                    isAbove: isAboveBreakEven,
+                    revenue: latestBE?.revenue || 0,
+                    breakEvenPoint: latestBE?.breakEven || 0,
+                    difference: Math.abs((latestBE?.revenue || 0) - (latestBE?.breakEven || 0)),
+                  } : null;
+                  await exportAnalyticsPDF({
+                    totals,
+                    monthlyFinancials,
+                    revenueByType,
+                    costsByCategory,
+                    topProducts,
+                    inventoryStats,
+                    breakEven: beData,
+                    farmCounts: {
+                      crops: crops.length,
+                      livestock: livestock.length,
+                      sales: filteredSales.length,
+                      purchases: filteredPurchases.length,
+                    },
+                    timeRange: timeRange === "6m" ? "Last 6 Months" : timeRange === "12m" ? "Last 12 Months" : "All Time",
+                  });
+                  toast.success("Analytics PDF downloaded successfully");
+                } catch (e: any) {
+                  toast.error("Failed to export PDF: " + e.message);
+                }
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
           </div>
         </div>
 
