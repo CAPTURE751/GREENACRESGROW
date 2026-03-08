@@ -278,7 +278,7 @@ export default function Finances() {
 
             {/* P&L Report Results */}
             {showPnL && pnlReport && (
-              <div className="mt-6 space-y-6">
+              <div id="pnl-report-preview" className="mt-6 space-y-6 print:mt-0">
                 {/* === REPORT HEADER === */}
                 <div className="bg-farm-green/5 border border-farm-green/20 rounded-lg p-4">
                   <div className="flex items-start justify-between">
