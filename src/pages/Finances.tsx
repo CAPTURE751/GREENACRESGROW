@@ -120,9 +120,12 @@ export default function Finances() {
     }))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const filteredTransactions = allTransactions.filter(t => 
-    filter === 'all' || t.type === filter
-  );
+  const filteredTransactions = allTransactions.filter(t => {
+    if (filter !== 'all' && t.type !== filter) return false;
+    if (txnStartDate && new Date(t.date) < new Date(txnStartDate)) return false;
+    if (txnEndDate && new Date(t.date) > new Date(txnEndDate)) return false;
+    return true;
+  });
 
   const totalIncome = salesAnalytics?.totalRevenue || 0;
   const totalExpenses = purchaseAnalytics?.totalExpenses || 0;
