@@ -151,9 +151,10 @@ export function FarmSwitcher() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setFarmToEdit({ id: farm.id, name: farm.name, location: farm.location });
+                        setFarmToEdit({ id: farm.id, name: farm.name, location: farm.location, logo_url: farm.logo_url });
                         setEditName(farm.name);
                         setEditLocation(farm.location);
+                        setEditLogoUrl(farm.logo_url);
                         setShowEditDialog(true);
                         setOpen(false);
                       }}
