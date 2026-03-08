@@ -29,11 +29,16 @@ export function FarmSwitcher() {
   const [open, setOpen] = useState(false);
   const [showNewFarmDialog, setShowNewFarmDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [farmToDelete, setFarmToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [farmToEdit, setFarmToEdit] = useState<{ id: string; name: string; location: string } | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editLocation, setEditLocation] = useState("");
   const [newFarmName, setNewFarmName] = useState("");
   const [newFarmLocation, setNewFarmLocation] = useState("");
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleCreateFarm = async () => {
     if (!newFarmName.trim() || !user) return;
