@@ -23,7 +23,10 @@ import {
   FileBarChart,
   BarChart3,
   X,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
+import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
 import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
