@@ -311,6 +311,7 @@ export default function Finances() {
                     <Button variant="outline" size="sm" onClick={() => exportPnLToPDF(pnlReport, printedByName)}>
                       <Download className="h-4 w-4 mr-1" />
                       PDF
+                    </Button>
                   </div>
                 </div>
 
