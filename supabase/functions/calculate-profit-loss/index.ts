@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate via JWT
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), {
@@ -25,23 +24,36 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+    // Authenticate user
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized', success: false }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { start_date, end_date, category } = await req.json();
+
+    // Validate type param
+    if (start_date && isNaN(Date.parse(start_date))) {
+      return new Response(JSON.stringify({ error: 'Invalid start_date format', success: false }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (end_date && isNaN(Date.parse(end_date))) {
+      return new Response(JSON.stringify({ error: 'Invalid end_date format', success: false }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     console.log(`Calculating P&L from ${start_date} to ${end_date}${category ? ` for category: ${category}` : ''} by user ${userId}`);
 
@@ -49,7 +61,6 @@ serve(async (req) => {
     let salesQuery = supabase
       .from('sales')
       .select('total_amount, unit_price, quantity, product_type, sale_date, payment_status');
-    
     if (category) salesQuery = salesQuery.eq('product_type', category);
     if (start_date) salesQuery = salesQuery.gte('sale_date', start_date);
     if (end_date) salesQuery = salesQuery.lte('sale_date', end_date);
@@ -60,7 +71,6 @@ serve(async (req) => {
     let purchasesQuery = supabase
       .from('purchases')
       .select('total_cost, unit_cost, quantity, category, purchase_date, payment_status');
-    
     if (category) purchasesQuery = purchasesQuery.eq('category', category);
     if (start_date) purchasesQuery = purchasesQuery.gte('purchase_date', start_date);
     if (end_date) purchasesQuery = purchasesQuery.lte('purchase_date', end_date);
@@ -83,7 +93,6 @@ serve(async (req) => {
 
     // Monthly trends
     const monthlyData = new Map();
-    
     sales?.forEach(sale => {
       const month = new Date(sale.sale_date).toISOString().substring(0, 7);
       if (!monthlyData.has(month)) monthlyData.set(month, { revenue: 0, costs: 0, sales_count: 0, purchases_count: 0 });
@@ -91,7 +100,6 @@ serve(async (req) => {
       d.revenue += sale.total_amount || 0;
       d.sales_count += 1;
     });
-
     purchases?.forEach(purchase => {
       const month = new Date(purchase.purchase_date).toISOString().substring(0, 7);
       if (!monthlyData.has(month)) monthlyData.set(month, { revenue: 0, costs: 0, sales_count: 0, purchases_count: 0 });
@@ -119,27 +127,48 @@ serve(async (req) => {
       .map(([category, p]) => ({ category, revenue: p.revenue, quantity: p.quantity, transactions: p.transactions, avg_transaction_value: p.transactions > 0 ? p.revenue / p.transactions : 0 }))
       .sort((a, b) => b.revenue - a.revenue);
 
+    const reportData = {
+      summary: {
+        period: { start_date: start_date || 'All time', end_date: end_date || 'Present' },
+        category: category || 'All Categories',
+        total_revenue: totalRevenue,
+        paid_revenue: paidRevenue,
+        total_costs: totalCosts,
+        paid_costs: paidCosts,
+        gross_profit: grossProfit,
+        net_profit: netProfit,
+        profit_margin_percent: profitMargin,
+        total_sales_transactions: sales?.length || 0,
+        total_purchase_transactions: purchases?.length || 0,
+      },
+      monthly_trends: monthlyTrends,
+      category_performance: topCategories,
+      generated_at: new Date().toISOString(),
+      generated_by: userId,
+    };
+
+    // Persist the generated report in the reports table
+    const { error: insertError } = await supabase
+      .from('reports')
+      .insert({
+        title: `P&L Report - ${category || 'All Categories'}`,
+        report_type: 'profit_loss',
+        content: reportData,
+        period_start: start_date || null,
+        period_end: end_date || null,
+        created_by: userId,
+        status: 'generated',
+      });
+
+    if (insertError) {
+      console.error('Failed to persist report:', insertError);
+      // Don't fail the request, just log it
+    }
+
     return new Response(JSON.stringify({
       success: true,
-      profit_loss_report: {
-        summary: {
-          period: { start_date, end_date },
-          category: category || 'All Categories',
-          total_revenue: totalRevenue,
-          paid_revenue: paidRevenue,
-          total_costs: totalCosts,
-          paid_costs: paidCosts,
-          gross_profit: grossProfit,
-          net_profit: netProfit,
-          profit_margin_percent: profitMargin,
-          total_sales_transactions: sales?.length || 0,
-          total_purchase_transactions: purchases?.length || 0,
-        },
-        monthly_trends: monthlyTrends,
-        category_performance: topCategories,
-        generated_at: new Date().toISOString(),
-        generated_by: userId,
-      },
+      data: reportData,
+      profit_loss_report: reportData,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
