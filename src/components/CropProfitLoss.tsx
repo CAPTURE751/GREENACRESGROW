@@ -151,10 +151,10 @@ export function CropProfitLoss() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Costs</p>
-                <p className="text-2xl font-bold text-orange-600 mt-1">{formatKES(totals.totalCosts)}</p>
+                <p className="text-2xl font-bold text-gray-700 mt-1">{formatKES(totals.totalCosts)}</p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-orange-50 flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-orange-600" />
+              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <TrendingDown className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
