@@ -136,14 +136,16 @@ export default function Analytics() {
       if (endDate) filtered = filtered.filter((s) => s.sale_date <= endDate);
       return filtered;
     },
-    [sales, cutoffDate]
+    [sales, cutoffDate, endDate]
   );
   const filteredPurchases = useMemo(
-    () =>
-      cutoffDate
-        ? purchases.filter((p) => p.purchase_date >= cutoffDate)
-        : purchases,
-    [purchases, cutoffDate]
+    () => {
+      let filtered = purchases;
+      if (cutoffDate) filtered = filtered.filter((p) => p.purchase_date >= cutoffDate);
+      if (endDate) filtered = filtered.filter((p) => p.purchase_date <= endDate);
+      return filtered;
+    },
+    [purchases, cutoffDate, endDate]
   );
 
   // ── KPI Summaries ──
