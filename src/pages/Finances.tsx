@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { formatKES } from "@/lib/currency";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useProfitLossCalculation } from "@/hooks/useEdgeFunctions";
 import { TransactionForm } from "@/components/TransactionForm";
 import { 
   DollarSign,
@@ -17,19 +19,77 @@ import {
   CreditCard,
   Calendar,
   Filter,
-  Loader2
+  Loader2,
+  FileBarChart,
+  BarChart3,
+  X,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
+interface PnLReport {
+  summary: {
+    period: { start_date: string; end_date: string };
+    category: string;
+    total_revenue: number;
+    paid_revenue: number;
+    total_costs: number;
+    paid_costs: number;
+    gross_profit: number;
+    net_profit: number;
+    profit_margin_percent: number;
+    total_sales_transactions: number;
+    total_purchase_transactions: number;
+  };
+  monthly_trends: Array<{
+    month: string;
+    revenue: number;
+    costs: number;
+    profit: number;
+    sales_count: number;
+    purchases_count: number;
+  }>;
+  category_performance: Array<{
+    category: string;
+    revenue: number;
+    quantity: number;
+    transactions: number;
+    avg_transaction_value: number;
+  }>;
+  generated_at: string;
+}
 
 export default function Finances() {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showPnL, setShowPnL] = useState(false);
+  const [pnlReport, setPnlReport] = useState<PnLReport | null>(null);
+  const [pnlStartDate, setPnlStartDate] = useState('');
+  const [pnlEndDate, setPnlEndDate] = useState('');
   
   const { sales, analytics: salesAnalytics, isLoading: salesLoading } = useSales();
   const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading } = usePurchases();
+  const profitLossMutation = useProfitLossCalculation();
 
   const isLoading = salesLoading || purchasesLoading;
+
+  const handleGeneratePnL = () => {
+    profitLossMutation.mutate(
+      {
+        start_date: pnlStartDate || undefined,
+        end_date: pnlEndDate || undefined,
+      },
+      {
+        onSuccess: (data) => {
+          if (data?.profit_loss_report) {
+            setPnlReport(data.profit_loss_report);
+            setShowPnL(true);
+          }
+        },
+      }
+    );
+  };
 
   // Combine sales and purchases into transactions
   const allTransactions = [
@@ -84,23 +144,25 @@ export default function Finances() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Financial Management</h1>
-            <p className="text-gray-600 mt-1">Track income, expenses, and profitability</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Financial Management</h1>
+            <p className="text-muted-foreground mt-1">Track income, expenses, and profitability</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-farm-green hover:bg-farm-green/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Transaction
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add New Transaction</DialogTitle>
-              </DialogHeader>
-              <TransactionForm onClose={() => setIsDialogOpen(false)} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-farm-green hover:bg-farm-green/90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Transaction
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Add New Transaction</DialogTitle>
+                </DialogHeader>
+                <TransactionForm onClose={() => setIsDialogOpen(false)} />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Financial Summary */}
@@ -157,6 +219,160 @@ export default function Finances() {
             </CardContent>
           </Card>
         </div>
+
+        {/* P&L Report Generator */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileBarChart className="h-5 w-5" />
+              Profit & Loss Report
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
+              <div className="space-y-2 flex-1">
+                <Label htmlFor="pnl-start">Start Date</Label>
+                <Input
+                  id="pnl-start"
+                  type="date"
+                  value={pnlStartDate}
+                  onChange={(e) => setPnlStartDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2 flex-1">
+                <Label htmlFor="pnl-end">End Date</Label>
+                <Input
+                  id="pnl-end"
+                  type="date"
+                  value={pnlEndDate}
+                  onChange={(e) => setPnlEndDate(e.target.value)}
+                />
+              </div>
+              <Button
+                onClick={handleGeneratePnL}
+                disabled={profitLossMutation.isPending}
+                className="bg-farm-green hover:bg-farm-green/90"
+              >
+                {profitLossMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                )}
+                Generate Report
+              </Button>
+            </div>
+
+            {/* P&L Report Results */}
+            {showPnL && pnlReport && (
+              <div className="mt-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-foreground">Report Results</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowPnL(false)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <Separator />
+
+                {/* Summary Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+                    <p className="text-xs text-muted-foreground font-medium">Total Revenue</p>
+                    <p className="text-lg font-bold text-green-700">{formatKES(pnlReport.summary.total_revenue)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Paid: {formatKES(pnlReport.summary.paid_revenue)}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                    <p className="text-xs text-muted-foreground font-medium">Total Costs</p>
+                    <p className="text-lg font-bold text-red-700">{formatKES(pnlReport.summary.total_costs)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Paid: {formatKES(pnlReport.summary.paid_costs)}
+                    </p>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${pnlReport.summary.gross_profit >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                    <p className="text-xs text-muted-foreground font-medium">Gross Profit</p>
+                    <p className={`text-lg font-bold ${pnlReport.summary.gross_profit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                      {formatKES(pnlReport.summary.gross_profit)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Margin: {pnlReport.summary.profit_margin_percent.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${pnlReport.summary.net_profit >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
+                    <p className="text-xs text-muted-foreground font-medium">Net Profit</p>
+                    <p className={`text-lg font-bold ${pnlReport.summary.net_profit >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
+                      {formatKES(pnlReport.summary.net_profit)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {pnlReport.summary.total_sales_transactions} sales · {pnlReport.summary.total_purchase_transactions} purchases
+                    </p>
+                  </div>
+                </div>
+
+                {/* Monthly Trends */}
+                {pnlReport.monthly_trends.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Monthly Trends</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Month</th>
+                            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Revenue</th>
+                            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Costs</th>
+                            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Profit</th>
+                            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Txns</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pnlReport.monthly_trends.map((trend) => (
+                            <tr key={trend.month} className="border-b last:border-0 hover:bg-muted/50">
+                              <td className="py-2 px-3 font-medium">{trend.month}</td>
+                              <td className="py-2 px-3 text-right text-green-600">{formatKES(trend.revenue)}</td>
+                              <td className="py-2 px-3 text-right text-red-600">{formatKES(trend.costs)}</td>
+                              <td className={`py-2 px-3 text-right font-semibold ${trend.profit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                {formatKES(trend.profit)}
+                              </td>
+                              <td className="py-2 px-3 text-right text-muted-foreground">
+                                {trend.sales_count + trend.purchases_count}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Category Performance */}
+                {pnlReport.category_performance.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Category Performance</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {pnlReport.category_performance.map((cat) => (
+                        <div key={cat.category} className="p-3 rounded-lg border bg-muted/30">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium capitalize">{cat.category}</span>
+                            <Badge variant="secondary">{cat.transactions} sales</Badge>
+                          </div>
+                          <p className="text-lg font-bold text-green-600">{formatKES(cat.revenue)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Avg: {formatKES(cat.avg_transaction_value)} per transaction
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground text-right">
+                  Generated: {new Date(pnlReport.generated_at).toLocaleString()}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Transaction Filters */}
         <div className="flex flex-wrap gap-2">
