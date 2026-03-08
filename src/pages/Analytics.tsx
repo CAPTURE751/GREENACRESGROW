@@ -440,6 +440,39 @@ export default function Analytics() {
             )}
           </CardContent>
         </Card>
+        {/* Monthly Profit Margin Trend */}
+        {monthlyFinancials.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Monthly Profit Margin Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={monthlyFinancials.map((m) => ({
+                  ...m,
+                  margin: m.revenue > 0 ? ((m.profit / m.revenue) * 100) : 0,
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis yAxisId="left" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <YAxis yAxisId="right" orientation="right" tickFormatter={(v) => `${v.toFixed(0)}%`} />
+                  <Tooltip
+                    formatter={(value: number, name: string) => {
+                      if (name === "Margin") return [`${value.toFixed(1)}%`, name];
+                      return [formatKES(value), name];
+                    }}
+                  />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="profit" name="Profit/Loss" fill="hsl(142 50% 45%)" radius={[4, 4, 0, 0]} />
+                  <Line yAxisId="right" type="monotone" dataKey="margin" name="Margin" stroke="hsl(210 65% 50%)" strokeWidth={3} dot={{ r: 5, fill: "hsl(210 65% 50%)" }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Pie Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
