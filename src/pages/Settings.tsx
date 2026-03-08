@@ -78,6 +78,8 @@ export default function Settings() {
 
             {activeTab === 'notifications' && <NotificationSettings />}
 
+            {activeTab === 'security' && <SecuritySettings />}
+
             {activeTab === 'backup' && (
               <Card>
                 <CardHeader>
