@@ -30,7 +30,10 @@ import {
   Pie,
   Cell,
   AreaChart,
-  Area
+  Area,
+  ReferenceLine,
+  Legend,
+  ComposedChart
 } from "recharts";
 
 const productivityData = [
