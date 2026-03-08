@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import farmLogo from "@/assets/farm-logo.png";
-import { Shield } from "lucide-react";
+
 
 interface PnLReport {
   summary: {
