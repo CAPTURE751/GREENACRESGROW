@@ -31,7 +31,7 @@ export function useFarmSettings() {
   });
 
   const updateSettings = useMutation({
-    mutationFn: async (updates: Partial<Pick<FarmSettings, 'farm_name' | 'owner_name' | 'location' | 'logo_url'>>) => {
+    mutationFn: async (updates: Partial<Pick<FarmSettings, 'farm_name' | 'owner_name' | 'location' | 'slogan' | 'logo_url'>>) => {
       const { data, error } = await supabase
         .from('farm_settings' as any)
         .update({ ...updates, updated_at: new Date().toISOString() } as any)

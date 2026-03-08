@@ -150,7 +150,17 @@ export function GeneralSettings() {
               disabled={!isAdmin}
             />
           </div>
-        </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="slogan">Farm Slogan</Label>
+            <Input
+              id="slogan"
+              value={slogan}
+              onChange={(e) => setSlogan(e.target.value)}
+              disabled={!isAdmin}
+              placeholder="e.g. Nurturing the Land, Feeding the Future"
+            />
+            <p className="text-xs text-muted-foreground">Appears on all exported reports as a tagline.</p>
+          </div>
 
         {isAdmin && (
           <Button onClick={handleSave} disabled={saving} className="bg-farm-green hover:bg-farm-green/90">
