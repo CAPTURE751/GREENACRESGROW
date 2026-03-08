@@ -192,17 +192,17 @@ export function CropProfitLoss() {
           const margin = data.revenue > 0 ? (profit / data.revenue) * 100 : 0;
 
           return (
-            <Card key={cropName}>
+            <Card key={cropName} className={`shadow-sm border-t-4 ${profit >= 0 ? 'border-t-green-500' : 'border-t-red-500'}`}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    🌾 {cropName}
-                    <Badge variant={profit >= 0 ? "default" : "destructive"} className={profit >= 0 ? "bg-green-600" : ""}>
+                  <CardTitle className="text-lg flex items-center gap-3">
+                    {cropName}
+                    <Badge variant={profit >= 0 ? "default" : "destructive"} className={profit >= 0 ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}>
                       {profit >= 0 ? "Profitable" : "Loss"}
                     </Badge>
                   </CardTitle>
                   <div className="text-right">
-                    <p className={`text-lg font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-xl font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatKES(profit)}
                     </p>
                     <p className="text-xs text-muted-foreground">Margin: {margin.toFixed(1)}%</p>

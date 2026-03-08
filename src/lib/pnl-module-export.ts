@@ -146,15 +146,19 @@ export async function exportModulePnLToPDF(
     const margin = data.revenue > 0 ? (profit / data.revenue) * 100 : 0;
 
     checkPage(30);
-    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...hc);
-    doc.text(`${sectionNum}. ${icon} ${productName}`, 14, y); y += 4;
+    doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(...hc);
+    doc.text(`${sectionNum}. ${productName}`, 14, y); y += 5;
 
-    // Status badge
-    const statusText = profit >= 0 ? "✅ PROFITABLE" : "❌ LOSS-MAKING";
+    // Status line with color coding
+    const statusText = profit >= 0 ? "PROFITABLE" : "LOSS-MAKING";
     const statusColor: [number, number, number] = profit >= 0 ? [40, 120, 40] : [180, 30, 30];
-    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...statusColor);
-    doc.text(`${statusText}  |  Net: ${formatKES(profit)}  |  Margin: ${margin.toFixed(1)}%`, 14, y);
-    y += 8;
+    
+    // Draw colored status bar
+    doc.setFillColor(...statusColor);
+    doc.roundedRect(14, y - 2, pw - 28, 10, 2, 2, "F");
+    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+    doc.text(`${statusText}  |  Net: ${formatKES(profit)}  |  Margin: ${margin.toFixed(1)}%`, 18, y + 4);
+    y += 14;
 
     // Sales table
     if (data.salesDetails.length > 0) {
