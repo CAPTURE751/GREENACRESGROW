@@ -6,7 +6,7 @@ import { getFarmSettings } from "./farm-settings-cache";
 
 const DEFAULT_FARM_NAME = "JEFF TRICKS FARM LTD";
 const DEFAULT_LOCATION = "Nyeri, Kenya";
-const FARM_SLOGAN = "Nurturing the Land, Feeding the Future";
+const DEFAULT_SLOGAN = "Nurturing the Land, Feeding the Future";
 
 /** Generate a standardized filename with farm prefix */
 export async function farmFileName(docName: string, ext: string): Promise<string> {
