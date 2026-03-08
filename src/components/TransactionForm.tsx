@@ -124,10 +124,26 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  {/* Crop Sales */}
                   <SelectItem value="crop">Crop</SelectItem>
+                  <SelectItem value="maize">Maize</SelectItem>
+                  <SelectItem value="beans">Beans</SelectItem>
+                  <SelectItem value="onion">Onion</SelectItem>
+                  <SelectItem value="vegetable">Vegetable</SelectItem>
+                  <SelectItem value="fruit">Fruit</SelectItem>
+                  {/* Livestock Income */}
                   <SelectItem value="livestock">Livestock</SelectItem>
+                  <SelectItem value="milk">Milk</SelectItem>
+                  <SelectItem value="eggs">Eggs</SelectItem>
+                  <SelectItem value="meat">Meat</SelectItem>
+                  {/* Value Added */}
+                  <SelectItem value="honey">Honey</SelectItem>
+                  <SelectItem value="seeds">Seeds</SelectItem>
+                  <SelectItem value="processed">Processed Products</SelectItem>
+                  {/* Other */}
                   <SelectItem value="dairy">Dairy</SelectItem>
                   <SelectItem value="poultry">Poultry</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
