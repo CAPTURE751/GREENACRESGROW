@@ -20,6 +20,7 @@ interface CropFormData {
   yield_quantity?: number;
   yield_unit?: string;
   season?: string;
+  acreage?: number;
   notes?: string;
 }
 
