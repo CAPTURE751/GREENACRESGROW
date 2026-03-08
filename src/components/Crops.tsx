@@ -264,7 +264,7 @@ export function Crops() {
                 <DialogHeader>
                   <DialogTitle>Add New Crop</DialogTitle>
                 </DialogHeader>
-                <CropForm onSubmit={handleCreateCrop} isLoading={isCreating} />
+                <CropForm onSubmit={handleCreateCrop} onCancel={() => setIsDialogOpen(false)} isLoading={isCreating} />
               </DialogContent>
             </Dialog>
           </CardContent>
