@@ -117,17 +117,25 @@ export default function Analytics() {
 
   // ── Time filter helper ──
   const cutoffDate = useMemo(() => {
+    if (timeRange === "custom") return customStart ? customStart.toISOString().substring(0, 10) : null;
     if (timeRange === "all") return null;
     const d = new Date();
     d.setMonth(d.getMonth() - (timeRange === "6m" ? 6 : 12));
     return d.toISOString().substring(0, 10);
-  }, [timeRange]);
+  }, [timeRange, customStart]);
+
+  const endDate = useMemo(() => {
+    if (timeRange === "custom" && customEnd) return customEnd.toISOString().substring(0, 10);
+    return null;
+  }, [timeRange, customEnd]);
 
   const filteredSales = useMemo(
-    () =>
-      cutoffDate
-        ? sales.filter((s) => s.sale_date >= cutoffDate)
-        : sales,
+    () => {
+      let filtered = sales;
+      if (cutoffDate) filtered = filtered.filter((s) => s.sale_date >= cutoffDate);
+      if (endDate) filtered = filtered.filter((s) => s.sale_date <= endDate);
+      return filtered;
+    },
     [sales, cutoffDate]
   );
   const filteredPurchases = useMemo(
