@@ -205,7 +205,7 @@ export default function Reports() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = farmFileName('Farm-Overview-Report', 'csv');
+    a.download = await farmFileName('Farm-Overview-Report', 'csv');
     a.click();
     URL.revokeObjectURL(url);
   };
