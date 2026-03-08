@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatKES } from "@/lib/currency";
@@ -19,50 +20,71 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useCrops } from "@/hooks/useCrops";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useSales } from "@/hooks/useSales";
+import { usePurchases } from "@/hooks/usePurchases";
 import { useInventory } from "@/hooks/useInventory";
 import { useInventoryAlerts, useGenerateFarmReport, useProfitLossCalculation } from "@/hooks/useEdgeFunctions";
+import { format, parseISO } from "date-fns";
 
-// Mock data for charts
-const revenueData = [
-  { month: 'Jan', revenue: 4000, expenses: 2400 },
-  { month: 'Feb', revenue: 3000, expenses: 1398 },
-  { month: 'Mar', revenue: 5000, expenses: 2800 },
-  { month: 'Apr', revenue: 2780, expenses: 3908 },
-  { month: 'May', revenue: 1890, expenses: 4800 },
-  { month: 'Jun', revenue: 6390, expenses: 3800 },
-];
-
-const cropYieldData = [
-  { crop: 'Corn', yield: 85 },
-  { crop: 'Wheat', yield: 70 },
-  { crop: 'Soybeans', yield: 60 },
-  { crop: 'Rice', yield: 90 },
-];
-
-const livestockData = [
-  { name: 'Cattle', value: 45, color: '#8B4513' },
-  { name: 'Pigs', value: 30, color: '#D2691E' },
-  { name: 'Chickens', value: 150, color: '#DAA520' },
-  { name: 'Sheep', value: 25, color: '#556B2F' },
-];
+const LIVESTOCK_COLORS = ['hsl(84, 31%, 44%)', 'hsl(43, 74%, 49%)', 'hsl(25, 65%, 45%)', 'hsl(150, 40%, 40%)', 'hsl(200, 50%, 45%)', 'hsl(340, 50%, 50%)'];
 
 export function Dashboard() {
   const { profile, signOut, hasRole } = useAuth();
   const { crops, isLoading: cropsLoading } = useCrops();
   const { livestock, isLoading: livestockLoading } = useLivestock();
-  const { analytics, isLoading: salesLoading } = useSales();
+  const { sales, analytics, isLoading: salesLoading } = useSales();
+  const { purchases } = usePurchases();
   const { lowStockItems } = useInventory();
   
-  // Edge Functions
   const inventoryAlerts = useInventoryAlerts();
   const generateReport = useGenerateFarmReport();
   const calculateProfitLoss = useProfitLossCalculation();
 
+  // Revenue vs Expenses chart — group by month from real sales & purchases
+  const revenueData = useMemo(() => {
+    const monthMap: Record<string, { revenue: number; expenses: number }> = {};
+
+    for (const sale of sales) {
+      const key = format(parseISO(sale.sale_date), 'MMM yyyy');
+      if (!monthMap[key]) monthMap[key] = { revenue: 0, expenses: 0 };
+      monthMap[key].revenue += sale.total_amount || 0;
+    }
+
+    for (const purchase of purchases) {
+      const key = format(parseISO(purchase.purchase_date), 'MMM yyyy');
+      if (!monthMap[key]) monthMap[key] = { revenue: 0, expenses: 0 };
+      monthMap[key].expenses += purchase.total_cost || 0;
+    }
+
+    return Object.entries(monthMap)
+      .sort((a, b) => {
+        const dateA = new Date(a[0]);
+        const dateB = new Date(b[0]);
+        return dateA.getTime() - dateB.getTime();
+      })
+      .map(([month, data]) => ({ month: month.split(' ')[0], ...data }));
+  }, [sales, purchases]);
+
+  // Crop Yields chart — real crops with yield data
+  const cropYieldData = useMemo(() => {
+    return crops
+      .filter(c => c.yield_quantity && c.yield_quantity > 0)
+      .map(c => ({ crop: c.name, yield: c.yield_quantity || 0 }));
+  }, [crops]);
+
+  // Livestock distribution — group by type
+  const livestockData = useMemo(() => {
+    const typeMap: Record<string, number> = {};
+    for (const animal of livestock) {
+      typeMap[animal.type] = (typeMap[animal.type] || 0) + 1;
+    }
+    return Object.entries(typeMap).map(([name, value], i) => ({
+      name,
+      value,
+      color: LIVESTOCK_COLORS[i % LIVESTOCK_COLORS.length],
+    }));
+  }, [livestock]);
+
   const upcomingTasks = [
-    { id: 1, task: "Fertilize corn field A", date: "Today", priority: "high" },
-    { id: 2, task: "Vaccinate cattle group B", date: "Tomorrow", priority: "medium" },
-    { id: 3, task: "Harvest wheat section 3", date: "In 3 days", priority: "high" },
-    { id: 4, task: "Feed inventory check", date: "This week", priority: "low" },
     ...lowStockItems.map(item => ({
       id: `stock-${item.id}`,
       task: `Restock ${item.item_name}`,
@@ -124,9 +146,7 @@ export function Dashboard() {
             <div className="text-2xl font-bold">
               {cropsLoading ? '...' : crops.length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Active crop records
-            </p>
+            <p className="text-xs text-muted-foreground">Active crop records</p>
           </CardContent>
         </Card>
 
@@ -139,9 +159,7 @@ export function Dashboard() {
             <div className="text-2xl font-bold">
               {livestockLoading ? '...' : livestock.length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Total livestock count
-            </p>
+            <p className="text-xs text-muted-foreground">Total livestock count</p>
           </CardContent>
         </Card>
 
@@ -154,9 +172,7 @@ export function Dashboard() {
             <div className="text-2xl font-bold">
               {formatKES(analytics?.totalRevenue || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Total sales revenue
-            </p>
+            <p className="text-xs text-muted-foreground">Total sales revenue</p>
           </CardContent>
         </Card>
 
@@ -169,9 +185,7 @@ export function Dashboard() {
             <div className="text-2xl font-bold">
               {salesLoading ? '...' : analytics?.completedSales || '0'}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Completed sales
-            </p>
+            <p className="text-xs text-muted-foreground">Completed sales</p>
           </CardContent>
         </Card>
       </div>
@@ -186,36 +200,66 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="revenue" stroke="hsl(84 31% 44%)" strokeWidth={3} />
-                <Line type="monotone" dataKey="expenses" stroke="hsl(43 74% 66%)" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
+            {revenueData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => formatKES(value)} />
+                  <Line type="monotone" dataKey="revenue" stroke="hsl(84 31% 44%)" strokeWidth={3} name="Revenue" />
+                  <Line type="monotone" dataKey="expenses" stroke="hsl(43 74% 66%)" strokeWidth={3} name="Expenses" />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                <TrendingUp className="h-10 w-10 mb-3 opacity-40" />
+                <p className="text-sm">No financial data yet</p>
+                <p className="text-xs">Record sales and purchases to see trends</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Wheat className="h-5 w-5" />
-              Crop Yields
+              {cropYieldData.length > 0 || livestockData.length === 0 ? (
+                <><Wheat className="h-5 w-5" /> Crop Yields</>
+              ) : (
+                <><Beef className="h-5 w-5" /> Livestock Distribution</>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={cropYieldData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="crop" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="yield" fill="hsl(84 31% 44%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {cropYieldData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={cropYieldData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="crop" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="yield" fill="hsl(84 31% 44%)" radius={[4, 4, 0, 0]} name="Yield" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : livestockData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={livestockData} cx="50%" cy="50%" outerRadius={100} dataKey="value" nameKey="name" label={({ name, value }) => `${name}: ${value}`}>
+                    {livestockData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                <Wheat className="h-10 w-10 mb-3 opacity-40" />
+                <p className="text-sm">No crop or livestock data yet</p>
+                <p className="text-xs">Add crops with yield data or livestock to see charts</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -226,37 +270,45 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Upcoming Tasks & Alerts
+              Alerts & Notifications
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {upcomingTasks.slice(0, 5).map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    {task.priority === 'high' ? (
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
-                    ) : (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    )}
-                    <div>
-                      <p className="font-medium">{task.task}</p>
-                      <p className="text-sm text-muted-foreground">{task.date}</p>
+            {upcomingTasks.length > 0 ? (
+              <div className="space-y-3">
+                {upcomingTasks.slice(0, 5).map((task) => (
+                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      {task.priority === 'high' ? (
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      )}
+                      <div>
+                        <p className="font-medium">{task.task}</p>
+                        <p className="text-sm text-muted-foreground">{task.date}</p>
+                      </div>
                     </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                      {task.priority}
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                    {task.priority}
-                  </span>
-                </div>
-              ))}
-              {lowStockItems.length > 5 && (
-                <div className="p-3 rounded-lg border border-red-200 bg-red-50">
-                  <p className="text-sm text-red-700 font-medium">
-                    +{lowStockItems.length - 5} more low stock items require attention
-                  </p>
-                </div>
-              )}
-            </div>
+                ))}
+                {lowStockItems.length > 5 && (
+                  <div className="p-3 rounded-lg border border-red-200 bg-red-50">
+                    <p className="text-sm text-red-700 font-medium">
+                      +{lowStockItems.length - 5} more low stock items require attention
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                <CheckCircle className="h-10 w-10 mb-3 opacity-40 text-green-500" />
+                <p className="text-sm font-medium">All clear!</p>
+                <p className="text-xs">No alerts or low-stock items at the moment</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -340,7 +392,6 @@ export function Dashboard() {
             </div>
           </CardContent>
         </Card>
-
       </div>
       
       {/* Admin Quick Access */}
