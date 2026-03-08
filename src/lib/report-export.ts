@@ -335,5 +335,5 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
     doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
   }
 
-  doc.save(farmFileName('PNL-report', 'pdf'));
+  doc.save(await farmFileName('PNL-report', 'pdf'));
 }
