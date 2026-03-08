@@ -467,7 +467,7 @@ export default function Finances() {
             </Button>
             <Button
               variant={filter === 'expense' ? 'default' : 'outline'}
-              onClick={() => setFilter('expense')}
+              onClick={() => { setFilter('expense'); setCurrentPage(1); }}
               className="text-red-700"
             >
               Expenses Only
