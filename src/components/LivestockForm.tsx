@@ -34,7 +34,7 @@ interface LivestockFormProps {
   initialData?: Partial<LivestockFormData>;
 }
 
-export function LivestockForm({ onSubmit, isLoading, initialData }: LivestockFormProps) {
+export function LivestockForm({ onSubmit, onCancel, isLoading, initialData }: LivestockFormProps) {
   const [formData, setFormData] = useState<LivestockFormData>({
     type: initialData?.type || "",
     breed: initialData?.breed || "",
