@@ -282,7 +282,7 @@ export default function Finances() {
             {/* P&L Report Results - Modal */}
             <Dialog open={showPnL && !!pnlReport} onOpenChange={(open) => { if (!open) setShowPnL(false); }}>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <div id="pnl-report-preview" className="space-y-6">
+              {pnlReport && <div id="pnl-report-preview" className="space-y-6">
                 {/* === REPORT HEADER === */}
                 <div className="bg-farm-green/5 border border-farm-green/20 rounded-lg p-4">
                   <div className="flex items-start justify-between">
@@ -443,7 +443,7 @@ export default function Finances() {
                     <p>Generated: {new Date(pnlReport.generated_at).toLocaleString()}</p>
                   </div>
                 </div>
-              </div>
+              </div>}
               </DialogContent>
             </Dialog>
           </CardContent>
