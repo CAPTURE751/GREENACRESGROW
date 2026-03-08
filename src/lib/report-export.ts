@@ -30,6 +30,8 @@ interface PnLReport {
     total_sales_transactions: number;
     total_purchase_transactions: number;
   };
+  sales_breakdown?: Record<string, { total: number; items: Record<string, number> }>;
+  purchases_breakdown?: Record<string, { total: number; items: Record<string, number> }>;
   monthly_trends: Array<{
     month: string;
     revenue: number;
