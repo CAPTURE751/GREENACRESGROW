@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
+import Equipment from "./pages/Equipment";
 const queryClient = new QueryClient();
 
 const App = () => (
