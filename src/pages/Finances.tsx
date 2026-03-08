@@ -355,7 +355,28 @@ export default function Finances() {
                   </div>
                 </div>
 
-                {/* Monthly Trends */}
+                {/* Revenue vs Costs Chart */}
+                {pnlReport.monthly_trends.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Revenue vs Costs</h4>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={pnlReport.monthly_trends} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                          <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                          <Tooltip formatter={(value: number) => formatKES(value)} />
+                          <Legend />
+                          <Bar dataKey="revenue" name="Revenue" fill="#16a34a" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="costs" name="Costs" fill="#dc2626" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="profit" name="Profit" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {/* Monthly Trends Table */}
                 {pnlReport.monthly_trends.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-foreground mb-3">Monthly Trends</h4>
