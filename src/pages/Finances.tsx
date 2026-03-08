@@ -82,18 +82,6 @@ export default function Finances() {
   const { profile } = useAuth();
   const printedByName = profile?.name || "System User";
 
-  // Generate a stamp code for on-screen display
-  const stampCode = useMemo(() => {
-    if (!pnlReport) return "";
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const segments = [];
-    for (let s = 0; s < 3; s++) {
-      let seg = "";
-      for (let i = 0; i < 4; i++) seg += chars[Math.floor(Math.random() * chars.length)];
-      segments.push(seg);
-    }
-    return segments.join("-");
-  }, [pnlReport]);
 
   const isLoading = salesLoading || purchasesLoading;
 
