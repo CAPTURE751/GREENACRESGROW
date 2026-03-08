@@ -20,11 +20,10 @@ serve(async (req) => {
 
     console.log('Checking inventory for low stock items...');
 
-    // Get all inventory items with low stock
-    const { data: lowStockItems, error: inventoryError } = await supabase
+    // Get all inventory items
+    const { data: allItems, error: inventoryError } = await supabase
       .from('inventory')
-      .select('*')
-      .filter('quantity', 'lte', 'min_threshold');
+      .select('*');
 
     if (inventoryError) {
       console.error('Error fetching inventory:', inventoryError);
