@@ -214,6 +214,12 @@ export function Crops() {
                       <span>{new Date(crop.planting_date).toLocaleDateString()}</span>
                     </div>
                   )}
+                  {(crop as any).acreage && (
+                    <div className="flex items-center gap-2">
+                      <Wheat className="h-4 w-4 text-muted-foreground" />
+                      <span>{(crop as any).acreage} acres</span>
+                    </div>
+                  )}
                   {crop.yield_quantity && (
                     <div className="flex items-center gap-2">
                       <TrendingUp className="h-4 w-4 text-muted-foreground" />
