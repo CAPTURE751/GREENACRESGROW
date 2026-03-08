@@ -1,18 +1,26 @@
 
-import { useState } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/currency";
+import { farmFileName } from "@/lib/report-export";
 import { FARM_BRANDING } from "@/lib/constants";
+import { useSales } from "@/hooks/useSales";
+import { usePurchases } from "@/hooks/usePurchases";
+import { useCrops } from "@/hooks/useCrops";
+import { useLivestock } from "@/hooks/useLivestock";
+import { useInventory } from "@/hooks/useInventory";
 import { 
   BarChart3,
   Download,
-  FileText,
   TrendingUp,
   DollarSign,
-  Calendar,
-  Filter
+  Wheat,
+  Beef,
+  Package,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { 
@@ -27,43 +35,190 @@ import {
   Line,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Legend,
 } from "recharts";
 
-const cropYieldData = [
-  { month: 'Jan', yield: 1200 },
-  { month: 'Feb', yield: 1500 },
-  { month: 'Mar', yield: 1800 },
-  { month: 'Apr', yield: 2200 },
-  { month: 'May', yield: 2800 },
-  { month: 'Jun', yield: 3200 },
-];
-
-const expenseData = [
-  { category: 'Seeds', amount: 5000, color: 'hsl(84 31% 44%)' },
-  { category: 'Labor', amount: 8000, color: 'hsl(31 45% 58%)' },
-  { category: 'Equipment', amount: 3500, color: 'hsl(23 47% 42%)' },
-  { category: 'Feed', amount: 4200, color: 'hsl(84 31% 44% / 0.7)' },
-];
-
-const profitData = [
-  { month: 'Jan', income: 8000, expenses: 5000, profit: 3000 },
-  { month: 'Feb', income: 9500, expenses: 6200, profit: 3300 },
-  { month: 'Mar', income: 11000, expenses: 7500, profit: 3500 },
-  { month: 'Apr', income: 13500, expenses: 8800, profit: 4700 },
-  { month: 'May', income: 15200, expenses: 9500, profit: 5700 },
-  { month: 'Jun', income: 16800, expenses: 10200, profit: 6600 },
+const CHART_COLORS = [
+  'hsl(84 31% 44%)',
+  'hsl(31 45% 58%)',
+  'hsl(23 47% 42%)',
+  'hsl(43 74% 66%)',
+  'hsl(84 31% 60%)',
+  'hsl(200 50% 50%)',
 ];
 
 export default function Reports() {
-  const [selectedReport, setSelectedReport] = useState('overview');
+  const { sales, isLoading: salesLoading } = useSales();
+  const { purchases, isLoading: purchasesLoading } = usePurchases();
+  const { crops, isLoading: cropsLoading } = useCrops();
+  const { livestock, isLoading: livestockLoading } = useLivestock();
+  const { inventory, lowStockItems, isLoading: inventoryLoading } = useInventory();
 
-  const reports = [
-    { id: 'overview', name: 'Farm Overview', icon: BarChart3 },
-    { id: 'crops', name: 'Crop Reports', icon: FileText },
-    { id: 'livestock', name: 'Livestock Reports', icon: FileText },
-    { id: 'financial', name: 'Financial Reports', icon: DollarSign },
-  ];
+  const isLoading = salesLoading || purchasesLoading || cropsLoading || livestockLoading || inventoryLoading;
+
+  // Compute monthly revenue vs expenses
+  const monthlyData = useMemo(() => {
+    const months: Record<string, { month: string; revenue: number; expenses: number; profit: number }> = {};
+    
+    sales.forEach(sale => {
+      const m = sale.sale_date.slice(0, 7); // YYYY-MM
+      const label = new Date(sale.sale_date + 'T00:00:00').toLocaleString('default', { month: 'short', year: '2-digit' });
+      if (!months[m]) months[m] = { month: label, revenue: 0, expenses: 0, profit: 0 };
+      months[m].revenue += sale.total_amount || 0;
+    });
+
+    purchases.forEach(p => {
+      const m = p.purchase_date.slice(0, 7);
+      const label = new Date(p.purchase_date + 'T00:00:00').toLocaleString('default', { month: 'short', year: '2-digit' });
+      if (!months[m]) months[m] = { month: label, revenue: 0, expenses: 0, profit: 0 };
+      months[m].expenses += p.total_cost || 0;
+    });
+
+    Object.values(months).forEach(m => { m.profit = m.revenue - m.expenses; });
+
+    return Object.entries(months)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => v);
+  }, [sales, purchases]);
+
+  // Expense breakdown by category
+  const expenseByCategory = useMemo(() => {
+    const cats: Record<string, number> = {};
+    purchases.forEach(p => {
+      const cat = p.category || 'Other';
+      cats[cat] = (cats[cat] || 0) + (p.total_cost || 0);
+    });
+    return Object.entries(cats).map(([category, amount], i) => ({
+      category: category.charAt(0).toUpperCase() + category.slice(1),
+      amount,
+      color: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+  }, [purchases]);
+
+  // Revenue by product type
+  const revenueByType = useMemo(() => {
+    const types: Record<string, number> = {};
+    sales.forEach(s => {
+      const t = s.product_type || 'Other';
+      types[t] = (types[t] || 0) + (s.total_amount || 0);
+    });
+    return Object.entries(types).map(([type, amount], i) => ({
+      type: type.charAt(0).toUpperCase() + type.slice(1),
+      amount,
+      color: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+  }, [sales]);
+
+  // Inventory value by category
+  const inventoryByCategory = useMemo(() => {
+    const cats: Record<string, { quantity: number; value: number }> = {};
+    inventory.forEach(item => {
+      const cat = item.category || 'Other';
+      if (!cats[cat]) cats[cat] = { quantity: 0, value: 0 };
+      cats[cat].quantity += Number(item.quantity) || 0;
+      cats[cat].value += (Number(item.quantity) || 0) * (Number(item.unit_cost) || 0);
+    });
+    return Object.entries(cats).map(([category, data]) => ({
+      category: category.charAt(0).toUpperCase() + category.slice(1),
+      ...data,
+    }));
+  }, [inventory]);
+
+  // Summary stats
+  const totalRevenue = useMemo(() => sales.reduce((s, sale) => s + (sale.total_amount || 0), 0), [sales]);
+  const totalExpenses = useMemo(() => purchases.reduce((s, p) => s + (p.total_cost || 0), 0), [purchases]);
+  const netProfit = totalRevenue - totalExpenses;
+  const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100) : 0;
+  const totalInventoryValue = useMemo(() => 
+    inventory.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unit_cost) || 0), 0), [inventory]);
+
+  // Crop status breakdown
+  const cropStatusData = useMemo(() => {
+    const statuses: Record<string, number> = {};
+    crops.forEach(c => {
+      const s = c.status || 'unknown';
+      statuses[s] = (statuses[s] || 0) + 1;
+    });
+    return Object.entries(statuses).map(([status, count], i) => ({
+      status: status.charAt(0).toUpperCase() + status.slice(1),
+      count,
+      color: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+  }, [crops]);
+
+  // Livestock by type
+  const livestockByType = useMemo(() => {
+    const types: Record<string, number> = {};
+    livestock.forEach(l => {
+      types[l.type] = (types[l.type] || 0) + 1;
+    });
+    return Object.entries(types).map(([type, count], i) => ({
+      type: type.charAt(0).toUpperCase() + type.slice(1),
+      count,
+      color: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+  }, [livestock]);
+
+  // Export full overview as CSV
+  const handleExportCSV = () => {
+    const lines: string[] = [];
+    lines.push(FARM_BRANDING.name);
+    lines.push(FARM_BRANDING.location);
+    lines.push('');
+    lines.push('FARM OVERVIEW REPORT');
+    lines.push(`Generated,${new Date().toLocaleString()}`);
+    lines.push('');
+    lines.push('SUMMARY');
+    lines.push(`Total Revenue,${totalRevenue}`);
+    lines.push(`Total Expenses,${totalExpenses}`);
+    lines.push(`Net Profit,${netProfit}`);
+    lines.push(`Profit Margin,${profitMargin.toFixed(1)}%`);
+    lines.push(`Total Crops,${crops.length}`);
+    lines.push(`Total Livestock,${livestock.length}`);
+    lines.push(`Inventory Items,${inventory.length}`);
+    lines.push(`Inventory Value,${totalInventoryValue}`);
+    lines.push(`Low Stock Alerts,${lowStockItems.length}`);
+    lines.push('');
+
+    if (monthlyData.length > 0) {
+      lines.push('MONTHLY TRENDS');
+      lines.push('Month,Revenue,Expenses,Profit');
+      monthlyData.forEach(m => lines.push(`${m.month},${m.revenue},${m.expenses},${m.profit}`));
+      lines.push('');
+    }
+
+    if (expenseByCategory.length > 0) {
+      lines.push('EXPENSES BY CATEGORY');
+      lines.push('Category,Amount');
+      expenseByCategory.forEach(c => lines.push(`${c.category},${c.amount}`));
+      lines.push('');
+    }
+
+    if (revenueByType.length > 0) {
+      lines.push('REVENUE BY PRODUCT TYPE');
+      lines.push('Type,Amount');
+      revenueByType.forEach(r => lines.push(`${r.type},${r.amount}`));
+    }
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = farmFileName('Farm-Overview-Report', 'csv');
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -71,56 +226,111 @@ export default function Reports() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reports & Analytics</h1>
-            <p className="text-gray-600 mt-1">{FARM_BRANDING.name} - Comprehensive farm operation reports</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Reports & Analytics</h1>
+            <p className="text-muted-foreground mt-1">{FARM_BRANDING.name} — Live farm data overview</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-            <Button className="bg-farm-green hover:bg-farm-green/90">
-              <Download className="h-4 w-4 mr-2" />
-              Export PDF
-            </Button>
-          </div>
+          <Button onClick={handleExportCSV} className="bg-farm-green hover:bg-farm-green/90">
+            <Download className="h-4 w-4 mr-2" />
+            Export Overview CSV
+          </Button>
         </div>
 
-        {/* Report Type Selector */}
-        <div className="flex flex-wrap gap-2">
-          {reports.map((report) => (
-            <Button
-              key={report.id}
-              variant={selectedReport === report.id ? "default" : "outline"}
-              onClick={() => setSelectedReport(report.id)}
-              className="flex items-center gap-2"
-            >
-              <report.icon className="h-4 w-4" />
-              {report.name}
-            </Button>
-          ))}
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Crop Yield Trends */}
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Revenue</p>
+                  <p className="text-2xl font-bold text-farm-green">{formatKES(totalRevenue)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{sales.length} transactions</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-farm-green" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Expenses</p>
+                  <p className="text-2xl font-bold text-farm-barn">{formatKES(totalExpenses)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{purchases.length} purchases</p>
+                </div>
+                <DollarSign className="h-8 w-8 text-farm-barn" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Net Profit</p>
+                  <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-farm-green' : 'text-destructive'}`}>
+                    {formatKES(netProfit)}
+                  </p>
+                  <Badge className={`mt-1 ${profitMargin >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {profitMargin.toFixed(1)}% margin
+                  </Badge>
+                </div>
+                <BarChart3 className="h-8 w-8 text-farm-harvest" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Inventory Value</p>
+                  <p className="text-2xl font-bold text-foreground">{formatKES(totalInventoryValue)}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {lowStockItems.length > 0 && (
+                      <Badge variant="destructive" className="text-xs">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        {lowStockItems.length} low stock
+                      </Badge>
+                    )}
+                    {lowStockItems.length === 0 && (
+                      <p className="text-xs text-muted-foreground">{inventory.length} items</p>
+                    )}
+                  </div>
+                </div>
+                <Package className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Financial Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Monthly Profit Trends */}
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-farm-green" />
-                Crop Yield Trends
+                Monthly Revenue vs Expenses
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={cropYieldData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="yield" fill="hsl(84 31% 44%)" />
-                </BarChart>
-              </ResponsiveContainer>
+              {monthlyData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <LineChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatKES(value)} />
+                    <Legend />
+                    <Line type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(84 31% 44%)" strokeWidth={2} />
+                    <Line type="monotone" dataKey="expenses" name="Expenses" stroke="hsl(31 45% 58%)" strokeWidth={2} />
+                    <Line type="monotone" dataKey="profit" name="Profit" stroke="hsl(23 47% 42%)" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted-foreground text-center py-12">No transaction data yet. Record sales and purchases to see trends.</p>
+              )}
             </CardContent>
           </Card>
 
@@ -133,103 +343,139 @@ export default function Reports() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={expenseData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="amount"
-                  >
-                    {expenseData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {expenseByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={expenseByCategory}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      dataKey="amount"
+                      nameKey="category"
+                    >
+                      {expenseByCategory.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => formatKES(value)} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted-foreground text-center py-12">No purchase data yet.</p>
+              )}
             </CardContent>
           </Card>
 
-          {/* Profit Analysis */}
-          <Card className="lg:col-span-2">
+          {/* Revenue by Product Type */}
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-farm-harvest" />
-                Monthly Profit Analysis
+                <TrendingUp className="h-5 w-5 text-farm-harvest" />
+                Revenue by Product Type
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={profitData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="income" stroke="hsl(84 31% 44%)" strokeWidth={2} />
-                  <Line type="monotone" dataKey="expenses" stroke="hsl(31 45% 58%)" strokeWidth={2} />
-                  <Line type="monotone" dataKey="profit" stroke="hsl(23 47% 42%)" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              {revenueByType.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={revenueByType}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="type" />
+                    <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: number) => formatKES(value)} />
+                    <Bar dataKey="amount" name="Revenue" radius={[4, 4, 0, 0]}>
+                      {revenueByType.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted-foreground text-center py-12">No sales data yet.</p>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Farm Operations */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Crop Status */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold text-farm-green">{formatKES(74000)}</p>
-                  <Badge className="mt-1 bg-green-100 text-green-800">+12.5%</Badge>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wheat className="h-5 w-5 text-farm-green" />
+                Crops ({crops.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {cropStatusData.length > 0 ? (
+                <div className="space-y-3">
+                  {cropStatusData.map((s) => (
+                    <div key={s.status} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: s.color }} />
+                        <span className="text-sm">{s.status}</span>
+                      </div>
+                      <Badge variant="secondary">{s.count}</Badge>
+                    </div>
+                  ))}
                 </div>
-                <TrendingUp className="h-8 w-8 text-farm-green" />
-              </div>
+              ) : (
+                <p className="text-muted-foreground text-sm text-center py-8">No crops recorded yet.</p>
+              )}
             </CardContent>
           </Card>
 
+          {/* Livestock Summary */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Expenses</p>
-                  <p className="text-2xl font-bold text-farm-barn">{formatKES(47200)}</p>
-                  <Badge className="mt-1 bg-yellow-100 text-yellow-800">+8.2%</Badge>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Beef className="h-5 w-5 text-farm-barn" />
+                Livestock ({livestock.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {livestockByType.length > 0 ? (
+                <div className="space-y-3">
+                  {livestockByType.map((l) => (
+                    <div key={l.type} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: l.color }} />
+                        <span className="text-sm">{l.type}</span>
+                      </div>
+                      <Badge variant="secondary">{l.count}</Badge>
+                    </div>
+                  ))}
                 </div>
-                <DollarSign className="h-8 w-8 text-farm-barn" />
-              </div>
+              ) : (
+                <p className="text-muted-foreground text-sm text-center py-8">No livestock recorded yet.</p>
+              )}
             </CardContent>
           </Card>
 
+          {/* Inventory by Category */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Net Profit</p>
-                  <p className="text-2xl font-bold text-farm-harvest">{formatKES(26800)}</p>
-                  <Badge className="mt-1 bg-green-100 text-green-800">+18.3%</Badge>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-muted-foreground" />
+                Inventory Value
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {inventoryByCategory.length > 0 ? (
+                <div className="space-y-3">
+                  {inventoryByCategory.map((cat) => (
+                    <div key={cat.category} className="flex items-center justify-between">
+                      <span className="text-sm">{cat.category}</span>
+                      <span className="text-sm font-medium">{formatKES(cat.value)}</span>
+                    </div>
+                  ))}
                 </div>
-                <BarChart3 className="h-8 w-8 text-farm-harvest" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">ROI</p>
-                  <p className="text-2xl font-bold">56.8%</p>
-                  <Badge className="mt-1 bg-green-100 text-green-800">+5.1%</Badge>
-                </div>
-                <TrendingUp className="h-8 w-8 text-farm-green" />
-              </div>
+              ) : (
+                <p className="text-muted-foreground text-sm text-center py-8">No inventory items yet.</p>
+              )}
             </CardContent>
           </Card>
         </div>
