@@ -102,8 +102,22 @@ export function CropProfitLoss() {
 
   return (
     <div className="space-y-6">
-      {/* Filter */}
-      <div className="flex items-center gap-4">
+      {/* Filter & Download */}
+      <div className="flex items-center gap-4 flex-wrap">
+        <Button
+          variant="outline"
+          onClick={async () => {
+            try {
+              await exportModulePnLToPDF("crop", filteredData, totals, selectedCrop);
+              toast.success("Crop P&L PDF downloaded successfully");
+            } catch (e) {
+              toast.error("Failed to generate PDF");
+            }
+          }}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download PDF
+        </Button>
         <Select value={selectedCrop} onValueChange={setSelectedCrop}>
           <SelectTrigger className="w-[220px]">
             <SelectValue placeholder="Filter by crop" />
