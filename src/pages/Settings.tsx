@@ -72,42 +72,7 @@ export default function Settings() {
           <div className="lg:col-span-3 space-y-6">
             {activeTab === 'general' && <GeneralSettings />}
 
-            {activeTab === 'users' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">John Smith</p>
-                        <p className="text-sm text-muted-foreground">admin@greenacres.com</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Admin</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Sarah Johnson</p>
-                        <p className="text-sm text-muted-foreground">sarah@greenacres.com</p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800">Manager</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Mike Wilson</p>
-                        <p className="text-sm text-muted-foreground">mike@greenacres.com</p>
-                      </div>
-                      <Badge className="bg-gray-100 text-gray-800">Worker</Badge>
-                    </div>
-                    <Button className="w-full mt-4">
-                      <User className="h-4 w-4 mr-2" />
-                      Add New User
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {activeTab === 'users' && <UserSettings />}
 
             {activeTab === 'notifications' && (
               <Card>
