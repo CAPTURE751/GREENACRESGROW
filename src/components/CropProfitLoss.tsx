@@ -14,31 +14,38 @@ import { useFarm } from "@/contexts/FarmContext";
 
 export function CropProfitLoss() {
   const [selectedCrop, setSelectedCrop] = useState<string>("all");
+  const { activeFarm } = useFarm();
 
   const { data: sales = [], isLoading: salesLoading } = useQuery({
-    queryKey: ["crop-sales"],
+    queryKey: ["crop-sales", activeFarm?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("sales")
         .select("*")
         .eq("product_type", "crop")
         .order("sale_date", { ascending: false });
+      if (activeFarm?.id) query = query.eq("farm_id", activeFarm.id);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
+    enabled: !!activeFarm,
   });
 
   const { data: purchases = [], isLoading: purchasesLoading } = useQuery({
-    queryKey: ["crop-purchases"],
+    queryKey: ["crop-purchases", activeFarm?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("purchases")
         .select("*")
         .in("category", ["seeds", "fertilizer", "chemicals", "casual_labour"])
         .order("purchase_date", { ascending: false });
+      if (activeFarm?.id) query = query.eq("farm_id", activeFarm.id);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
+    enabled: !!activeFarm,
   });
 
   const isLoading = salesLoading || purchasesLoading;
