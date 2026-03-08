@@ -35,6 +35,7 @@ const navigationItems = [
   { title: "Calendar", url: "/calendar", icon: Calendar },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Budget Simulator", url: "/budget-simulator", icon: Calculator },
   { title: "Users", url: "/users", icon: Users },
   { title: "Settings", url: "/settings", icon: Settings },
 ];

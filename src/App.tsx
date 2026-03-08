@@ -79,6 +79,11 @@ const App = () => (
                 <UserManagement />
               </ProtectedRoute>
             } />
+            <Route path="/budget-simulator" element={
+              <ProtectedRoute>
+                <BudgetSimulator />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
