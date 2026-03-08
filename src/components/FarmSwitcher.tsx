@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useFarm } from "@/contexts/FarmContext";
-import { Check, ChevronsUpDown, Plus, Trash2, Pencil } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Trash2, Pencil, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
