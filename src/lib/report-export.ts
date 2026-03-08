@@ -7,6 +7,12 @@ const FARM_NAME = "JEFF TRICKS FARM LTD";
 const FARM_LOCATION = "Nyeri, Kenya";
 const FARM_SLOGAN = "Nurturing the Land, Feeding the Future";
 
+/** Generate a standardized filename with farm prefix: "JEFF TRICKS FARM LTD <docName>-YYYY-MM-DD.<ext>" */
+export function farmFileName(docName: string, ext: string): string {
+  const date = new Date().toISOString().slice(0, 10);
+  return `${FARM_NAME} ${docName}-${date}.${ext}`;
+}
+
 interface PnLReport {
   summary: {
     period: { start_date: string; end_date: string };
