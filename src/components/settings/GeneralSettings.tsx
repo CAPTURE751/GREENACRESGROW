@@ -161,6 +161,7 @@ export function GeneralSettings() {
             />
             <p className="text-xs text-muted-foreground">Appears on all exported reports as a tagline.</p>
           </div>
+        </div>
 
         {isAdmin && (
           <Button onClick={handleSave} disabled={saving} className="bg-farm-green hover:bg-farm-green/90">
