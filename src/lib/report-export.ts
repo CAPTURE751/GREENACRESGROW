@@ -86,6 +86,7 @@ export async function exportPnLToCSV(report: PnLReport, printedBy?: string) {
   const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
   const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
   const FARM_SLOGAN = (settings as any)?.slogan || DEFAULT_SLOGAN;
+  const lines: string[] = [];
   const now = new Date();
   const stampCode = generateStampCode();
 
