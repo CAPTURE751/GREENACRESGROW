@@ -57,7 +57,9 @@ const PIE_COLORS = [
 ];
 
 export default function Analytics() {
-  const [timeRange, setTimeRange] = useState<"6m" | "12m" | "all">("12m");
+  const [timeRange, setTimeRange] = useState<"6m" | "12m" | "all" | "custom">("12m");
+  const [customStart, setCustomStart] = useState<Date | undefined>(undefined);
+  const [customEnd, setCustomEnd] = useState<Date | undefined>(undefined);
 
   // ── Fetch all raw data ──
   const { data: sales = [], isLoading: sl } = useQuery({
