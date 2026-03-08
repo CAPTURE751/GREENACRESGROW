@@ -123,7 +123,7 @@ export async function exportModulePnLToPDF(
     body: [
       ["Total Revenue", formatKES(totals.totalRevenue)],
       ["Total Costs", formatKES(totals.totalCosts)],
-      ["Net Profit / (Loss)", formatKES(totals.netProfit)],
+      [totals.netProfit >= 0 ? "Net Profit" : "Net Loss", formatKES(Math.abs(totals.netProfit))],
       ["Profit Margin", totals.totalRevenue > 0 ? `${((totals.netProfit / totals.totalRevenue) * 100).toFixed(1)}%` : "N/A"],
     ],
     theme: "grid",
@@ -131,14 +131,17 @@ export async function exportModulePnLToPDF(
     styles: { fontSize: 10 },
     didParseCell: (data: any) => {
       if (data.section === "body" && data.column.index === 1) {
+        // Revenue = Blue
         if (data.row.index === 0) {
-          data.cell.styles.textColor = [40, 120, 40];
+          data.cell.styles.textColor = [30, 80, 180];
           data.cell.styles.fontStyle = "bold";
         }
+        // Costs = Orange
         if (data.row.index === 1) {
-          data.cell.styles.textColor = [180, 30, 30];
+          data.cell.styles.textColor = [200, 120, 20];
           data.cell.styles.fontStyle = "bold";
         }
+        // Net Profit = Green, Net Loss = Red
         if (data.row.index === 2) {
           data.cell.styles.fontStyle = "bold";
           data.cell.styles.textColor = totals.netProfit >= 0 ? [40, 120, 40] : [180, 30, 30];
@@ -192,10 +195,10 @@ export async function exportModulePnLToPDF(
           formatKES(s.total_amount),
         ]),
         theme: "grid",
-        headStyles: { fillColor: [200, 220, 200], textColor: [30, 30, 30] },
+        headStyles: { fillColor: [200, 210, 240], textColor: [30, 30, 30] },
         styles: { fontSize: 8 },
         foot: [["", "", "", "Total Revenue", formatKES(data.revenue)]],
-        footStyles: { fillColor: [230, 245, 230], textColor: [40, 120, 40], fontStyle: "bold" },
+        footStyles: { fillColor: [220, 230, 250], textColor: [30, 80, 180], fontStyle: "bold" },
       });
       y = (doc as any).lastAutoTable.finalY + 6;
     }
@@ -217,10 +220,10 @@ export async function exportModulePnLToPDF(
           formatKES(p.total_cost),
         ]),
         theme: "grid",
-        headStyles: { fillColor: [220, 200, 200], textColor: [30, 30, 30] },
+        headStyles: { fillColor: [240, 220, 200], textColor: [30, 30, 30] },
         styles: { fontSize: 8 },
         foot: [["", "", "", "Total Costs", formatKES(data.costs)]],
-        footStyles: { fillColor: [245, 230, 230], textColor: [180, 30, 30], fontStyle: "bold" },
+        footStyles: { fillColor: [250, 235, 220], textColor: [200, 120, 20], fontStyle: "bold" },
       });
       y = (doc as any).lastAutoTable.finalY + 6;
     }
