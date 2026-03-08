@@ -25,11 +25,12 @@ interface CropFormData {
 
 interface CropFormProps {
   onSubmit: (data: CropFormData) => void;
+  onCancel?: () => void;
   isLoading?: boolean;
   initialData?: Partial<CropFormData>;
 }
 
-export function CropForm({ onSubmit, isLoading, initialData }: CropFormProps) {
+export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFormProps) {
   const [formData, setFormData] = useState<CropFormData>({
     name: initialData?.name || "",
     type: initialData?.type || "",
@@ -209,6 +210,11 @@ export function CropForm({ onSubmit, isLoading, initialData }: CropFormProps) {
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+            Cancel
+          </Button>
+        )}
         <Button type="submit" disabled={isLoading} className="bg-farm-green hover:bg-farm-green/90">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {initialData ? "Update Crop" : "Create Crop"}

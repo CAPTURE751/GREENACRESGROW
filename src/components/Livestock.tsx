@@ -84,7 +84,7 @@ export function Livestock() {
             <DialogHeader>
               <DialogTitle>Add New Animal</DialogTitle>
             </DialogHeader>
-            <LivestockForm onSubmit={handleCreateLivestock} isLoading={isCreating} />
+            <LivestockForm onSubmit={handleCreateLivestock} onCancel={() => setIsDialogOpen(false)} isLoading={isCreating} />
           </DialogContent>
         </Dialog>
       </div>
@@ -283,7 +283,7 @@ export function Livestock() {
                 <DialogHeader>
                   <DialogTitle>Add New Animal</DialogTitle>
                 </DialogHeader>
-                <LivestockForm onSubmit={handleCreateLivestock} isLoading={isCreating} />
+                <LivestockForm onSubmit={handleCreateLivestock} onCancel={() => setIsDialogOpen(false)} isLoading={isCreating} />
               </DialogContent>
             </Dialog>
           </CardContent>

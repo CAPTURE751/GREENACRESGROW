@@ -29,11 +29,12 @@ interface LivestockFormData {
 
 interface LivestockFormProps {
   onSubmit: (data: LivestockFormData) => void;
+  onCancel?: () => void;
   isLoading?: boolean;
   initialData?: Partial<LivestockFormData>;
 }
 
-export function LivestockForm({ onSubmit, isLoading, initialData }: LivestockFormProps) {
+export function LivestockForm({ onSubmit, onCancel, isLoading, initialData }: LivestockFormProps) {
   const [formData, setFormData] = useState<LivestockFormData>({
     type: initialData?.type || "",
     breed: initialData?.breed || "",
@@ -311,6 +312,11 @@ export function LivestockForm({ onSubmit, isLoading, initialData }: LivestockFor
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+            Cancel
+          </Button>
+        )}
         <Button type="submit" disabled={isLoading} className="bg-farm-barn hover:bg-farm-barn/90 text-white">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {initialData ? "Update Animal" : "Add Animal"}
