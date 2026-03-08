@@ -1,173 +1,281 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
-import { 
+import { useQuery } from "@tanstack/react-query";
+import {
   BarChart3,
   TrendingUp,
   TrendingDown,
   Target,
   Calendar,
-  Filter,
   Download,
-  RefreshCw
+  RefreshCw,
+  Loader2,
+  Wheat,
+  Bug,
+  DollarSign,
+  ShoppingCart,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   LineChart,
   Line,
   PieChart,
   Pie,
   Cell,
-  AreaChart,
   Area,
-  ReferenceLine,
   Legend,
-  ComposedChart
+  ComposedChart,
 } from "recharts";
 
-const productivityData = [
-  { month: 'Jan', crops: 85, livestock: 92, efficiency: 78 },
-  { month: 'Feb', crops: 88, livestock: 89, efficiency: 82 },
-  { month: 'Mar', crops: 92, livestock: 94, efficiency: 85 },
-  { month: 'Apr', crops: 96, livestock: 91, efficiency: 88 },
-  { month: 'May', crops: 89, livestock: 96, efficiency: 90 },
-  { month: 'Jun', crops: 94, livestock: 98, efficiency: 93 },
-];
-
-const revenueAnalysis = [
-  { quarter: 'Q1', revenue: 45000, costs: 28000, profit: 17000 },
-  { quarter: 'Q2', revenue: 52000, costs: 31000, profit: 21000 },
-  { quarter: 'Q3', revenue: 58000, costs: 35000, profit: 23000 },
-  { quarter: 'Q4', revenue: 61000, costs: 38000, profit: 23000 },
-];
-
-const cropDistribution = [
-  { name: 'Wheat', value: 35, color: 'hsl(84 31% 44%)' },
-  { name: 'Corn', value: 28, color: 'hsl(43 74% 66%)' },
-  { name: 'Soybeans', value: 22, color: 'hsl(31 45% 58%)' },
-  { name: 'Rice', value: 15, color: 'hsl(23 47% 42%)' },
-];
-
-const performanceMetrics = [
-  {
-    id: 1,
-    title: "Crop Yield Efficiency",
-    current: 94.2,
-    target: 95.0,
-    trend: "up",
-    change: 2.3
-  },
-  {
-    id: 2,
-    title: "Livestock Health Score",
-    current: 97.8,
-    target: 98.0,
-    trend: "up",
-    change: 1.2
-  },
-  {
-    id: 3,
-    title: "Resource Utilization",
-    current: 87.5,
-    target: 90.0,
-    trend: "down",
-    change: -0.8
-  },
-  {
-    id: 4,
-    title: "Cost per Unit",
-    current: 12.3,
-    target: 11.8,
-    trend: "down",
-    change: -1.5
-  }
+const PIE_COLORS = [
+  "hsl(142 50% 45%)",
+  "hsl(210 65% 50%)",
+  "hsl(45 80% 50%)",
+  "hsl(340 60% 50%)",
+  "hsl(270 50% 55%)",
+  "hsl(180 50% 45%)",
+  "hsl(25 70% 50%)",
+  "hsl(100 40% 45%)",
 ];
 
 export default function Analytics() {
-  const [timeRange, setTimeRange] = useState<'month' | 'quarter' | 'year'>('month');
-  const [selectedMetric, setSelectedMetric] = useState('productivity');
+  const [timeRange, setTimeRange] = useState<"6m" | "12m" | "all">("12m");
 
-  // Fetch real sales & purchases for break-even chart
-  const [salesData, setSalesData] = useState<any[]>([]);
-  const [purchasesData, setPurchasesData] = useState<any[]>([]);
+  // ── Fetch all raw data ──
+  const { data: sales = [], isLoading: sl } = useQuery({
+    queryKey: ["analytics-sales"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("*")
+        .order("sale_date");
+      if (error) throw error;
+      return data;
+    },
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [{ data: sales }, { data: purchases }] = await Promise.all([
-        supabase.from('sales').select('total_amount, sale_date, product_type').order('sale_date'),
-        supabase.from('purchases').select('total_cost, purchase_date, category').order('purchase_date'),
-      ]);
-      setSalesData(sales || []);
-      setPurchasesData(purchases || []);
-    };
-    fetchData();
-  }, []);
+  const { data: purchases = [], isLoading: pl } = useQuery({
+    queryKey: ["analytics-purchases"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("*")
+        .order("purchase_date");
+      if (error) throw error;
+      return data;
+    },
+  });
 
-  // Build monthly break-even data
+  const { data: crops = [], isLoading: cl } = useQuery({
+    queryKey: ["analytics-crops"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("crops").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: livestock = [], isLoading: ll } = useQuery({
+    queryKey: ["analytics-livestock"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("livestock").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: inventory = [], isLoading: il } = useQuery({
+    queryKey: ["analytics-inventory"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("inventory").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isLoading = sl || pl || cl || ll || il;
+
+  // ── Time filter helper ──
+  const cutoffDate = useMemo(() => {
+    if (timeRange === "all") return null;
+    const d = new Date();
+    d.setMonth(d.getMonth() - (timeRange === "6m" ? 6 : 12));
+    return d.toISOString().substring(0, 10);
+  }, [timeRange]);
+
+  const filteredSales = useMemo(
+    () =>
+      cutoffDate
+        ? sales.filter((s) => s.sale_date >= cutoffDate)
+        : sales,
+    [sales, cutoffDate]
+  );
+  const filteredPurchases = useMemo(
+    () =>
+      cutoffDate
+        ? purchases.filter((p) => p.purchase_date >= cutoffDate)
+        : purchases,
+    [purchases, cutoffDate]
+  );
+
+  // ── KPI Summaries ──
+  const totals = useMemo(() => {
+    const totalRevenue = filteredSales.reduce((s, r) => s + (r.total_amount || 0), 0);
+    const totalCosts = filteredPurchases.reduce((s, r) => s + (r.total_cost || 0), 0);
+    const netProfit = totalRevenue - totalCosts;
+    const margin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+    return { totalRevenue, totalCosts, netProfit, margin };
+  }, [filteredSales, filteredPurchases]);
+
+  // ── Monthly Revenue vs Costs (bar chart) ──
+  const monthlyFinancials = useMemo(() => {
+    const map = new Map<string, { revenue: number; costs: number }>();
+    filteredSales.forEach((s) => {
+      const m = s.sale_date?.substring(0, 7);
+      if (!m) return;
+      if (!map.has(m)) map.set(m, { revenue: 0, costs: 0 });
+      map.get(m)!.revenue += s.total_amount || 0;
+    });
+    filteredPurchases.forEach((p) => {
+      const m = p.purchase_date?.substring(0, 7);
+      if (!m) return;
+      if (!map.has(m)) map.set(m, { revenue: 0, costs: 0 });
+      map.get(m)!.costs += p.total_cost || 0;
+    });
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, d]) => ({
+        month: new Date(month + "-01").toLocaleDateString("en", { month: "short", year: "2-digit" }),
+        revenue: d.revenue,
+        costs: d.costs,
+        profit: d.revenue - d.costs,
+      }));
+  }, [filteredSales, filteredPurchases]);
+
+  // ── Revenue by product type (pie) ──
+  const revenueByType = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredSales.forEach((s) => {
+      const key = s.product_name || "Other";
+      map.set(key, (map.get(key) || 0) + (s.total_amount || 0));
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([name, value], i) => ({ name, value, color: PIE_COLORS[i % PIE_COLORS.length] }));
+  }, [filteredSales]);
+
+  // ── Costs by category (pie) ──
+  const costsByCategory = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredPurchases.forEach((p) => {
+      const key = p.category || "Other";
+      map.set(key, (map.get(key) || 0) + (p.total_cost || 0));
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([name, value], i) => ({ name: name.replace(/_/g, " "), value, color: PIE_COLORS[i % PIE_COLORS.length] }));
+  }, [filteredPurchases]);
+
+  // ── Break-even analysis ──
+  const opexKeys = [
+    "permanent_labour", "salaries", "salary", "machinery", "equipment",
+    "maintenance", "utilities", "electricity", "water", "transport",
+    "insurance", "administration", "marketing", "communication",
+    "land_costs", "farm_supplies", "loan_interest", "bank_charges",
+    "depreciation", "taxes",
+  ];
+
   const breakEvenData = useMemo(() => {
     const monthlyMap = new Map<string, { revenue: number; fixedCosts: number; variableCosts: number }>();
-
-    const opexKeys = ['permanent_labour', 'salaries', 'salary', 'machinery', 'equipment', 'maintenance',
-      'utilities', 'electricity', 'water', 'transport', 'insurance', 'administration', 'marketing',
-      'communication', 'land_costs', 'farm_supplies', 'loan_interest', 'bank_charges', 'depreciation', 'taxes'];
-
-    salesData.forEach((s: any) => {
+    filteredSales.forEach((s) => {
       const month = s.sale_date?.substring(0, 7);
       if (!month) return;
       if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, fixedCosts: 0, variableCosts: 0 });
       monthlyMap.get(month)!.revenue += s.total_amount || 0;
     });
-
-    purchasesData.forEach((p: any) => {
+    filteredPurchases.forEach((p) => {
       const month = p.purchase_date?.substring(0, 7);
       if (!month) return;
       if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, fixedCosts: 0, variableCosts: 0 });
-      const isFixed = opexKeys.some(k => (p.category || '').toLowerCase().includes(k));
-      if (isFixed) {
-        monthlyMap.get(month)!.fixedCosts += p.total_cost || 0;
-      } else {
-        monthlyMap.get(month)!.variableCosts += p.total_cost || 0;
-      }
+      const isFixed = opexKeys.some((k) => (p.category || "").toLowerCase().includes(k));
+      if (isFixed) monthlyMap.get(month)!.fixedCosts += p.total_cost || 0;
+      else monthlyMap.get(month)!.variableCosts += p.total_cost || 0;
     });
-
-    // Calculate cumulative + break-even line
-    let cumRevenue = 0, cumFixed = 0, cumVariable = 0;
+    let cumR = 0, cumF = 0, cumV = 0;
     return Array.from(monthlyMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, d]) => {
-        cumRevenue += d.revenue;
-        cumFixed += d.fixedCosts;
-        cumVariable += d.variableCosts;
-        const cmRatio = cumRevenue > 0 ? (cumRevenue - cumVariable) / cumRevenue : 0;
-        const breakEvenRev = cmRatio > 0 ? cumFixed / cmRatio : cumFixed + cumVariable;
+        cumR += d.revenue;
+        cumF += d.fixedCosts;
+        cumV += d.variableCosts;
+        const cmRatio = cumR > 0 ? (cumR - cumV) / cumR : 0;
+        const be = cmRatio > 0 ? cumF / cmRatio : cumF + cumV;
         return {
-          month,
-          revenue: cumRevenue,
-          totalCosts: cumFixed + cumVariable,
-          breakEven: Math.round(breakEvenRev),
+          month: new Date(month + "-01").toLocaleDateString("en", { month: "short", year: "2-digit" }),
+          revenue: cumR,
+          totalCosts: cumF + cumV,
+          breakEven: Math.round(be),
         };
       });
-  }, [salesData, purchasesData]);
+  }, [filteredSales, filteredPurchases]);
 
   const latestBE = breakEvenData.length > 0 ? breakEvenData[breakEvenData.length - 1] : null;
   const isAboveBreakEven = latestBE ? latestBE.revenue >= latestBE.breakEven : false;
 
+  // ── Top sales ranking ──
+  const topProducts = useMemo(() => {
+    const map = new Map<string, { revenue: number; qty: number; unit: string }>();
+    filteredSales.forEach((s) => {
+      const key = s.product_name;
+      const cur = map.get(key) || { revenue: 0, qty: 0, unit: s.unit };
+      cur.revenue += s.total_amount || 0;
+      cur.qty += s.quantity || 0;
+      map.set(key, cur);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1].revenue - a[1].revenue)
+      .slice(0, 5)
+      .map(([name, d]) => ({ name, ...d }));
+  }, [filteredSales]);
+
+  // ── Inventory health ──
+  const inventoryStats = useMemo(() => {
+    const lowStock = inventory.filter((i) => i.min_threshold && i.quantity <= i.min_threshold).length;
+    const totalItems = inventory.length;
+    const totalValue = inventory.reduce((s, i) => s + (i.quantity * (i.unit_cost || 0)), 0);
+    return { lowStock, totalItems, totalValue };
+  }, [inventory]);
+
   const timeRanges = [
-    { id: 'month', label: 'This Month' },
-    { id: 'quarter', label: 'This Quarter' },
-    { id: 'year', label: 'This Year' }
+    { id: "6m" as const, label: "6 Months" },
+    { id: "12m" as const, label: "12 Months" },
+    { id: "all" as const, label: "All Time" },
   ];
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-farm-green" />
+          <span className="ml-3 text-muted-foreground">Loading analytics...</span>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -175,196 +283,198 @@ export default function Analytics() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-            <p className="text-gray-600 mt-1">Deep insights into farm performance and trends</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Analytics Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Real-time insights from your farm data</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-            <Button className="bg-farm-green hover:bg-farm-green/90" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            {timeRanges.map((r) => (
+              <Button
+                key={r.id}
+                variant={timeRange === r.id ? "default" : "outline"}
+                onClick={() => setTimeRange(r.id)}
+                size="sm"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                {r.label}
+              </Button>
+            ))}
           </div>
         </div>
 
-        {/* Time Range Selector */}
-        <div className="flex gap-2">
-          {timeRanges.map((range) => (
-            <Button
-              key={range.id}
-              variant={timeRange === range.id ? "default" : "outline"}
-              onClick={() => setTimeRange(range.id as typeof timeRange)}
-              size="sm"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              {range.label}
-            </Button>
-          ))}
-        </div>
-
-        {/* Performance Metrics Grid */}
+        {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {performanceMetrics.map((metric) => (
-            <Card key={metric.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">{metric.title}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold">{metric.current}%</span>
-                      <Badge 
-                        className={`${
-                          metric.trend === 'up' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {metric.trend === 'up' ? '+' : ''}{metric.change}%
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Target className="h-3 w-3" />
-                      Target: {metric.target}%
-                    </div>
-                  </div>
-                  {metric.trend === 'up' ? (
-                    <TrendingUp className="h-8 w-8 text-green-600" />
+          <Card className="border-l-4 border-l-blue-500">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Revenue</p>
+                  <p className="text-2xl font-bold text-blue-600 mt-1">{formatKES(totals.totalRevenue)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{filteredSales.length} transactions</p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-gray-600">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Costs</p>
+                  <p className="text-2xl font-bold text-gray-700 mt-1">{formatKES(totals.totalCosts)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{filteredPurchases.length} purchases</p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                  <ShoppingCart className="h-6 w-6 text-gray-700" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={`border-l-4 ${totals.netProfit >= 0 ? "border-l-green-500" : "border-l-red-500"}`}>
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {totals.netProfit >= 0 ? "Net Profit" : "Net Loss"}
+                  </p>
+                  <p className={`text-2xl font-bold mt-1 ${totals.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatKES(Math.abs(totals.netProfit))}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Margin: {totals.margin.toFixed(1)}%
+                  </p>
+                </div>
+                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${totals.netProfit >= 0 ? "bg-green-50" : "bg-red-50"}`}>
+                  {totals.netProfit >= 0 ? (
+                    <TrendingUp className="h-6 w-6 text-green-600" />
                   ) : (
-                    <TrendingDown className="h-8 w-8 text-red-600" />
+                    <TrendingDown className="h-6 w-6 text-red-600" />
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-amber-500">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Farm Assets</p>
+                  <p className="text-2xl font-bold text-amber-600 mt-1">
+                    {crops.length + livestock.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {crops.length} crops · {livestock.length} livestock
+                  </p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-amber-50 flex items-center justify-center">
+                  <Wheat className="h-6 w-6 text-amber-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Productivity Trends */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-farm-green" />
-                Productivity Trends
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={productivityData}>
+        {/* Monthly Revenue vs Costs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              Monthly Revenue vs Costs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monthlyFinancials.length === 0 ? (
+              <p className="text-center text-muted-foreground py-12">No financial data available for the selected period.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={monthlyFinancials}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="crops" 
-                    stroke="hsl(84 31% 44%)" 
-                    strokeWidth={2}
-                    name="Crops"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="livestock" 
-                    stroke="hsl(31 45% 58%)" 
-                    strokeWidth={2}
-                    name="Livestock"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="efficiency" 
-                    stroke="hsl(23 47% 42%)" 
-                    strokeWidth={2}
-                    name="Efficiency"
-                  />
-                </LineChart>
+                  <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value: number) => [formatKES(value), ""]} />
+                  <Legend />
+                  <Bar dataKey="revenue" name="Revenue" fill="hsl(210 65% 50%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="costs" name="Costs" fill="hsl(0 0% 55%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="profit" name="Profit/Loss" fill="hsl(142 50% 45%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Crop Distribution */}
+        {/* Pie Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Revenue by Product */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-farm-barn" />
-                Crop Distribution
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                Revenue by Product
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={cropDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {cropDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {revenueByType.length === 0 ? (
+                <p className="text-center text-muted-foreground py-12">No sales data yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={revenueByType}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={100}
+                      dataKey="value"
+                    >
+                      {revenueByType.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => [formatKES(value), ""]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
-          {/* Revenue Analysis */}
-          <Card className="lg:col-span-2">
+          {/* Costs by Category */}
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-farm-harvest" />
-                Quarterly Revenue Analysis
+                <ShoppingCart className="h-5 w-5 text-gray-600" />
+                Costs by Category
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={revenueAnalysis}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="quarter" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => [formatKES(Number(value)), '']} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stackId="1"
-                    stroke="hsl(84 31% 44%)" 
-                    fill="hsl(84 31% 44% / 0.6)"
-                    name="Revenue"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="costs" 
-                    stackId="2"
-                    stroke="hsl(31 45% 58%)" 
-                    fill="hsl(31 45% 58% / 0.6)"
-                    name="Costs"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="profit" 
-                    stackId="3"
-                    stroke="hsl(23 47% 42%)" 
-                    fill="hsl(23 47% 42% / 0.6)"
-                    name="Profit"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {costsByCategory.length === 0 ? (
+                <p className="text-center text-muted-foreground py-12">No purchase data yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={costsByCategory}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={100}
+                      dataKey="value"
+                    >
+                      {costsByCategory.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => [formatKES(value), ""]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Break-Even Analysis Chart */}
+        {/* Break-Even Analysis */}
         {breakEvenData.length > 0 && (
           <Card>
             <CardHeader>
@@ -373,27 +483,25 @@ export default function Analytics() {
                   <Target className="h-5 w-5 text-farm-green" />
                   Break-Even Analysis
                 </CardTitle>
-                <Badge className={isAboveBreakEven ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                  {isAboveBreakEven ? '✓ Above Break-Even' : '✗ Below Break-Even'}
+                <Badge className={isAboveBreakEven ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                  {isAboveBreakEven ? "Above Break-Even" : "Below Break-Even"}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Cumulative revenue vs costs with break-even threshold
-              </p>
+              <p className="text-sm text-muted-foreground">Cumulative revenue vs costs with break-even threshold</p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="rounded-lg border p-3 text-center">
                   <p className="text-xs text-muted-foreground">Cumulative Revenue</p>
-                  <p className="text-lg font-bold text-foreground">{formatKES(latestBE?.revenue || 0)}</p>
+                  <p className="text-lg font-bold text-blue-600">{formatKES(latestBE?.revenue || 0)}</p>
                 </div>
                 <div className="rounded-lg border p-3 text-center">
                   <p className="text-xs text-muted-foreground">Break-Even Point</p>
-                  <p className="text-lg font-bold text-foreground">{formatKES(latestBE?.breakEven || 0)}</p>
+                  <p className="text-lg font-bold text-amber-600">{formatKES(latestBE?.breakEven || 0)}</p>
                 </div>
                 <div className="rounded-lg border p-3 text-center">
-                  <p className="text-xs text-muted-foreground">{isAboveBreakEven ? 'Surplus' : 'Shortfall'}</p>
-                  <p className={`text-lg font-bold ${isAboveBreakEven ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className="text-xs text-muted-foreground">{isAboveBreakEven ? "Surplus" : "Shortfall"}</p>
+                  <p className={`text-lg font-bold ${isAboveBreakEven ? "text-green-600" : "text-red-600"}`}>
                     {formatKES(Math.abs((latestBE?.revenue || 0) - (latestBE?.breakEven || 0)))}
                   </p>
                 </div>
@@ -403,79 +511,125 @@ export default function Analytics() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(value: number) => [formatKES(value), '']} />
+                  <Tooltip formatter={(value: number) => [formatKES(value), ""]} />
                   <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="hsl(84 31% 44%)"
-                    fill="hsl(84 31% 44% / 0.3)"
-                    strokeWidth={2}
-                    name="Revenue"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="totalCosts"
-                    stroke="hsl(0 65% 50%)"
-                    fill="hsl(0 65% 50% / 0.15)"
-                    strokeWidth={2}
-                    name="Total Costs"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="breakEven"
-                    stroke="hsl(43 74% 50%)"
-                    strokeWidth={2}
-                    strokeDasharray="8 4"
-                    dot={false}
-                    name="Break-Even Line"
-                  />
+                  <Area type="monotone" dataKey="revenue" stroke="hsl(210 65% 50%)" fill="hsl(210 65% 50% / 0.2)" strokeWidth={2} name="Revenue" />
+                  <Area type="monotone" dataKey="totalCosts" stroke="hsl(0 0% 55%)" fill="hsl(0 0% 55% / 0.1)" strokeWidth={2} name="Total Costs" />
+                  <Line type="monotone" dataKey="breakEven" stroke="hsl(45 80% 50%)" strokeWidth={2} strokeDasharray="8 4" dot={false} name="Break-Even Line" />
                 </ComposedChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         )}
 
-        {/* Key Insights */}
+        {/* Top Products + Inventory Health */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Products */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Top Revenue Products
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {topProducts.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No sales data yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {topProducts.map((p, i) => {
+                    const maxRevenue = topProducts[0]?.revenue || 1;
+                    const pct = (p.revenue / maxRevenue) * 100;
+                    return (
+                      <div key={p.name} className="space-y-1">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="font-medium">
+                            <span className="text-muted-foreground mr-2">#{i + 1}</span>
+                            {p.name}
+                          </span>
+                          <span className="font-bold text-blue-600">{formatKES(p.revenue)}</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-blue-500 transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {p.qty} {p.unit} sold
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Inventory Health */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bug className="h-5 w-5 text-amber-600" />
+                Inventory Health
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="rounded-lg border p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Items</p>
+                    <p className="text-2xl font-bold text-foreground">{inventoryStats.totalItems}</p>
+                  </div>
+                  <BarChart3 className="h-8 w-8 text-blue-500" />
+                </div>
+                <div className="rounded-lg border p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Inventory Value</p>
+                    <p className="text-2xl font-bold text-foreground">{formatKES(inventoryStats.totalValue)}</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-green-500" />
+                </div>
+                <div className={`rounded-lg border p-4 flex items-center justify-between ${inventoryStats.lowStock > 0 ? "border-red-300 bg-red-50" : ""}`}>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Low Stock Alerts</p>
+                    <p className={`text-2xl font-bold ${inventoryStats.lowStock > 0 ? "text-red-600" : "text-green-600"}`}>
+                      {inventoryStats.lowStock}
+                    </p>
+                  </div>
+                  {inventoryStats.lowStock > 0 ? (
+                    <TrendingDown className="h-8 w-8 text-red-500" />
+                  ) : (
+                    <TrendingUp className="h-8 w-8 text-green-500" />
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Farm Summary */}
         <Card>
           <CardHeader>
-            <CardTitle>Key Insights & Recommendations</CardTitle>
+            <CardTitle>Farm Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="font-semibold text-farm-green">Performance Highlights</h4>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span>Livestock health score improved by 1.2% this month</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span>Crop yield efficiency is approaching target levels</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-600 mt-0.5" />
-                    <span>Cost per unit decreased by 1.5% due to optimization</span>
-                  </li>
-                </ul>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="text-center p-4 rounded-lg border">
+                <p className="text-3xl font-bold text-foreground">{crops.length}</p>
+                <p className="text-sm text-muted-foreground mt-1">Active Crops</p>
               </div>
-              <div className="space-y-4">
-                <h4 className="font-semibold text-farm-barn">Areas for Improvement</h4>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-start gap-2">
-                    <Target className="h-4 w-4 text-yellow-600 mt-0.5" />
-                    <span>Resource utilization needs attention to reach 90% target</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Target className="h-4 w-4 text-yellow-600 mt-0.5" />
-                    <span>Consider diversifying crop portfolio for better risk management</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Target className="h-4 w-4 text-yellow-600 mt-0.5" />
-                    <span>Seasonal planning could improve quarterly consistency</span>
-                  </li>
-                </ul>
+              <div className="text-center p-4 rounded-lg border">
+                <p className="text-3xl font-bold text-foreground">{livestock.length}</p>
+                <p className="text-sm text-muted-foreground mt-1">Livestock</p>
+              </div>
+              <div className="text-center p-4 rounded-lg border">
+                <p className="text-3xl font-bold text-foreground">{filteredSales.length}</p>
+                <p className="text-sm text-muted-foreground mt-1">Sales Made</p>
+              </div>
+              <div className="text-center p-4 rounded-lg border">
+                <p className="text-3xl font-bold text-foreground">{filteredPurchases.length}</p>
+                <p className="text-sm text-muted-foreground mt-1">Purchases</p>
               </div>
             </div>
           </CardContent>
