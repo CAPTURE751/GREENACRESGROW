@@ -79,6 +79,24 @@ export function FarmSwitcher() {
     setFarmToDelete(null);
   };
 
+  const handleEditFarm = async () => {
+    if (!farmToEdit || !editName.trim()) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from('farms' as any)
+      .update({ name: editName.trim(), location: editLocation.trim() } as any)
+      .eq('id', farmToEdit.id);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } else {
+      toast({ title: "Farm updated", description: "Farm details have been saved." });
+      await refetchFarms();
+    }
+    setSaving(false);
+    setShowEditDialog(false);
+    setFarmToEdit(null);
+  };
+
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
