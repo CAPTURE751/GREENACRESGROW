@@ -364,6 +364,78 @@ export default function Analytics() {
           </Card>
         </div>
 
+        {/* Break-Even Analysis Chart */}
+        {breakEvenData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-farm-green" />
+                  Break-Even Analysis
+                </CardTitle>
+                <Badge className={isAboveBreakEven ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                  {isAboveBreakEven ? '✓ Above Break-Even' : '✗ Below Break-Even'}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Cumulative revenue vs costs with break-even threshold
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Cumulative Revenue</p>
+                  <p className="text-lg font-bold text-foreground">{formatKES(latestBE?.revenue || 0)}</p>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-xs text-muted-foreground">Break-Even Point</p>
+                  <p className="text-lg font-bold text-foreground">{formatKES(latestBE?.breakEven || 0)}</p>
+                </div>
+                <div className="rounded-lg border p-3 text-center">
+                  <p className="text-xs text-muted-foreground">{isAboveBreakEven ? 'Surplus' : 'Shortfall'}</p>
+                  <p className={`text-lg font-bold ${isAboveBreakEven ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatKES(Math.abs((latestBE?.revenue || 0) - (latestBE?.breakEven || 0)))}
+                  </p>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={350}>
+                <ComposedChart data={breakEvenData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value: number) => [formatKES(value), '']} />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="hsl(84 31% 44%)"
+                    fill="hsl(84 31% 44% / 0.3)"
+                    strokeWidth={2}
+                    name="Revenue"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="totalCosts"
+                    stroke="hsl(0 65% 50%)"
+                    fill="hsl(0 65% 50% / 0.15)"
+                    strokeWidth={2}
+                    name="Total Costs"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="breakEven"
+                    stroke="hsl(43 74% 50%)"
+                    strokeWidth={2}
+                    strokeDasharray="8 4"
+                    dot={false}
+                    name="Break-Even Line"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Key Insights */}
         <Card>
           <CardHeader>
