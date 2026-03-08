@@ -2,3 +2,12 @@ project_id = "aavcuwndjrleacytrmuw"
 
 [functions.bulk-inventory-update]
 verify_jwt = false
+
+[functions.calculate-profit-loss]
+verify_jwt = false
+
+[functions.generate-farm-report]
+verify_jwt = false
+
+[functions.inventory-alerts]
+verify_jwt = false
