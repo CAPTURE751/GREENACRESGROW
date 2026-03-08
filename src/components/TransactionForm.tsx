@@ -167,20 +167,38 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Category *</Label>
               <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="seeds">Seeds</SelectItem>
+                  {/* Direct Costs */}
+                  <SelectItem value="seeds">Seeds & Planting Materials</SelectItem>
                   <SelectItem value="fertilizer">Fertilizer</SelectItem>
-                  <SelectItem value="equipment">Equipment</SelectItem>
-                  <SelectItem value="labor">Labor</SelectItem>
-                  <SelectItem value="feed">Feed</SelectItem>
-                  <SelectItem value="veterinary">Veterinary</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                  <SelectItem value="utilities">Utilities</SelectItem>
+                  <SelectItem value="chemicals">Chemicals & Crop Protection</SelectItem>
+                  <SelectItem value="irrigation">Irrigation Costs</SelectItem>
+                  <SelectItem value="feed">Livestock Feed</SelectItem>
+                  <SelectItem value="veterinary">Veterinary Costs</SelectItem>
+                  <SelectItem value="casual_labour">Casual Labour</SelectItem>
+                  {/* Operating Expenses */}
+                  <SelectItem value="permanent_labour">Permanent Labour / Salaries</SelectItem>
+                  <SelectItem value="machinery">Machinery & Equipment</SelectItem>
+                  <SelectItem value="utilities">Utilities (Electricity/Water)</SelectItem>
+                  <SelectItem value="transport">Transport & Distribution</SelectItem>
+                  <SelectItem value="farm_supplies">Farm Supplies (Tools/Packaging)</SelectItem>
+                  <SelectItem value="communication">Communication (Internet/Phone)</SelectItem>
+                  <SelectItem value="land_costs">Land Costs (Lease/Rates)</SelectItem>
+                  <SelectItem value="insurance">Insurance (Crop/Livestock)</SelectItem>
+                  <SelectItem value="administration">Administration</SelectItem>
+                  <SelectItem value="marketing">Marketing & Advertising</SelectItem>
+                  {/* Financial Costs */}
+                  <SelectItem value="loan_interest">Loan Interest</SelectItem>
+                  <SelectItem value="bank_charges">Bank Charges</SelectItem>
+                  <SelectItem value="equipment_financing">Equipment Financing</SelectItem>
+                  {/* Other */}
+                  <SelectItem value="depreciation">Depreciation</SelectItem>
+                  <SelectItem value="taxes">Taxes</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
