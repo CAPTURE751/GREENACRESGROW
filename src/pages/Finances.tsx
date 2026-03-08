@@ -301,7 +301,34 @@ export default function Finances() {
                 {/* Title + Export Controls */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-foreground">Profit & Loss Report</h3>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 print:hidden">
+                    <Button variant="outline" size="sm" onClick={() => {
+                      const printContents = document.getElementById('pnl-report-preview');
+                      if (!printContents) return;
+                      const win = window.open('', '_blank');
+                      if (!win) return;
+                      win.document.write(`
+                        <html><head><title>P&L Report - JEFF TRICKS FARM LTD</title>
+                        <style>
+                          body { font-family: Arial, sans-serif; padding: 20px; color: #1e1e1e; }
+                          table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+                          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
+                          th { background-color: #4c6f3c; color: white; }
+                          h3 { margin: 0; } h4 { margin: 8px 0 4px; }
+                          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+                          .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0; }
+                          .summary-card { padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+                          .footer { border-top: 1px solid #4c6f3c; padding-top: 8px; margin-top: 24px; font-size: 11px; color: #888; }
+                        </style></head><body>
+                        ${printContents.innerHTML}
+                        </body></html>
+                      `);
+                      win.document.close();
+                      win.print();
+                    }}>
+                      <Printer className="h-4 w-4 mr-1" />
+                      Print
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => exportPnLToCSV(pnlReport, printedByName)}>
                       <FileSpreadsheet className="h-4 w-4 mr-1" />
                       CSV
