@@ -1,16 +1,19 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatKES } from "./currency";
-import farmLogoUrl from "@/assets/farm-logo.png";
+import fallbackLogoUrl from "@/assets/farm-logo.png";
+import { getFarmSettings } from "./farm-settings-cache";
 
-const FARM_NAME = "JEFF TRICKS FARM LTD";
-const FARM_LOCATION = "Nyeri, Kenya";
+const DEFAULT_FARM_NAME = "JEFF TRICKS FARM LTD";
+const DEFAULT_LOCATION = "Nyeri, Kenya";
 const FARM_SLOGAN = "Nurturing the Land, Feeding the Future";
 
-/** Generate a standardized filename with farm prefix: "JEFF TRICKS FARM LTD <docName>-YYYY-MM-DD.<ext>" */
-export function farmFileName(docName: string, ext: string): string {
+/** Generate a standardized filename with farm prefix */
+export async function farmFileName(docName: string, ext: string): Promise<string> {
+  const settings = await getFarmSettings();
+  const name = settings?.farm_name || DEFAULT_FARM_NAME;
   const date = new Date().toISOString().slice(0, 10);
-  return `${FARM_NAME} ${docName}-${date}.${ext}`;
+  return `${name} ${docName}-${date}.${ext}`;
 }
 
 interface PnLReport {
