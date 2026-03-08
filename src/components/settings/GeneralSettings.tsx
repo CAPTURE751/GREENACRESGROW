@@ -57,6 +57,7 @@ export function GeneralSettings() {
         farm_name: farmName,
         owner_name: ownerName,
         location,
+        slogan,
         logo_url: logoUrl,
       });
       setLogoFile(null);
