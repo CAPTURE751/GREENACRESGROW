@@ -161,7 +161,7 @@ export default function Reports() {
   }, [livestock]);
 
   // Export full overview as CSV
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const lines: string[] = [];
     lines.push(FARM_BRANDING.name);
     lines.push(FARM_BRANDING.location);
