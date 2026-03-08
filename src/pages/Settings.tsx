@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
+import { UserSettings } from "@/components/settings/UserSettings";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
