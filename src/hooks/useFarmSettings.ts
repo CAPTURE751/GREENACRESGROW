@@ -7,6 +7,7 @@ export interface FarmSettings {
   farm_name: string;
   owner_name: string;
   location: string;
+  slogan: string;
   logo_url: string | null;
   created_at: string;
   updated_at: string;
