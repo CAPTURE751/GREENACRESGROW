@@ -25,7 +25,7 @@ import {
   X,
   Download,
   FileSpreadsheet,
-} from "lucide-react";
+Printer,
 import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
 import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
