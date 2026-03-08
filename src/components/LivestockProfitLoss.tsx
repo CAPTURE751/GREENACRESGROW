@@ -6,7 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatKES } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Loader2 } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Loader2, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
+import { toast } from "sonner";
 
 export function LivestockProfitLoss() {
   const [selectedProduct, setSelectedProduct] = useState<string>("all");
