@@ -19,6 +19,7 @@ export function GeneralSettings() {
   const [farmName, setFarmName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [location, setLocation] = useState('');
+  const [slogan, setSlogan] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
