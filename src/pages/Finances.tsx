@@ -448,15 +448,14 @@ export default function Finances() {
         {/* Transactions List */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Recent Transactions
-              </span>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Recent Transactions
+              {(txnStartDate || txnEndDate) && (
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  {txnStartDate || '...'} → {txnEndDate || '...'}
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
