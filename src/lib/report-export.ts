@@ -313,7 +313,6 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.text(`Page ${i} of ${totalPages}`, pageWidth - 14, pageHeight - 12, { align: "right" });
-    doc.text(`Ref: ${stampCode}`, pageWidth - 14, pageHeight - 8, { align: "right" });
 
     // Bottom green bar
     doc.setFillColor(...headerColor);
