@@ -66,6 +66,8 @@ interface PnLReport {
 export default function Finances() {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [txnStartDate, setTxnStartDate] = useState('');
+  const [txnEndDate, setTxnEndDate] = useState('');
   const [showPnL, setShowPnL] = useState(false);
   const [pnlReport, setPnlReport] = useState<PnLReport | null>(null);
   const [pnlStartDate, setPnlStartDate] = useState('');
@@ -118,9 +120,12 @@ export default function Finances() {
     }))
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const filteredTransactions = allTransactions.filter(t => 
-    filter === 'all' || t.type === filter
-  );
+  const filteredTransactions = allTransactions.filter(t => {
+    if (filter !== 'all' && t.type !== filter) return false;
+    if (txnStartDate && new Date(t.date) < new Date(txnStartDate)) return false;
+    if (txnEndDate && new Date(t.date) > new Date(txnEndDate)) return false;
+    return true;
+  });
 
   const totalIncome = salesAnalytics?.totalRevenue || 0;
   const totalExpenses = purchaseAnalytics?.totalExpenses || 0;
@@ -388,41 +393,69 @@ export default function Finances() {
         </Card>
 
         {/* Transaction Filters */}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={filter === 'all' ? 'default' : 'outline'}
-            onClick={() => setFilter('all')}
-          >
-            All Transactions
-          </Button>
-          <Button
-            variant={filter === 'income' ? 'default' : 'outline'}
-            onClick={() => setFilter('income')}
-            className="text-green-700"
-          >
-            Income Only
-          </Button>
-          <Button
-            variant={filter === 'expense' ? 'default' : 'outline'}
-            onClick={() => setFilter('expense')}
-            className="text-red-700"
-          >
-            Expenses Only
-          </Button>
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex gap-2">
+            <Button
+              variant={filter === 'all' ? 'default' : 'outline'}
+              onClick={() => setFilter('all')}
+            >
+              All Transactions
+            </Button>
+            <Button
+              variant={filter === 'income' ? 'default' : 'outline'}
+              onClick={() => setFilter('income')}
+              className="text-green-700"
+            >
+              Income Only
+            </Button>
+            <Button
+              variant={filter === 'expense' ? 'default' : 'outline'}
+              onClick={() => setFilter('expense')}
+              className="text-red-700"
+            >
+              Expenses Only
+            </Button>
+          </div>
+          <div className="flex gap-2 items-end ml-auto">
+            <div className="space-y-1">
+              <Label htmlFor="txn-start" className="text-xs">From</Label>
+              <Input
+                id="txn-start"
+                type="date"
+                value={txnStartDate}
+                onChange={(e) => setTxnStartDate(e.target.value)}
+                className="h-9 w-[140px]"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="txn-end" className="text-xs">To</Label>
+              <Input
+                id="txn-end"
+                type="date"
+                value={txnEndDate}
+                onChange={(e) => setTxnEndDate(e.target.value)}
+                className="h-9 w-[140px]"
+              />
+            </div>
+            {(txnStartDate || txnEndDate) && (
+              <Button variant="ghost" size="sm" onClick={() => { setTxnStartDate(''); setTxnEndDate(''); }}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Transactions List */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Recent Transactions
-              </span>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Recent Transactions
+              {(txnStartDate || txnEndDate) && (
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  {txnStartDate || '...'} → {txnEndDate || '...'}
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
