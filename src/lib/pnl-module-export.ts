@@ -136,9 +136,9 @@ export async function exportModulePnLToPDF(
           data.cell.styles.textColor = [30, 80, 180];
           data.cell.styles.fontStyle = "bold";
         }
-        // Costs = Orange
+        // Costs = Charcoal Gray
         if (data.row.index === 1) {
-          data.cell.styles.textColor = [200, 120, 20];
+          data.cell.styles.textColor = [70, 70, 70];
           data.cell.styles.fontStyle = "bold";
         }
         // Net Profit = Green, Net Loss = Red
