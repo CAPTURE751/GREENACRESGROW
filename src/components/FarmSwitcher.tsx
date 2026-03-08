@@ -106,18 +106,35 @@ export function FarmSwitcher() {
                   )}
                   <span className="truncate">{farm.name}</span>
                 </button>
-                {farms.length > 1 && farm.owner_id === user?.id && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFarmToDelete({ id: farm.id, name: farm.name });
-                      setShowDeleteDialog(true);
-                      setOpen(false);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 text-destructive mr-1 transition-opacity"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                {farm.owner_id === user?.id && (
+                  <div className="flex opacity-0 group-hover:opacity-100 transition-opacity mr-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFarmToEdit({ id: farm.id, name: farm.name, location: farm.location });
+                        setEditName(farm.name);
+                        setEditLocation(farm.location);
+                        setShowEditDialog(true);
+                        setOpen(false);
+                      }}
+                      className="p-1 rounded hover:bg-accent text-muted-foreground"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    {farms.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFarmToDelete({ id: farm.id, name: farm.name });
+                          setShowDeleteDialog(true);
+                          setOpen(false);
+                        }}
+                        className="p-1 rounded hover:bg-destructive/10 text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             ))}
