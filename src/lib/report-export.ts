@@ -139,7 +139,7 @@ export async function exportPnLToCSV(report: PnLReport, printedBy?: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = farmFileName('PNL-report', 'csv');
+  a.download = await farmFileName('PNL-report', 'csv');
   a.click();
   URL.revokeObjectURL(url);
 }
