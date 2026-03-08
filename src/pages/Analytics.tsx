@@ -2,6 +2,10 @@
 import { useState, useMemo } from "react";
 import { exportAnalyticsPDF } from "@/lib/analytics-export";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +57,9 @@ const PIE_COLORS = [
 ];
 
 export default function Analytics() {
-  const [timeRange, setTimeRange] = useState<"6m" | "12m" | "all">("12m");
+  const [timeRange, setTimeRange] = useState<"6m" | "12m" | "all" | "custom">("12m");
+  const [customStart, setCustomStart] = useState<Date | undefined>(undefined);
+  const [customEnd, setCustomEnd] = useState<Date | undefined>(undefined);
 
   // ── Fetch all raw data ──
   const { data: sales = [], isLoading: sl } = useQuery({
@@ -111,25 +117,35 @@ export default function Analytics() {
 
   // ── Time filter helper ──
   const cutoffDate = useMemo(() => {
+    if (timeRange === "custom") return customStart ? customStart.toISOString().substring(0, 10) : null;
     if (timeRange === "all") return null;
     const d = new Date();
     d.setMonth(d.getMonth() - (timeRange === "6m" ? 6 : 12));
     return d.toISOString().substring(0, 10);
-  }, [timeRange]);
+  }, [timeRange, customStart]);
+
+  const endDate = useMemo(() => {
+    if (timeRange === "custom" && customEnd) return customEnd.toISOString().substring(0, 10);
+    return null;
+  }, [timeRange, customEnd]);
 
   const filteredSales = useMemo(
-    () =>
-      cutoffDate
-        ? sales.filter((s) => s.sale_date >= cutoffDate)
-        : sales,
-    [sales, cutoffDate]
+    () => {
+      let filtered = sales;
+      if (cutoffDate) filtered = filtered.filter((s) => s.sale_date >= cutoffDate);
+      if (endDate) filtered = filtered.filter((s) => s.sale_date <= endDate);
+      return filtered;
+    },
+    [sales, cutoffDate, endDate]
   );
   const filteredPurchases = useMemo(
-    () =>
-      cutoffDate
-        ? purchases.filter((p) => p.purchase_date >= cutoffDate)
-        : purchases,
-    [purchases, cutoffDate]
+    () => {
+      let filtered = purchases;
+      if (cutoffDate) filtered = filtered.filter((p) => p.purchase_date >= cutoffDate);
+      if (endDate) filtered = filtered.filter((p) => p.purchase_date <= endDate);
+      return filtered;
+    },
+    [purchases, cutoffDate, endDate]
   );
 
   // ── KPI Summaries ──
@@ -266,6 +282,7 @@ export default function Analytics() {
     { id: "6m" as const, label: "6 Months" },
     { id: "12m" as const, label: "12 Months" },
     { id: "all" as const, label: "All Time" },
+    { id: "custom" as const, label: "Custom" },
   ];
 
   if (isLoading) {
@@ -300,6 +317,33 @@ export default function Analytics() {
                 {r.label}
               </Button>
             ))}
+            {timeRange === "custom" && (
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal", !customStart && "text-muted-foreground")}>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {customStart ? format(customStart, "dd/MM/yyyy") : "Start date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent mode="single" selected={customStart} onSelect={setCustomStart} initialFocus className={cn("p-3 pointer-events-auto")} />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-muted-foreground text-sm">to</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal", !customEnd && "text-muted-foreground")}>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {customEnd ? format(customEnd, "dd/MM/yyyy") : "End date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent mode="single" selected={customEnd} onSelect={setCustomEnd} initialFocus className={cn("p-3 pointer-events-auto")} disabled={(date) => customStart ? date < customStart : false} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
             <Button
               size="sm"
               className="bg-farm-green hover:bg-farm-green/90"
@@ -325,7 +369,7 @@ export default function Analytics() {
                       sales: filteredSales.length,
                       purchases: filteredPurchases.length,
                     },
-                    timeRange: timeRange === "6m" ? "Last 6 Months" : timeRange === "12m" ? "Last 12 Months" : "All Time",
+                    timeRange: timeRange === "6m" ? "Last 6 Months" : timeRange === "12m" ? "Last 12 Months" : timeRange === "custom" ? `${customStart ? format(customStart, "dd/MM/yyyy") : "?"} – ${customEnd ? format(customEnd, "dd/MM/yyyy") : "?"}` : "All Time",
                   });
                   toast.success("Analytics PDF downloaded successfully");
                 } catch (e: any) {
