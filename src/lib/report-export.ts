@@ -383,9 +383,9 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   // Operating expense category mappings
   const opexMappings: { label: string; keys: string[] }[] = [
     { label: "Labour Costs (Permanent Workers / Farm Manager)", keys: ["permanent_labour", "permanent labour", "salaries", "salary", "farm manager"] },
-    { label: "Machinery & Equipment (Fuel, Maintenance, Repairs)", keys: ["machinery", "equipment", "maintenance", "tractor fuel", "repairs"] },
-    { label: "Utilities (Electricity, Water)", keys: ["utilities", "electricity"] },
-    { label: "Transport & Distribution", keys: ["transport", "distribution", "delivery", "fuel"] },
+    { label: "Machinery & Equipment (Maintenance, Repairs)", keys: ["machinery", "equipment", "maintenance", "tractor", "repairs"] },
+    { label: "Utilities (Electricity, Water)", keys: ["utilities", "electricity", "water"] },
+    { label: "Transport & Distribution", keys: ["transport", "distribution", "delivery"] },
     { label: "Farm Supplies (Tools, Packaging, Storage)", keys: ["farm_supplies", "farm supplies", "tools", "packaging", "storage"] },
     { label: "Communication (Internet, Phone)", keys: ["communication", "internet", "phone"] },
     { label: "Land Costs (Lease, Rates)", keys: ["land_costs", "land costs", "lease", "land rates"] },
