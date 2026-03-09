@@ -702,7 +702,8 @@ export async function generateExpenseReport(data: ReportData) {
 
 // ========== 10. Break-Even Analysis Report ==========
 export async function generateBreakEvenAnalysis(data: ReportData) {
-  const ctx = await createBrandedPDF("Break-Even Analysis Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Break-Even Analysis Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
