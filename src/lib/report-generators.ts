@@ -414,7 +414,8 @@ export async function generateProductionBudget(data: ReportData) {
 
 // ========== 5. Enterprise Profitability Report ==========
 export async function generateEnterpriseProfitability(data: ReportData) {
-  const ctx = await createBrandedPDF("Enterprise Profitability Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Enterprise Profitability Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
