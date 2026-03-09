@@ -442,8 +442,8 @@ export default function Finances() {
                 <Separator />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div>
-                    <p className="font-semibold text-farm-green">JEFF TRICKS FARM LTD</p>
-                    <p className="italic">"Nurturing the Land, Feeding the Future"</p>
+                    <p className="font-semibold text-farm-green">{farmName}</p>
+                    {farmSlogan && <p className="italic">"{farmSlogan}"</p>}
                   </div>
                   <div className="text-right">
                     <p>Generated: {new Date(pnlReport.generated_at).toLocaleString()}</p>
