@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/currency";
 import { farmFileName } from "@/lib/report-export";
-import { FARM_BRANDING } from "@/lib/constants";
+import { useFarm } from "@/contexts/FarmContext";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
 import { useCrops } from "@/hooks/useCrops";
@@ -49,6 +49,7 @@ const CHART_COLORS = [
 ];
 
 export default function Reports() {
+  const { activeFarm } = useFarm();
   const { sales, isLoading: salesLoading } = useSales();
   const { purchases, isLoading: purchasesLoading } = usePurchases();
   const { crops, isLoading: cropsLoading } = useCrops();
@@ -162,9 +163,12 @@ export default function Reports() {
 
   // Export full overview as CSV
   const handleExportCSV = async () => {
+    const farmName = activeFarm?.name || 'My Farm';
+    const farmLocation = activeFarm?.location || '';
     const lines: string[] = [];
-    lines.push(FARM_BRANDING.name);
-    lines.push(FARM_BRANDING.location);
+    lines.push(farmName);
+    lines.push(farmLocation);
+    lines.push(farmLocation);
     lines.push('');
     lines.push('FARM OVERVIEW REPORT');
     lines.push(`Generated,${new Date().toLocaleString()}`);
@@ -227,7 +231,7 @@ export default function Reports() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Reports & Analytics</h1>
-            <p className="text-muted-foreground mt-1">{FARM_BRANDING.name} — Live farm data overview</p>
+            <p className="text-muted-foreground mt-1">{activeFarm?.name || 'My Farm'} — Live farm data overview</p>
           </div>
           <Button onClick={handleExportCSV} className="bg-farm-green hover:bg-farm-green/90">
             <Download className="h-4 w-4 mr-2" />
