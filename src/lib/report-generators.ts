@@ -74,7 +74,7 @@ function generateStampCode(): string {
   return segments.join("-");
 }
 
-async function createBrandedPDF(title: string) {
+async function createBrandedPDF(title: string, period?: string) {
   const settings = await getFarmSettings();
   const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
   const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
