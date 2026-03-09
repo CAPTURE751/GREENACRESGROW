@@ -163,9 +163,10 @@ export default function Reports() {
 
   // Export full overview as CSV
   const handleExportCSV = async () => {
-    const lines: string[] = [];
-    lines.push(FARM_BRANDING.name);
-    lines.push(FARM_BRANDING.location);
+    const farmName = activeFarm?.name || 'My Farm';
+    const farmLocation = activeFarm?.location || '';
+    lines.push(farmName);
+    lines.push(farmLocation);
     lines.push('');
     lines.push('FARM OVERVIEW REPORT');
     lines.push(`Generated,${new Date().toLocaleString()}`);
