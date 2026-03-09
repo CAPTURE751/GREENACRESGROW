@@ -16,6 +16,31 @@ interface ReportData {
   livestock: any[];
   inventory: any[];
   equipment?: any[];
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string;   // YYYY-MM-DD
+}
+
+function filterByDateRange(data: ReportData): ReportData {
+  const { startDate, endDate } = data;
+  if (!startDate && !endDate) return data;
+  const filterDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return true;
+    if (startDate && dateStr < startDate) return false;
+    if (endDate && dateStr > endDate) return false;
+    return true;
+  };
+  return {
+    ...data,
+    sales: data.sales.filter(s => filterDate(s.sale_date)),
+    purchases: data.purchases.filter(p => filterDate(p.purchase_date)),
+  };
+}
+
+function periodLabel(data: ReportData): string {
+  if (data.startDate && data.endDate) return `Period: ${data.startDate} to ${data.endDate}`;
+  if (data.startDate) return `From: ${data.startDate}`;
+  if (data.endDate) return `Up to: ${data.endDate}`;
+  return "Period: All Time";
 }
 
 // ========== PDF Helpers ==========
@@ -49,7 +74,7 @@ function generateStampCode(): string {
   return segments.join("-");
 }
 
-async function createBrandedPDF(title: string) {
+async function createBrandedPDF(title: string, period?: string) {
   const settings = await getFarmSettings();
   const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
   const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
@@ -85,6 +110,13 @@ async function createBrandedPDF(title: string) {
   doc.line(14, y, pageWidth - 14, y);
   y += 10;
 
+  // Period subtitle
+  if (period) {
+    doc.setFontSize(9); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+    doc.text(period, pageWidth / 2, y, { align: "center" });
+    y += 4;
+  }
+
   // Title
   doc.setFontSize(15); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
   doc.text(title, pageWidth / 2, y, { align: "center" });
@@ -116,7 +148,8 @@ async function createBrandedPDF(title: string) {
 
 // ========== 1. Income Statement (P&L) ==========
 export async function generateIncomeStatement(data: ReportData) {
-  const ctx = await createBrandedPDF("Income Statement (Profit & Loss)");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Income Statement (Profit & Loss)", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters, pageWidth } = ctx;
   let y = ctx.getY();
 
@@ -190,7 +223,8 @@ export async function generateIncomeStatement(data: ReportData) {
 
 // ========== 2. Cash Flow Statement ==========
 export async function generateCashFlowStatement(data: ReportData) {
-  const ctx = await createBrandedPDF("Cash Flow Statement");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Cash Flow Statement", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
@@ -255,7 +289,8 @@ export async function generateCashFlowStatement(data: ReportData) {
 
 // ========== 3. Balance Sheet ==========
 export async function generateBalanceSheet(data: ReportData) {
-  const ctx = await createBrandedPDF("Balance Sheet (Farm Net Worth Report)");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Balance Sheet (Farm Net Worth Report)", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
@@ -325,7 +360,8 @@ export async function generateBalanceSheet(data: ReportData) {
 
 // ========== 4. Production Budget Report ==========
 export async function generateProductionBudget(data: ReportData) {
-  const ctx = await createBrandedPDF("Production Budget Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Production Budget Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
@@ -378,7 +414,8 @@ export async function generateProductionBudget(data: ReportData) {
 
 // ========== 5. Enterprise Profitability Report ==========
 export async function generateEnterpriseProfitability(data: ReportData) {
-  const ctx = await createBrandedPDF("Enterprise Profitability Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Enterprise Profitability Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
@@ -443,7 +480,8 @@ export async function generateEnterpriseProfitability(data: ReportData) {
 
 // ========== 6. Cost of Production Report ==========
 export async function generateCostOfProduction(data: ReportData) {
-  const ctx = await createBrandedPDF("Cost of Production Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Cost of Production Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
@@ -483,7 +521,8 @@ export async function generateCostOfProduction(data: ReportData) {
 
 // ========== 7. Inventory / Stock Report ==========
 export async function generateInventoryReport(data: ReportData) {
-  const ctx = await createBrandedPDF("Inventory / Stock Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Inventory / Stock Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
@@ -530,7 +569,8 @@ export async function generateInventoryReport(data: ReportData) {
 
 // ========== 8. Sales Revenue Report ==========
 export async function generateSalesRevenueReport(data: ReportData) {
-  const ctx = await createBrandedPDF("Sales Revenue Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Sales Revenue Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
@@ -590,7 +630,8 @@ export async function generateSalesRevenueReport(data: ReportData) {
 
 // ========== 9. Expense Report ==========
 export async function generateExpenseReport(data: ReportData) {
-  const ctx = await createBrandedPDF("Expense Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Expense Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
@@ -661,7 +702,8 @@ export async function generateExpenseReport(data: ReportData) {
 
 // ========== 10. Break-Even Analysis Report ==========
 export async function generateBreakEvenAnalysis(data: ReportData) {
-  const ctx = await createBrandedPDF("Break-Even Analysis Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Break-Even Analysis Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
