@@ -360,7 +360,8 @@ export async function generateBalanceSheet(data: ReportData) {
 
 // ========== 4. Production Budget Report ==========
 export async function generateProductionBudget(data: ReportData) {
-  const ctx = await createBrandedPDF("Production Budget Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Production Budget Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
