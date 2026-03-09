@@ -148,7 +148,8 @@ async function createBrandedPDF(title: string, period?: string) {
 
 // ========== 1. Income Statement (P&L) ==========
 export async function generateIncomeStatement(data: ReportData) {
-  const ctx = await createBrandedPDF("Income Statement (Profit & Loss)");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Income Statement (Profit & Loss)", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters, pageWidth } = ctx;
   let y = ctx.getY();
 
