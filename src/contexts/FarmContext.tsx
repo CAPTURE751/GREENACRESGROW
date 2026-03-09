@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
+import { clearFarmSettingsCache } from '@/lib/farm-settings-cache';
 
 export interface Farm {
   id: string;
@@ -93,6 +94,7 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
   const setActiveFarmId = (id: string) => {
     setActiveFarmIdState(id);
     localStorage.setItem(ACTIVE_FARM_KEY, id);
+    clearFarmSettingsCache();
     // Invalidate all data queries when switching farms
     queryClient.invalidateQueries();
   };
