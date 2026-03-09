@@ -521,7 +521,8 @@ export async function generateCostOfProduction(data: ReportData) {
 
 // ========== 7. Inventory / Stock Report ==========
 export async function generateInventoryReport(data: ReportData) {
-  const ctx = await createBrandedPDF("Inventory / Stock Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Inventory / Stock Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
