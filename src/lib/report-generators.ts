@@ -110,6 +110,13 @@ async function createBrandedPDF(title: string, period?: string) {
   doc.line(14, y, pageWidth - 14, y);
   y += 10;
 
+  // Period subtitle
+  if (period) {
+    doc.setFontSize(9); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+    doc.text(period, pageWidth / 2, y, { align: "center" });
+    y += 4;
+  }
+
   // Title
   doc.setFontSize(15); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
   doc.text(title, pageWidth / 2, y, { align: "center" });
