@@ -160,43 +160,49 @@ export function UserSettings() {
                   Add User
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Add New User</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-name">Full Name *</Label>
-                    <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Jane Wanjiku" />
+                <div className="space-y-3 py-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new-name">Full Name *</Label>
+                      <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Jane Wanjiku" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new-phone">Phone</Label>
+                      <Input id="new-phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="e.g. +254 712 345678" />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-phone">Phone</Label>
-                    <Input id="new-phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="e.g. +254 712 345678" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new-email">Email *</Label>
+                      <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="jane@example.com" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new-location">Location</Label>
+                      <Input id="new-location" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} placeholder="e.g. Nyeri, Kenya" />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-email">Email *</Label>
-                    <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="jane@example.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-location">Location</Label>
-                    <Input id="new-location" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} placeholder="e.g. Nyeri, Kenya" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password">Password *</Label>
-                    <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 6 characters" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Select value={newRole} onValueChange={(v) => setNewRole(v as UserRole)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="farmer">Farmer</SelectItem>
-                        <SelectItem value="staff">Staff</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new-password">Password *</Label>
+                      <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 6 characters" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Role</Label>
+                      <Select value={newRole} onValueChange={(v) => setNewRole(v as UserRole)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="farmer">Farmer</SelectItem>
+                          <SelectItem value="staff">Staff</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
