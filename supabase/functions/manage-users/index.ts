@@ -47,7 +47,7 @@ serve(async (req) => {
     const { action, ...payload } = await req.json();
 
     if (action === "create") {
-      const { email, password, name, role } = payload;
+      const { email, password, name, phone, location, role } = payload;
       if (!email || !password || !name) {
         return new Response(JSON.stringify({ error: "Email, password, and name are required" }), {
           status: 400,
@@ -70,12 +70,19 @@ serve(async (req) => {
         });
       }
 
-      // Update role if not default farmer
-      if (role && role !== "farmer" && newUser.user) {
-        await supabaseAdmin
-          .from("profiles")
-          .update({ role })
-          .eq("user_id", newUser.user.id);
+      // Update profile with role, phone, and location
+      if (newUser.user) {
+        const profileUpdate: Record<string, string> = {};
+        if (role && role !== "farmer") profileUpdate.role = role;
+        if (phone) profileUpdate.phone = phone;
+        if (location) profileUpdate.farm_location = location;
+
+        if (Object.keys(profileUpdate).length > 0) {
+          await supabaseAdmin
+            .from("profiles")
+            .update(profileUpdate)
+            .eq("user_id", newUser.user.id);
+        }
       }
 
       return new Response(JSON.stringify({ success: true, user_id: newUser.user?.id }), {

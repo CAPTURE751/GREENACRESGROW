@@ -29,7 +29,9 @@ export function UserSettings() {
 
   // New user form
   const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newLocation, setNewLocation] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState<UserRole>('farmer');
 
@@ -85,7 +87,7 @@ export function UserSettings() {
     setAdding(true);
     try {
       const { data, error } = await supabase.functions.invoke('manage-users', {
-        body: { action: 'create', email: newEmail, password: newPassword, name: newName, role: newRole },
+        body: { action: 'create', email: newEmail, password: newPassword, name: newName, phone: newPhone, location: newLocation, role: newRole },
       });
 
       if (error || data?.error) {
@@ -93,7 +95,9 @@ export function UserSettings() {
       } else {
         toast({ title: 'User Created', description: `${newName} has been added as ${newRole}.` });
         setNewName('');
+        setNewPhone('');
         setNewEmail('');
+        setNewLocation('');
         setNewPassword('');
         setNewRole('farmer');
         setAddDialogOpen(false);
@@ -166,8 +170,16 @@ export function UserSettings() {
                     <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Jane Wanjiku" />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="new-phone">Phone</Label>
+                    <Input id="new-phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="e.g. +254 712 345678" />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="new-email">Email *</Label>
                     <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="jane@example.com" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-location">Location</Label>
+                    <Input id="new-location" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} placeholder="e.g. Nyeri, Kenya" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="new-password">Password *</Label>
