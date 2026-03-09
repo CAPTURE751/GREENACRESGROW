@@ -359,13 +359,10 @@ export async function exportAnalyticsPDF(data: AnalyticsData) {
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
-  // ── Watermark on each page ──
+  // ── Footer on each page ──
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
-    doc.setFontSize(50);
-    doc.setTextColor(230, 230, 230);
-    doc.text("CONFIDENTIAL", pw / 2, ph / 2, { align: "center", angle: 45 });
     // Footer
     doc.setFontSize(7);
     doc.setTextColor(160, 160, 160);
