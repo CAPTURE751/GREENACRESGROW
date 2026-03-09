@@ -480,7 +480,8 @@ export async function generateEnterpriseProfitability(data: ReportData) {
 
 // ========== 6. Cost of Production Report ==========
 export async function generateCostOfProduction(data: ReportData) {
-  const ctx = await createBrandedPDF("Cost of Production Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Cost of Production Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
