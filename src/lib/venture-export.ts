@@ -189,7 +189,29 @@ export async function exportVenturePDF(
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
-  // 6. AI Advice
+  // 6. Cash Flow (if provided)
+  if (cashFlow && cashFlow.length > 0) {
+    checkPage(40);
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...hc);
+    doc.text("6. Monthly Cash Flow Projection", 14, y); y += 6;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Month", "Cost (KES)", "Revenue (KES)", "Cash Position (KES)"]],
+      body: cashFlow.map((m: any) => [m.month, formatKES(m.cost), formatKES(m.revenue), formatKES(m.cashPosition)]),
+      theme: "grid", headStyles: { fillColor: hc }, styles: { fontSize: 9 },
+      didParseCell: (data: any) => {
+        if (data.column.index === 3 && data.section === "body") {
+          const val = cashFlow[data.row.index]?.cashPosition;
+          data.cell.styles.textColor = val >= 0 ? [40, 120, 40] : [180, 30, 30];
+          data.cell.styles.fontStyle = "bold";
+        }
+      },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // 7. AI Advice
   if (aiAdvice) {
     checkPage(30);
     doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...hc);
