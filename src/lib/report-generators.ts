@@ -16,6 +16,31 @@ interface ReportData {
   livestock: any[];
   inventory: any[];
   equipment?: any[];
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string;   // YYYY-MM-DD
+}
+
+function filterByDateRange(data: ReportData): ReportData {
+  const { startDate, endDate } = data;
+  if (!startDate && !endDate) return data;
+  const filterDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return true;
+    if (startDate && dateStr < startDate) return false;
+    if (endDate && dateStr > endDate) return false;
+    return true;
+  };
+  return {
+    ...data,
+    sales: data.sales.filter(s => filterDate(s.sale_date)),
+    purchases: data.purchases.filter(p => filterDate(p.purchase_date)),
+  };
+}
+
+function periodLabel(data: ReportData): string {
+  if (data.startDate && data.endDate) return `Period: ${data.startDate} to ${data.endDate}`;
+  if (data.startDate) return `From: ${data.startDate}`;
+  if (data.endDate) return `Up to: ${data.endDate}`;
+  return "Period: All Time";
 }
 
 // ========== PDF Helpers ==========
