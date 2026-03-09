@@ -569,7 +569,8 @@ export async function generateInventoryReport(data: ReportData) {
 
 // ========== 8. Sales Revenue Report ==========
 export async function generateSalesRevenueReport(data: ReportData) {
-  const ctx = await createBrandedPDF("Sales Revenue Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Sales Revenue Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
