@@ -69,6 +69,11 @@ interface PnLReport {
 }
 
 export default function Finances() {
+  const { activeFarm } = useFarm();
+  const farmName = activeFarm?.name || 'My Farm';
+  const farmLocation = activeFarm?.location || '';
+  const farmSlogan = activeFarm?.slogan || '';
+  const logoUrl = activeFarm?.logo_url || farmLogo;
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [txnStartDate, setTxnStartDate] = useState('');
