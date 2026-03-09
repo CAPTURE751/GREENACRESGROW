@@ -293,11 +293,11 @@ export default function Finances() {
                 <div className="bg-farm-green/5 border border-farm-green/20 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <img src={farmLogo} alt="JEFF TRICKS FARM LTD" className="h-14 w-14 object-contain" />
+                      <img src={logoUrl} alt={farmName} className="h-14 w-14 object-contain" />
                       <div>
-                        <h3 className="text-lg font-bold text-farm-green">JEFF TRICKS FARM LTD</h3>
-                        <p className="text-xs text-muted-foreground">Nyeri, Kenya</p>
-                        <p className="text-xs text-muted-foreground italic">"Nurturing the Land, Feeding the Future"</p>
+                        <h3 className="text-lg font-bold text-farm-green">{farmName}</h3>
+                        <p className="text-xs text-muted-foreground">{farmLocation}</p>
+                        {farmSlogan && <p className="text-xs text-muted-foreground italic">"{farmSlogan}"</p>}
                       </div>
                     </div>
                     <div className="text-right text-xs text-muted-foreground space-y-0.5">
