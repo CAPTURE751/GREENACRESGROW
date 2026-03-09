@@ -37,7 +37,8 @@ export async function exportVenturePDF(
   revenue: any,
   sensitivity: any,
   recommendation: any,
-  aiAdvice: string | null
+  aiAdvice: string | null,
+  cashFlow?: any[]
 ) {
   const settings = await getFarmSettings();
   const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
