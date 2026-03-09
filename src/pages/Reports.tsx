@@ -1,6 +1,5 @@
-
-import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/currency";
@@ -11,7 +10,21 @@ import { usePurchases } from "@/hooks/usePurchases";
 import { useCrops } from "@/hooks/useCrops";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useInventory } from "@/hooks/useInventory";
-import { 
+import { useEquipment } from "@/hooks/useEquipment";
+import { useToast } from "@/hooks/use-toast";
+import {
+  generateIncomeStatement,
+  generateCashFlowStatement,
+  generateBalanceSheet,
+  generateProductionBudget,
+  generateEnterpriseProfitability,
+  generateCostOfProduction,
+  generateInventoryReport,
+  generateSalesRevenueReport,
+  generateExpenseReport,
+  generateBreakEvenAnalysis,
+} from "@/lib/report-generators";
+import {
   BarChart3,
   Download,
   TrendingUp,
@@ -21,15 +34,23 @@ import {
   Package,
   Loader2,
   AlertTriangle,
+  FileText,
+  PiggyBank,
+  Scale,
+  Factory,
+  Layers,
+  Receipt,
+  ShoppingCart,
+  Target,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   LineChart,
   Line,
@@ -48,6 +69,19 @@ const CHART_COLORS = [
   'hsl(200 50% 50%)',
 ];
 
+const REPORT_TYPES = [
+  { id: 'income-statement', title: 'Income Statement (P&L)', description: 'Revenue, expenses, and net profit summary', icon: FileText, generator: generateIncomeStatement },
+  { id: 'cash-flow', title: 'Cash Flow Statement', description: 'Monthly inflows, outflows, and cumulative cash position', icon: TrendingUp, generator: generateCashFlowStatement },
+  { id: 'balance-sheet', title: 'Balance Sheet', description: 'Assets, liabilities, and farm net worth', icon: Scale, generator: generateBalanceSheet },
+  { id: 'production-budget', title: 'Production Budget', description: 'Input costs and crop production budgets', icon: Factory, generator: generateProductionBudget },
+  { id: 'enterprise-profitability', title: 'Enterprise Profitability', description: 'Profit analysis per crop and livestock enterprise', icon: Layers, generator: generateEnterpriseProfitability },
+  { id: 'cost-of-production', title: 'Cost of Production', description: 'Detailed breakdown of all production costs', icon: Receipt, generator: generateCostOfProduction },
+  { id: 'inventory-report', title: 'Inventory / Stock Report', description: 'Current stock levels, values, and alerts', icon: Package, generator: generateInventoryReport },
+  { id: 'sales-revenue', title: 'Sales Revenue Report', description: 'Revenue by product, buyer, and transaction detail', icon: ShoppingCart, generator: generateSalesRevenueReport },
+  { id: 'expense-report', title: 'Expense Report', description: 'Expenses by category, supplier, and transactions', icon: DollarSign, generator: generateExpenseReport },
+  { id: 'break-even', title: 'Break-Even Analysis', description: 'Fixed vs variable costs and break-even point', icon: Target, generator: generateBreakEvenAnalysis },
+];
+
 export default function Reports() {
   const { activeFarm } = useFarm();
   const { sales, isLoading: salesLoading } = useSales();
@@ -55,32 +89,46 @@ export default function Reports() {
   const { crops, isLoading: cropsLoading } = useCrops();
   const { livestock, isLoading: livestockLoading } = useLivestock();
   const { inventory, lowStockItems, isLoading: inventoryLoading } = useInventory();
+  const { equipment } = useEquipment();
+  const { toast } = useToast();
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const isLoading = salesLoading || purchasesLoading || cropsLoading || livestockLoading || inventoryLoading;
+
+  const reportData = useMemo(() => ({
+    sales, purchases, crops, livestock, inventory, equipment,
+  }), [sales, purchases, crops, livestock, inventory, equipment]);
+
+  const handleGenerateReport = async (reportId: string, generator: (data: any) => Promise<void>) => {
+    setGeneratingId(reportId);
+    try {
+      await generator(reportData);
+      toast({ title: "Report downloaded", description: "Your PDF report has been generated and downloaded." });
+    } catch (error: any) {
+      console.error('Report generation failed:', error);
+      toast({ variant: "destructive", title: "Report failed", description: error.message || "Failed to generate report." });
+    } finally {
+      setGeneratingId(null);
+    }
+  };
 
   // Compute monthly revenue vs expenses
   const monthlyData = useMemo(() => {
     const months: Record<string, { month: string; revenue: number; expenses: number; profit: number }> = {};
-    
     sales.forEach(sale => {
-      const m = sale.sale_date.slice(0, 7); // YYYY-MM
+      const m = sale.sale_date.slice(0, 7);
       const label = new Date(sale.sale_date + 'T00:00:00').toLocaleString('default', { month: 'short', year: '2-digit' });
       if (!months[m]) months[m] = { month: label, revenue: 0, expenses: 0, profit: 0 };
       months[m].revenue += sale.total_amount || 0;
     });
-
     purchases.forEach(p => {
       const m = p.purchase_date.slice(0, 7);
       const label = new Date(p.purchase_date + 'T00:00:00').toLocaleString('default', { month: 'short', year: '2-digit' });
       if (!months[m]) months[m] = { month: label, revenue: 0, expenses: 0, profit: 0 };
       months[m].expenses += p.total_cost || 0;
     });
-
     Object.values(months).forEach(m => { m.profit = m.revenue - m.expenses; });
-
-    return Object.entries(months)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, v]) => v);
+    return Object.entries(months).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
   }, [sales, purchases]);
 
   // Expense breakdown by category
@@ -131,7 +179,7 @@ export default function Reports() {
   const totalExpenses = useMemo(() => purchases.reduce((s, p) => s + (p.total_cost || 0), 0), [purchases]);
   const netProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100) : 0;
-  const totalInventoryValue = useMemo(() => 
+  const totalInventoryValue = useMemo(() =>
     inventory.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unit_cost) || 0), 0), [inventory]);
 
   // Crop status breakdown
@@ -237,6 +285,46 @@ export default function Reports() {
             <Download className="h-4 w-4 mr-2" />
             Export Overview CSV
           </Button>
+        </div>
+
+        {/* ============ DOWNLOADABLE REPORTS SECTION ============ */}
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-1">Downloadable Reports</h2>
+          <p className="text-sm text-muted-foreground mb-4">Generate branded PDF reports from your farm data. Click any report to download.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+            {REPORT_TYPES.map((report) => {
+              const Icon = report.icon;
+              const isGenerating = generatingId === report.id;
+              return (
+                <Card key={report.id} className="hover:shadow-md transition-shadow cursor-pointer group">
+                  <CardContent className="pt-5 pb-4 px-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-semibold text-foreground leading-tight">{report.title}</h3>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{report.description}</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs"
+                      disabled={isGenerating}
+                      onClick={() => handleGenerateReport(report.id, report.generator)}
+                    >
+                      {isGenerating ? (
+                        <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Generating...</>
+                      ) : (
+                        <><Download className="h-3 w-3 mr-1" /> Download PDF</>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
 
         {/* Key Metrics */}
