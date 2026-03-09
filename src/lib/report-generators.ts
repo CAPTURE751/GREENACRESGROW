@@ -223,7 +223,8 @@ export async function generateIncomeStatement(data: ReportData) {
 
 // ========== 2. Cash Flow Statement ==========
 export async function generateCashFlowStatement(data: ReportData) {
-  const ctx = await createBrandedPDF("Cash Flow Statement");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Cash Flow Statement", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
