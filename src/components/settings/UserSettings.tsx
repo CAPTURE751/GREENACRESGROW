@@ -170,8 +170,16 @@ export function UserSettings() {
                     <Input id="new-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Jane Wanjiku" />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="new-phone">Phone</Label>
+                    <Input id="new-phone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="e.g. +254 712 345678" />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="new-email">Email *</Label>
                     <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="jane@example.com" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-location">Location</Label>
+                    <Input id="new-location" value={newLocation} onChange={(e) => setNewLocation(e.target.value)} placeholder="e.g. Nyeri, Kenya" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="new-password">Password *</Label>
