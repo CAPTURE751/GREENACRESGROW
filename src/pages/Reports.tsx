@@ -165,7 +165,9 @@ export default function Reports() {
   const handleExportCSV = async () => {
     const farmName = activeFarm?.name || 'My Farm';
     const farmLocation = activeFarm?.location || '';
+    const lines: string[] = [];
     lines.push(farmName);
+    lines.push(farmLocation);
     lines.push(farmLocation);
     lines.push('');
     lines.push('FARM OVERVIEW REPORT');
