@@ -229,7 +229,7 @@ export default function Reports() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Reports & Analytics</h1>
-            <p className="text-muted-foreground mt-1">{FARM_BRANDING.name} — Live farm data overview</p>
+            <p className="text-muted-foreground mt-1">{activeFarm?.name || 'My Farm'} — Live farm data overview</p>
           </div>
           <Button onClick={handleExportCSV} className="bg-farm-green hover:bg-farm-green/90">
             <Download className="h-4 w-4 mr-2" />
