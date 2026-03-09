@@ -94,6 +94,7 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
   const setActiveFarmId = (id: string) => {
     setActiveFarmIdState(id);
     localStorage.setItem(ACTIVE_FARM_KEY, id);
+    clearFarmSettingsCache();
     // Invalidate all data queries when switching farms
     queryClient.invalidateQueries();
   };
