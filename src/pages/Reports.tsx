@@ -302,7 +302,40 @@ export default function Reports() {
         {/* ============ DOWNLOADABLE REPORTS SECTION ============ */}
         <div>
           <h2 className="text-lg font-semibold text-foreground mb-1">Downloadable Reports</h2>
-          <p className="text-sm text-muted-foreground mb-4">Generate branded PDF reports from your farm data. Click any report to download.</p>
+          <p className="text-sm text-muted-foreground mb-3">Generate branded PDF reports from your farm data. Select a date range to filter, then click any report to download.</p>
+          
+          {/* Date Range Filter */}
+          <div className="flex flex-wrap items-center gap-3 mb-4 p-3 rounded-lg border bg-muted/30">
+            <span className="text-sm font-medium text-foreground">Date Range:</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("w-[150px] justify-start text-left font-normal", !reportStartDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                  {reportStartDate ? format(reportStartDate, "PP") : "Start date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={reportStartDate} onSelect={setReportStartDate} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+            <span className="text-muted-foreground text-sm">to</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("w-[150px] justify-start text-left font-normal", !reportEndDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                  {reportEndDate ? format(reportEndDate, "PP") : "End date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={reportEndDate} onSelect={setReportEndDate} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+            {(reportStartDate || reportEndDate) && (
+              <Button variant="ghost" size="sm" onClick={() => { setReportStartDate(undefined); setReportEndDate(undefined); }}>
+                Clear
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
             {REPORT_TYPES.map((report) => {
               const Icon = report.icon;
