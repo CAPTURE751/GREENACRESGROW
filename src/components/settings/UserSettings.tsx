@@ -95,7 +95,9 @@ export function UserSettings() {
       } else {
         toast({ title: 'User Created', description: `${newName} has been added as ${newRole}.` });
         setNewName('');
+        setNewPhone('');
         setNewEmail('');
+        setNewLocation('');
         setNewPassword('');
         setNewRole('farmer');
         setAddDialogOpen(false);
