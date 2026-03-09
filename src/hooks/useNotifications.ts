@@ -115,7 +115,7 @@ export function useNotifications() {
     if (user) {
       fetchNotifications();
     }
-  }, [user]);
+  }, [user, activeFarm?.id]);
 
   return {
     notifications,
