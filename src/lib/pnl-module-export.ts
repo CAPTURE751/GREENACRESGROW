@@ -4,9 +4,9 @@ import { formatKES } from "./currency";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
 import { getFarmSettings } from "./farm-settings-cache";
 
-const DEFAULT_FARM_NAME = "JEFF TRICKS FARM LTD";
-const DEFAULT_LOCATION = "Nyeri, Kenya";
-const DEFAULT_SLOGAN = "Nurturing the Land, Feeding the Future";
+const DEFAULT_FARM_NAME = "My Farm";
+const DEFAULT_LOCATION = "";
+const DEFAULT_SLOGAN = "";
 
 function loadImageAsBase64(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
