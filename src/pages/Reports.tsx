@@ -97,6 +97,8 @@ export default function Reports() {
   const { equipment } = useEquipment();
   const { toast } = useToast();
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [reportStartDate, setReportStartDate] = useState<Date | undefined>(undefined);
+  const [reportEndDate, setReportEndDate] = useState<Date | undefined>(undefined);
 
   const isLoading = salesLoading || purchasesLoading || cropsLoading || livestockLoading || inventoryLoading;
 
