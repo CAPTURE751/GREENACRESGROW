@@ -49,6 +49,7 @@ const CHART_COLORS = [
 ];
 
 export default function Reports() {
+  const { activeFarm } = useFarm();
   const { sales, isLoading: salesLoading } = useSales();
   const { purchases, isLoading: purchasesLoading } = usePurchases();
   const { crops, isLoading: cropsLoading } = useCrops();
