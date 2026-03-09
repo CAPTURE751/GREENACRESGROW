@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFarm } from '@/contexts/FarmContext';
 import { NOTIFICATION_TYPES } from '@/lib/constants';
 
 export interface Notification {
@@ -18,23 +19,27 @@ export function useNotifications() {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user, hasRole } = useAuth();
+  const { activeFarm } = useFarm();
 
   const fetchNotifications = async () => {
     if (!user) return;
 
     try {
-      // For now, generate sample notifications based on user role
-      // In a real system, these would come from a notifications table
       const sampleNotifications: Notification[] = [];
 
       if (hasRole(['admin', 'staff'])) {
-        // Check for low stock items
-        const { data: lowStockItems } = await supabase
+        // Check for low stock items scoped to active farm
+        let query = supabase
           .from('inventory')
-          .select('item_name, quantity, min_threshold')
-          .lt('quantity', 10);
+          .select('item_name, quantity, min_threshold');
 
-        lowStockItems?.forEach((item, index) => {
+        if (activeFarm?.id) {
+          query = query.eq('farm_id', activeFarm.id);
+        }
+
+        const { data: lowStockItems } = await query.not('min_threshold', 'is', null);
+
+        lowStockItems?.filter(item => item.min_threshold && item.quantity <= item.min_threshold).forEach((item, index) => {
           sampleNotifications.push({
             id: `low-stock-${index}`,
             type: NOTIFICATION_TYPES.LOW_STOCK,
@@ -110,7 +115,7 @@ export function useNotifications() {
     if (user) {
       fetchNotifications();
     }
-  }, [user]);
+  }, [user, activeFarm?.id]);
 
   return {
     notifications,
