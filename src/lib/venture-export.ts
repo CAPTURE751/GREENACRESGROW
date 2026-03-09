@@ -215,7 +215,7 @@ export async function exportVenturePDF(
   if (aiAdvice) {
     checkPage(30);
     doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...hc);
-    doc.text("6. AI Crop Advisor Recommendation", 14, y); y += 6;
+    doc.text(`${cashFlow ? "7" : "6"}. AI Crop Advisor Recommendation`, 14, y); y += 6;
     doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(50, 50, 50);
     const adviceLines = doc.splitTextToSize(aiAdvice, pw - 36);
     adviceLines.forEach((line: string) => {
