@@ -289,7 +289,8 @@ export async function generateCashFlowStatement(data: ReportData) {
 
 // ========== 3. Balance Sheet ==========
 export async function generateBalanceSheet(data: ReportData) {
-  const ctx = await createBrandedPDF("Balance Sheet (Farm Net Worth Report)");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Balance Sheet (Farm Net Worth Report)", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
