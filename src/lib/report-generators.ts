@@ -630,7 +630,8 @@ export async function generateSalesRevenueReport(data: ReportData) {
 
 // ========== 9. Expense Report ==========
 export async function generateExpenseReport(data: ReportData) {
-  const ctx = await createBrandedPDF("Expense Report");
+  data = filterByDateRange(data);
+  const ctx = await createBrandedPDF("Expense Report", periodLabel(data));
   const { doc, headerColor, checkPage, addFooters } = ctx;
   let y = ctx.getY();
 
