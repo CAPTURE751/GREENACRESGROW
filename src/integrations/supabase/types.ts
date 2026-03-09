@@ -662,6 +662,59 @@ export type Database = {
           },
         ]
       }
+      venture_budgets: {
+        Row: {
+          ai_advice: string | null
+          costs_total: number
+          created_at: string
+          created_by: string
+          farm_id: string | null
+          id: string
+          inputs: Json
+          name: string
+          profit: number
+          revenue_total: number
+          updated_at: string
+          venture_type: string
+        }
+        Insert: {
+          ai_advice?: string | null
+          costs_total?: number
+          created_at?: string
+          created_by: string
+          farm_id?: string | null
+          id?: string
+          inputs?: Json
+          name: string
+          profit?: number
+          revenue_total?: number
+          updated_at?: string
+          venture_type: string
+        }
+        Update: {
+          ai_advice?: string | null
+          costs_total?: number
+          created_at?: string
+          created_by?: string
+          farm_id?: string | null
+          id?: string
+          inputs?: Json
+          name?: string
+          profit?: number
+          revenue_total?: number
+          updated_at?: string
+          venture_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_budgets_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
