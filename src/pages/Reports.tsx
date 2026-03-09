@@ -109,7 +109,12 @@ export default function Reports() {
   const handleGenerateReport = async (reportId: string, generator: (data: any) => Promise<void>) => {
     setGeneratingId(reportId);
     try {
-      await generator(reportData);
+      const dataWithDates = {
+        ...reportData,
+        startDate: reportStartDate ? format(reportStartDate, 'yyyy-MM-dd') : undefined,
+        endDate: reportEndDate ? format(reportEndDate, 'yyyy-MM-dd') : undefined,
+      };
+      await generator(dataWithDates);
       toast({ title: "Report downloaded", description: "Your PDF report has been generated and downloaded." });
     } catch (error: any) {
       console.error('Report generation failed:', error);
