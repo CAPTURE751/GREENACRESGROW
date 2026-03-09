@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import farmLogo from "@/assets/farm-logo.png";
+import { useFarm } from "@/contexts/FarmContext";
 
 
 interface PnLReport {
@@ -68,6 +69,11 @@ interface PnLReport {
 }
 
 export default function Finances() {
+  const { activeFarm } = useFarm();
+  const farmName = activeFarm?.name || 'My Farm';
+  const farmLocation = activeFarm?.location || '';
+  const farmSlogan = activeFarm?.slogan || '';
+  const logoUrl = activeFarm?.logo_url || farmLogo;
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [txnStartDate, setTxnStartDate] = useState('');
@@ -287,11 +293,11 @@ export default function Finances() {
                 <div className="bg-farm-green/5 border border-farm-green/20 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <img src={farmLogo} alt="JEFF TRICKS FARM LTD" className="h-14 w-14 object-contain" />
+                      <img src={logoUrl} alt={farmName} className="h-14 w-14 object-contain" />
                       <div>
-                        <h3 className="text-lg font-bold text-farm-green">JEFF TRICKS FARM LTD</h3>
-                        <p className="text-xs text-muted-foreground">Nyeri, Kenya</p>
-                        <p className="text-xs text-muted-foreground italic">"Nurturing the Land, Feeding the Future"</p>
+                        <h3 className="text-lg font-bold text-farm-green">{farmName}</h3>
+                        <p className="text-xs text-muted-foreground">{farmLocation}</p>
+                        {farmSlogan && <p className="text-xs text-muted-foreground italic">"{farmSlogan}"</p>}
                       </div>
                     </div>
                     <div className="text-right text-xs text-muted-foreground space-y-0.5">
@@ -436,8 +442,8 @@ export default function Finances() {
                 <Separator />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div>
-                    <p className="font-semibold text-farm-green">JEFF TRICKS FARM LTD</p>
-                    <p className="italic">"Nurturing the Land, Feeding the Future"</p>
+                    <p className="font-semibold text-farm-green">{farmName}</p>
+                    {farmSlogan && <p className="italic">"{farmSlogan}"</p>}
                   </div>
                   <div className="text-right">
                     <p>Generated: {new Date(pnlReport.generated_at).toLocaleString()}</p>
