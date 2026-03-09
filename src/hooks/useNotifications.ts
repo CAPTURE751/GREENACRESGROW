@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFarm } from '@/contexts/FarmContext';
 import { NOTIFICATION_TYPES } from '@/lib/constants';
 
 export interface Notification {
