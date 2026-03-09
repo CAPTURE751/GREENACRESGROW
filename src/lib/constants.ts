@@ -1,12 +1,10 @@
 /**
- * Farm branding and system constants
+ * System constants
  */
 
-export const FARM_BRANDING = {
-  name: 'JEFF TRICKS FARM LTD',
-  location: 'Nyeri, Kenya',
-  currency: 'KES',
-  currencySymbol: 'KSh',
+export const CURRENCY = {
+  code: 'KES',
+  symbol: 'KSh',
 } as const;
 
 export const USER_ROLES = {
