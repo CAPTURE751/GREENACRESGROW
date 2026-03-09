@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/currency";
 import { farmFileName } from "@/lib/report-export";
-import { FARM_BRANDING } from "@/lib/constants";
+import { useFarm } from "@/contexts/FarmContext";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
 import { useCrops } from "@/hooks/useCrops";
