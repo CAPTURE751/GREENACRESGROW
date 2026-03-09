@@ -87,7 +87,7 @@ export function UserSettings() {
     setAdding(true);
     try {
       const { data, error } = await supabase.functions.invoke('manage-users', {
-        body: { action: 'create', email: newEmail, password: newPassword, name: newName, role: newRole },
+        body: { action: 'create', email: newEmail, password: newPassword, name: newName, phone: newPhone, location: newLocation, role: newRole },
       });
 
       if (error || data?.error) {
