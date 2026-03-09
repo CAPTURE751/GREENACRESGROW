@@ -4,12 +4,11 @@ import { Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { useFarm } from "@/contexts/FarmContext";
-import { FARM_BRANDING } from "@/lib/constants";
 
 export function Header() {
   const { activeFarm } = useFarm();
-  const farmName = activeFarm?.name || FARM_BRANDING.name;
-  const farmLocation = activeFarm?.location || FARM_BRANDING.location;
+  const farmName = activeFarm?.name || 'My Farm';
+  const farmLocation = activeFarm?.location || '';
   const logoUrl = activeFarm?.logo_url;
 
   return (
