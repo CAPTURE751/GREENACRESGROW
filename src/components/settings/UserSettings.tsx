@@ -29,7 +29,9 @@ export function UserSettings() {
 
   // New user form
   const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newLocation, setNewLocation] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState<UserRole>('farmer');
 
