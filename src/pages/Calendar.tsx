@@ -171,6 +171,64 @@ export default function CalendarPage() {
           </div>
         </div>
 
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Filter className="h-4 w-4" />
+                Filters
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="w-[130px] h-9">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="crop">Crop</SelectItem>
+                    <SelectItem value="livestock">Livestock</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="harvest">Harvest</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterPriority} onValueChange={setFilterPriority}>
+                  <SelectTrigger className="w-[130px] h-9">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-[130px] h-9">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-xs">
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+              {hasActiveFilters && (
+                <Badge variant="secondary" className="ml-auto">
+                  {filteredTasks.length} of {tasks.length} tasks
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Overdue Tasks Alert */}
         {overdueTasks.length > 0 && (
           <Card className="border-red-200 bg-red-50">
