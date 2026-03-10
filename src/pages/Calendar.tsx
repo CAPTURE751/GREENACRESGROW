@@ -4,16 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Calendar as CalendarIcon,
   Plus,
   Wheat,
   Beef,
-  Syringe,
-  Droplets,
   Clock,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Filter,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useTasks, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
@@ -25,6 +25,9 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const { tasks: backendTasks, isLoading } = useTasks();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -57,6 +60,16 @@ export default function CalendarPage() {
     parentTaskId?: string | null;
   }>;
 
+  // Apply filters
+  const filteredTasks = tasks.filter(task => {
+    if (filterType !== "all" && task.type !== filterType) return false;
+    if (filterPriority !== "all" && task.priority !== filterPriority) return false;
+    if (filterStatus === "completed" && !task.completed) return false;
+    if (filterStatus === "pending" && task.completed) return false;
+    if (filterStatus === "overdue" && (task.completed || task.date >= new Date())) return false;
+    return true;
+  });
+
   const handleToggleComplete = async (taskId: string) => {
     const task = backendTasks.find(t => t.id === taskId);
     if (task) {
@@ -68,7 +81,7 @@ export default function CalendarPage() {
   };
 
   const getTasksForDate = (date: Date) => {
-    return tasks.filter(task => 
+    return filteredTasks.filter(task => 
       task.date.toDateString() === date.toDateString()
     );
   };
@@ -102,14 +115,17 @@ export default function CalendarPage() {
     }
   };
 
-  const upcomingTasks = tasks
+  const upcomingTasks = filteredTasks
     .filter(task => !task.completed && task.date >= new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 5);
 
-  const overdueTasks = tasks.filter(task => 
+  const overdueTasks = filteredTasks.filter(task => 
     !task.completed && task.date < new Date()
   );
+
+  const hasActiveFilters = filterType !== "all" || filterPriority !== "all" || filterStatus !== "all";
+  const clearFilters = () => { setFilterType("all"); setFilterPriority("all"); setFilterStatus("all"); };
 
   return (
     <Layout>
@@ -154,6 +170,64 @@ export default function CalendarPage() {
             <TaskForm />
           </div>
         </div>
+
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Filter className="h-4 w-4" />
+                Filters
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="w-[130px] h-9">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="crop">Crop</SelectItem>
+                    <SelectItem value="livestock">Livestock</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="harvest">Harvest</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterPriority} onValueChange={setFilterPriority}>
+                  <SelectTrigger className="w-[130px] h-9">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-[130px] h-9">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-xs">
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+              {hasActiveFilters && (
+                <Badge variant="secondary" className="ml-auto">
+                  {filteredTasks.length} of {tasks.length} tasks
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Overdue Tasks Alert */}
         {overdueTasks.length > 0 && (
