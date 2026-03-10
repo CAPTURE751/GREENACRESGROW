@@ -25,6 +25,9 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const { tasks: backendTasks, isLoading } = useTasks();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
