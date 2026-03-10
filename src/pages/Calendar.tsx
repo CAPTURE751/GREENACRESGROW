@@ -19,7 +19,9 @@ import { Layout } from "@/components/Layout";
 import { useTasks, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
 import { TaskForm } from "@/components/TaskForm";
 import { useTaskNotifications } from "@/hooks/useTaskNotifications";
-import { Trash2, Repeat, Bell } from "lucide-react";
+import { Trash2, Repeat, Bell, Download } from "lucide-react";
+import { exportCalendarToPDF } from "@/lib/calendar-export";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
