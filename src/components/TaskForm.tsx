@@ -165,6 +165,7 @@ export function TaskForm() {
             {createTask.isPending ? "Creating..." : "Create Task"}
           </Button>
         </div>
+      </DialogContent>
     </Dialog>
   );
 }
