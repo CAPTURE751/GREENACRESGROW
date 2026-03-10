@@ -115,14 +115,17 @@ export default function CalendarPage() {
     }
   };
 
-  const upcomingTasks = tasks
+  const upcomingTasks = filteredTasks
     .filter(task => !task.completed && task.date >= new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 5);
 
-  const overdueTasks = tasks.filter(task => 
+  const overdueTasks = filteredTasks.filter(task => 
     !task.completed && task.date < new Date()
   );
+
+  const hasActiveFilters = filterType !== "all" || filterPriority !== "all" || filterStatus !== "all";
+  const clearFilters = () => { setFilterType("all"); setFilterPriority("all"); setFilterStatus("all"); };
 
   return (
     <Layout>
