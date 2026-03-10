@@ -60,7 +60,7 @@ export function TaskForm() {
           <DialogTitle>Add New Task</DialogTitle>
         </DialogHeader>
         <ScrollArea className="flex-1 pr-4 -mr-4">
-          <form onSubmit={handleSubmit} className="space-y-4 pb-2">
+          <form id="task-form" onSubmit={handleSubmit} className="space-y-4 pb-2">
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
               <Input
@@ -155,18 +155,16 @@ export function TaskForm() {
                 </div>
               )}
             </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createTask.isPending} className="bg-farm-green hover:bg-farm-green/90">
-                {createTask.isPending ? "Creating..." : "Create Task"}
-              </Button>
-            </div>
           </form>
         </ScrollArea>
-      </DialogContent>
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" form="task-form" disabled={createTask.isPending} className="bg-farm-green hover:bg-farm-green/90">
+            {createTask.isPending ? "Creating..." : "Create Task"}
+          </Button>
+        </div>
     </Dialog>
   );
 }
