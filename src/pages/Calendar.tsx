@@ -29,6 +29,7 @@ export default function CalendarPage() {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const { notifications, unreadCount, markRead, markAllRead } = useTaskNotifications();
+  const { toast } = useToast();
   // Convert backend tasks to the format expected by the UI
   const tasks = backendTasks.map(task => ({
     id: parseInt(task.id.slice(-8), 16),
