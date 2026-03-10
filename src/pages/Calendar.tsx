@@ -126,6 +126,7 @@ export default function CalendarPage() {
             )}
             <TaskForm />
           </div>
+        </div>
 
         {/* Overdue Tasks Alert */}
         {overdueTasks.length > 0 && (
