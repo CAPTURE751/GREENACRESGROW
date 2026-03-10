@@ -185,6 +185,12 @@ export default function CalendarPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
+                            {task.recurrence && (
+                              <Badge variant="outline" className="text-xs gap-1">
+                                <Repeat className="h-3 w-3" />
+                                {task.recurrence}
+                              </Badge>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -192,6 +198,14 @@ export default function CalendarPage() {
                               className="h-8 w-8 p-0"
                             >
                               <CheckCircle className={`h-4 w-4 ${task.completed ? 'text-green-600' : 'text-muted-foreground'}`} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteTask.mutateAsync(task.originalId)}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                             <Badge className={getTypeColor(task.type)}>
                               {task.type}
