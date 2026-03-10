@@ -4,27 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Calendar as CalendarIcon,
   Plus,
   Wheat,
   Beef,
-  Syringe,
-  Droplets,
   Clock,
   AlertTriangle,
   CheckCircle,
   Filter,
-} from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-  Plus,
-  Wheat,
-  Beef,
-  Syringe,
-  Droplets,
-  Clock,
-  AlertTriangle,
-  CheckCircle
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { useTasks, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
