@@ -15,15 +15,15 @@ export function TaskForm() {
   const [taskDate, setTaskDate] = useState("");
   const [taskType, setTaskType] = useState<'crop' | 'livestock' | 'maintenance' | 'harvest'>('crop');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [recurrence, setRecurrence] = useState<string>("none");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
 
   const createTask = useCreateTask();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title || !taskDate) {
-      return;
-    }
+    if (!title || !taskDate) return;
 
     await createTask.mutateAsync({
       title,
@@ -31,15 +31,18 @@ export function TaskForm() {
       task_date: taskDate,
       task_type: taskType,
       priority,
-      completed: false
+      completed: false,
+      recurrence: recurrence === "none" ? null : recurrence,
+      recurrence_end_date: recurrenceEndDate || null,
     });
 
-    // Reset form
     setTitle("");
     setDescription("");
     setTaskDate("");
     setTaskType('crop');
     setPriority('medium');
+    setRecurrence("none");
+    setRecurrenceEndDate("");
     setOpen(false);
   };
 
@@ -118,6 +121,37 @@ export function TaskForm() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="recurrence">Recurrence</Label>
+              <Select value={recurrence} onValueChange={setRecurrence}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Repeat</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="biweekly">Bi-Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {recurrence !== "none" && (
+              <div className="space-y-2">
+                <Label htmlFor="recurrenceEnd">Repeat Until</Label>
+                <Input
+                  id="recurrenceEnd"
+                  type="date"
+                  value={recurrenceEndDate}
+                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                  placeholder="Optional"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
