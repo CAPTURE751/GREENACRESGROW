@@ -19,7 +19,9 @@ import { Layout } from "@/components/Layout";
 import { useTasks, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
 import { TaskForm } from "@/components/TaskForm";
 import { useTaskNotifications } from "@/hooks/useTaskNotifications";
-import { Trash2, Repeat, Bell } from "lucide-react";
+import { Trash2, Repeat, Bell, Download } from "lucide-react";
+import { exportCalendarToPDF } from "@/lib/calendar-export";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -27,6 +29,7 @@ export default function CalendarPage() {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const { notifications, unreadCount, markRead, markAllRead } = useTaskNotifications();
+  const { toast } = useToast();
   // Convert backend tasks to the format expected by the UI
   const tasks = backendTasks.map(task => ({
     id: parseInt(task.id.slice(-8), 16),
@@ -124,6 +127,30 @@ export default function CalendarPage() {
                 {unreadCount} new
               </Badge>
             )}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await exportCalendarToPDF(tasks.map(t => ({
+                    title: t.title,
+                    date: t.date,
+                    type: t.type,
+                    priority: t.priority,
+                    completed: t.completed,
+                    description: t.description,
+                    recurrence: t.recurrence,
+                    assignedTo: t.assignedTo,
+                  })));
+                  toast({ title: "PDF Downloaded", description: "Calendar report saved successfully." });
+                } catch (e) {
+                  toast({ variant: "destructive", title: "Export Failed", description: "Could not generate PDF." });
+                }
+              }}
+              disabled={tasks.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
             <TaskForm />
           </div>
         </div>

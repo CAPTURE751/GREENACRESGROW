@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateTask } from "@/hooks/useTasks";
 import { Plus } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function TaskForm() {
   const [open, setOpen] = useState(false);
@@ -54,115 +55,117 @@ export function TaskForm() {
           Add Task
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Add New Task</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter task title"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter task description (optional)"
-              rows={3}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="taskDate">Date</Label>
-            <Input
-              id="taskDate"
-              type="date"
-              value={taskDate}
-              onChange={(e) => setTaskDate(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <ScrollArea className="flex-1 pr-4 -mr-4">
+          <form onSubmit={handleSubmit} className="space-y-4 pb-2">
             <div className="space-y-2">
-              <Label htmlFor="taskType">Type</Label>
-              <Select value={taskType} onValueChange={(value: 'crop' | 'livestock' | 'maintenance' | 'harvest') => setTaskType(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="crop">Crop</SelectItem>
-                  <SelectItem value="livestock">Livestock</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                  <SelectItem value="harvest">Harvest</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter task title"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter task description (optional)"
+                rows={3}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={priority} onValueChange={(value: 'low' | 'medium' | 'high') => setPriority(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="recurrence">Recurrence</Label>
-              <Select value={recurrence} onValueChange={setRecurrence}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Repeat</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="biweekly">Bi-Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="taskDate">Date</Label>
+              <Input
+                id="taskDate"
+                type="date"
+                value={taskDate}
+                onChange={(e) => setTaskDate(e.target.value)}
+                required
+              />
             </div>
 
-            {recurrence !== "none" && (
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="recurrenceEnd">Repeat Until</Label>
-                <Input
-                  id="recurrenceEnd"
-                  type="date"
-                  value={recurrenceEndDate}
-                  onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                  placeholder="Optional"
-                />
+                <Label htmlFor="taskType">Type</Label>
+                <Select value={taskType} onValueChange={(value: 'crop' | 'livestock' | 'maintenance' | 'harvest') => setTaskType(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="z-[200]">
+                    <SelectItem value="crop">Crop</SelectItem>
+                    <SelectItem value="livestock">Livestock</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="harvest">Harvest</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createTask.isPending} className="bg-farm-green hover:bg-farm-green/90">
-              {createTask.isPending ? "Creating..." : "Create Task"}
-            </Button>
-          </div>
-        </form>
+              <div className="space-y-2">
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={priority} onValueChange={(value: 'low' | 'medium' | 'high') => setPriority(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="z-[200]">
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="recurrence">Recurrence</Label>
+                <Select value={recurrence} onValueChange={setRecurrence}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="z-[200]">
+                    <SelectItem value="none">No Repeat</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="biweekly">Bi-Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {recurrence !== "none" && (
+                <div className="space-y-2">
+                  <Label htmlFor="recurrenceEnd">Repeat Until</Label>
+                  <Input
+                    id="recurrenceEnd"
+                    type="date"
+                    value={recurrenceEndDate}
+                    onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createTask.isPending} className="bg-farm-green hover:bg-farm-green/90">
+                {createTask.isPending ? "Creating..." : "Create Task"}
+              </Button>
+            </div>
+          </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
