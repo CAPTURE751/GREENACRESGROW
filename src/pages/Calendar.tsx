@@ -127,6 +127,30 @@ export default function CalendarPage() {
                 {unreadCount} new
               </Badge>
             )}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await exportCalendarToPDF(tasks.map(t => ({
+                    title: t.title,
+                    date: t.date,
+                    type: t.type,
+                    priority: t.priority,
+                    completed: t.completed,
+                    description: t.description,
+                    recurrence: t.recurrence,
+                    assignedTo: t.assignedTo,
+                  })));
+                  toast({ title: "PDF Downloaded", description: "Calendar report saved successfully." });
+                } catch (e) {
+                  toast({ variant: "destructive", title: "Export Failed", description: "Could not generate PDF." });
+                }
+              }}
+              disabled={tasks.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
             <TaskForm />
           </div>
         </div>
