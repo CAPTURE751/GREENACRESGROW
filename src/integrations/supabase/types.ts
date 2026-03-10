@@ -612,41 +612,94 @@ export type Database = {
           },
         ]
       }
+      task_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          task_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          task_id: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          task_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
+          assigned_to: string | null
           completed: boolean
           created_at: string
           created_by: string
           description: string | null
           farm_id: string | null
           id: string
+          parent_task_id: string | null
           priority: string
+          recurrence: string | null
+          recurrence_end_date: string | null
+          reminder_sent: boolean | null
           task_date: string
           task_type: string
           title: string
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           completed?: boolean
           created_at?: string
           created_by: string
           description?: string | null
           farm_id?: string | null
           id?: string
+          parent_task_id?: string | null
           priority?: string
+          recurrence?: string | null
+          recurrence_end_date?: string | null
+          reminder_sent?: boolean | null
           task_date: string
           task_type: string
           title: string
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           completed?: boolean
           created_at?: string
           created_by?: string
           description?: string | null
           farm_id?: string | null
           id?: string
+          parent_task_id?: string | null
           priority?: string
+          recurrence?: string | null
+          recurrence_end_date?: string | null
+          reminder_sent?: boolean | null
           task_date?: string
           task_type?: string
           title?: string
@@ -658,6 +711,13 @@ export type Database = {
             columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -720,6 +780,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_recurring_tasks: { Args: never; Returns: undefined }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
