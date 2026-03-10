@@ -25,7 +25,8 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { tasks: backendTasks, isLoading } = useTasks();
   const updateTask = useUpdateTask();
-
+  const deleteTask = useDeleteTask();
+  const { notifications, unreadCount, markRead, markAllRead } = useTaskNotifications();
   // Convert backend tasks to the format expected by the UI
   const tasks = backendTasks.map(task => ({
     id: parseInt(task.id.slice(-8), 16), // Convert UUID to number for compatibility
