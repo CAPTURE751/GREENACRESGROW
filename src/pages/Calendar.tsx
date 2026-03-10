@@ -16,8 +16,10 @@ import {
   CheckCircle
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { useTasks, useUpdateTask, Task } from "@/hooks/useTasks";
+import { useTasks, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
 import { TaskForm } from "@/components/TaskForm";
+import { useTaskNotifications } from "@/hooks/useTaskNotifications";
+import { Trash2, Repeat, Bell } from "lucide-react";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
