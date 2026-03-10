@@ -37,7 +37,7 @@ export default function CalendarPage() {
   const tasks = backendTasks.map(task => ({
     id: parseInt(task.id.slice(-8), 16),
     title: task.title,
-    date: new Date(task.task_date),
+    date: new Date(task.task_date + 'T00:00:00'),
     type: task.task_type,
     priority: task.priority,
     completed: task.completed,
