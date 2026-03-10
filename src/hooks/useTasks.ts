@@ -12,6 +12,11 @@ export interface Task {
   priority: 'low' | 'medium' | 'high';
   completed: boolean;
   created_by: string;
+  assigned_to?: string | null;
+  recurrence?: string | null;
+  recurrence_end_date?: string | null;
+  parent_task_id?: string | null;
+  reminder_sent?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -41,7 +46,7 @@ export const useCreateTask = () => {
   const { activeFarm } = useFarm();
 
   return useMutation({
-    mutationFn: async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
+    mutationFn: async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'reminder_sent'>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       const { data, error } = await supabase

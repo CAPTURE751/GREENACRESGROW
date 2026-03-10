@@ -16,24 +16,30 @@ import {
   CheckCircle
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import { useTasks, useUpdateTask, Task } from "@/hooks/useTasks";
+import { useTasks, useUpdateTask, useDeleteTask, Task } from "@/hooks/useTasks";
 import { TaskForm } from "@/components/TaskForm";
+import { useTaskNotifications } from "@/hooks/useTaskNotifications";
+import { Trash2, Repeat, Bell } from "lucide-react";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { tasks: backendTasks, isLoading } = useTasks();
   const updateTask = useUpdateTask();
-
+  const deleteTask = useDeleteTask();
+  const { notifications, unreadCount, markRead, markAllRead } = useTaskNotifications();
   // Convert backend tasks to the format expected by the UI
   const tasks = backendTasks.map(task => ({
-    id: parseInt(task.id.slice(-8), 16), // Convert UUID to number for compatibility
+    id: parseInt(task.id.slice(-8), 16),
     title: task.title,
     date: new Date(task.task_date),
     type: task.task_type,
     priority: task.priority,
     completed: task.completed,
     description: task.description,
-    originalId: task.id // Keep original UUID for updates
+    originalId: task.id,
+    recurrence: task.recurrence,
+    assignedTo: task.assigned_to,
+    parentTaskId: task.parent_task_id,
   })) as Array<{
     id: number;
     title: string;
@@ -43,6 +49,9 @@ export default function CalendarPage() {
     completed: boolean;
     description?: string;
     originalId: string;
+    recurrence?: string | null;
+    assignedTo?: string | null;
+    parentTaskId?: string | null;
   }>;
 
   const handleToggleComplete = async (taskId: string) => {
@@ -105,10 +114,18 @@ export default function CalendarPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Farm Calendar</h1>
-            <p className="text-gray-600 mt-1">Schedule and track your farm activities</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Farm Calendar</h1>
+            <p className="text-muted-foreground mt-1">Schedule and track your farm activities</p>
           </div>
-          <TaskForm />
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="gap-1">
+                <Bell className="h-3 w-3" />
+                {unreadCount} new
+              </Badge>
+            )}
+            <TaskForm />
+          </div>
         </div>
 
         {/* Overdue Tasks Alert */}
@@ -176,6 +193,12 @@ export default function CalendarPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
+                            {task.recurrence && (
+                              <Badge variant="outline" className="text-xs gap-1">
+                                <Repeat className="h-3 w-3" />
+                                {task.recurrence}
+                              </Badge>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -183,6 +206,14 @@ export default function CalendarPage() {
                               className="h-8 w-8 p-0"
                             >
                               <CheckCircle className={`h-4 w-4 ${task.completed ? 'text-green-600' : 'text-muted-foreground'}`} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteTask.mutateAsync(task.originalId)}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                             <Badge className={getTypeColor(task.type)}>
                               {task.type}
