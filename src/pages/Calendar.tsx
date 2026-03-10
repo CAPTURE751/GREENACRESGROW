@@ -29,14 +29,17 @@ export default function CalendarPage() {
   const { notifications, unreadCount, markRead, markAllRead } = useTaskNotifications();
   // Convert backend tasks to the format expected by the UI
   const tasks = backendTasks.map(task => ({
-    id: parseInt(task.id.slice(-8), 16), // Convert UUID to number for compatibility
+    id: parseInt(task.id.slice(-8), 16),
     title: task.title,
     date: new Date(task.task_date),
     type: task.task_type,
     priority: task.priority,
     completed: task.completed,
     description: task.description,
-    originalId: task.id // Keep original UUID for updates
+    originalId: task.id,
+    recurrence: task.recurrence,
+    assignedTo: task.assigned_to,
+    parentTaskId: task.parent_task_id,
   })) as Array<{
     id: number;
     title: string;
@@ -46,6 +49,9 @@ export default function CalendarPage() {
     completed: boolean;
     description?: string;
     originalId: string;
+    recurrence?: string | null;
+    assignedTo?: string | null;
+    parentTaskId?: string | null;
   }>;
 
   const handleToggleComplete = async (taskId: string) => {
