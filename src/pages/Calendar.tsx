@@ -60,6 +60,16 @@ export default function CalendarPage() {
     parentTaskId?: string | null;
   }>;
 
+  // Apply filters
+  const filteredTasks = tasks.filter(task => {
+    if (filterType !== "all" && task.type !== filterType) return false;
+    if (filterPriority !== "all" && task.priority !== filterPriority) return false;
+    if (filterStatus === "completed" && !task.completed) return false;
+    if (filterStatus === "pending" && task.completed) return false;
+    if (filterStatus === "overdue" && (task.completed || task.date >= new Date())) return false;
+    return true;
+  });
+
   const handleToggleComplete = async (taskId: string) => {
     const task = backendTasks.find(t => t.id === taskId);
     if (task) {
@@ -71,7 +81,7 @@ export default function CalendarPage() {
   };
 
   const getTasksForDate = (date: Date) => {
-    return tasks.filter(task => 
+    return filteredTasks.filter(task => 
       task.date.toDateString() === date.toDateString()
     );
   };
