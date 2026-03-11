@@ -1,0 +1,2 @@
+ALTER TABLE public.sales DROP CONSTRAINT IF EXISTS sales_product_type_check;
+ALTER TABLE public.sales ADD CONSTRAINT sales_product_type_check CHECK (product_type IN ('crop', 'maize', 'beans', 'onion', 'vegetable', 'fruit', 'livestock', 'milk', 'eggs', 'meat', 'dairy', 'poultry', 'honey', 'seeds', 'processed', 'other'));
