@@ -203,7 +203,17 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* ... same as before ... */}
+                  <SelectItem value="seeds">Seeds</SelectItem>
+                  <SelectItem value="fertilizer">Fertilizer</SelectItem>
+                  <SelectItem value="pesticides">Pesticides</SelectItem>
+                  <SelectItem value="feed">Animal Feed</SelectItem>
+                  <SelectItem value="medicine">Medicine</SelectItem>
+                  <SelectItem value="equipment">Equipment</SelectItem>
+                  <SelectItem value="labor">Labor</SelectItem>
+                  <SelectItem value="fuel">Fuel</SelectItem>
+                  <SelectItem value="transport">Transport</SelectItem>
+                  <SelectItem value="utilities">Utilities</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
