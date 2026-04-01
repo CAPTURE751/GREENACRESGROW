@@ -45,9 +45,10 @@ export function useSales() {
     mutationFn: async (saleData: Omit<SaleInsert, 'created_by'>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+      const { total_amount, ...rest } = saleData as any;
       const { data, error } = await supabase
         .from('sales')
-        .insert({ ...saleData, created_by: user.id, total_amount: saleData.quantity * saleData.unit_price, farm_id: activeFarm?.id } as any)
+        .insert({ ...rest, created_by: user.id, farm_id: activeFarm?.id })
         .select().single();
       if (error) throw error;
       return data;
