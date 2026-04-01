@@ -95,8 +95,9 @@ export function useSales() {
   });
 
   useEffect(() => {
+    const channelName = `sales-changes-${Date.now()}`;
     const channel = supabase
-      .channel('sales-changes')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => {
         queryClient.invalidateQueries({ queryKey: ['sales'] });
       })
