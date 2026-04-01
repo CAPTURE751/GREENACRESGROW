@@ -203,7 +203,17 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* ... same as before ... */}
+                  <SelectItem value="seeds">Seeds</SelectItem>
+                  <SelectItem value="fertilizer">Fertilizer</SelectItem>
+                  <SelectItem value="pesticides">Pesticides</SelectItem>
+                  <SelectItem value="feed">Animal Feed</SelectItem>
+                  <SelectItem value="medicine">Medicine</SelectItem>
+                  <SelectItem value="equipment">Equipment</SelectItem>
+                  <SelectItem value="labor">Labor</SelectItem>
+                  <SelectItem value="fuel">Fuel</SelectItem>
+                  <SelectItem value="transport">Transport</SelectItem>
+                  <SelectItem value="utilities">Utilities</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -280,7 +290,7 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
               type="number"
               value={totalAmount}
               readOnly
-              className="bg-gray-100"
+              className="bg-muted"
             />
           </div>
         )}
@@ -301,8 +311,61 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
         </div>
       </div>
 
-      {/* Date Picker, Notes, Buttons remain unchanged */}
+      {/* Date Picker */}
+      <div className="space-y-2">
+        <Label>Date *</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !formData.date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={formData.date}
+              onSelect={(date) => handleInputChange('date', date || new Date())}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
 
+      {/* Notes */}
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => handleInputChange('notes', e.target.value)}
+          placeholder="Additional notes..."
+          rows={3}
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading} className="bg-farm-green hover:bg-farm-green/90">
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            transactionType === 'income' ? 'Record Sale' : 'Record Purchase'
+          )}
+        </Button>
+      </div>
     </form>
   );
 }
