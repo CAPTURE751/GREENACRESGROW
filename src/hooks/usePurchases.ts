@@ -45,9 +45,10 @@ export function usePurchases() {
     mutationFn: async (purchaseData: Omit<PurchaseInsert, 'created_by'>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+      const { total_cost, ...rest } = purchaseData as any;
       const { data, error } = await supabase
         .from('purchases')
-        .insert({ ...purchaseData, created_by: user.id, total_cost: purchaseData.quantity * purchaseData.unit_cost, farm_id: activeFarm?.id } as any)
+        .insert({ ...rest, created_by: user.id, farm_id: activeFarm?.id })
         .select().single();
       if (error) throw error;
       return data;
