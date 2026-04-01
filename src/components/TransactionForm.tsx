@@ -290,7 +290,7 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
               type="number"
               value={totalAmount}
               readOnly
-              className="bg-gray-100"
+              className="bg-muted"
             />
           </div>
         )}
