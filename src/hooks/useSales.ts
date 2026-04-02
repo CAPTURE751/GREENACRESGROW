@@ -88,6 +88,9 @@ export function useSales() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-sales'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-inventory'] });
       toast({ title: "Sale deleted", description: "Sale has been deleted successfully." });
     },
     onError: (error) => {
