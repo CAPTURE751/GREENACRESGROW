@@ -25,7 +25,9 @@ import {
   X,
   Download,
   FileSpreadsheet,
+  Trash2,
 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
 import { Layout } from "@/components/Layout";
@@ -85,8 +87,8 @@ export default function Finances() {
   const [pnlStartDate, setPnlStartDate] = useState('');
   const [pnlEndDate, setPnlEndDate] = useState('');
   
-  const { sales, analytics: salesAnalytics, isLoading: salesLoading } = useSales();
-  const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading } = usePurchases();
+  const { sales, analytics: salesAnalytics, isLoading: salesLoading, deleteSale, isDeleting: isDeletingSale } = useSales();
+  const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading, deletePurchase, isDeleting: isDeletingPurchase } = usePurchases();
   const profitLossMutation = useProfitLossCalculation();
   const { profile } = useAuth();
   const printedByName = profile?.name || "System User";
@@ -556,18 +558,50 @@ export default function Finances() {
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className={`text-lg font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                            {transaction.type === 'income' ? '+' : '-'}{formatKES(transaction.amount).replace('KSh ', '')}
-                          </p>
-                          <div className="flex gap-2 mt-1">
-                            <Badge className={getTypeColor(transaction.type)}>
-                              {transaction.type}
-                            </Badge>
-                            <Badge className={getStatusColor(transaction.status)}>
-                              {transaction.status}
-                            </Badge>
+                        <div className="text-right flex items-center gap-3">
+                          <div>
+                            <p className={`text-lg font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                              {transaction.type === 'income' ? '+' : '-'}{formatKES(transaction.amount).replace('KSh ', '')}
+                            </p>
+                            <div className="flex gap-2 mt-1">
+                              <Badge className={getTypeColor(transaction.type)}>
+                                {transaction.type}
+                              </Badge>
+                              <Badge className={getStatusColor(transaction.status)}>
+                                {transaction.status}
+                              </Badge>
+                            </div>
                           </div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this {transaction.type === 'income' ? 'sale' : 'purchase'}? This will also update inventory and analytics data.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-red-600 hover:bg-red-700"
+                                  onClick={() => {
+                                    if (transaction.type === 'income') {
+                                      deleteSale(transaction.id);
+                                    } else {
+                                      deletePurchase(transaction.id);
+                                    }
+                                  }}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     ))}

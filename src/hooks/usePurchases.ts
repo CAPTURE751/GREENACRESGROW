@@ -88,6 +88,9 @@ export function usePurchases() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-inventory'] });
       toast({ title: "Purchase deleted", description: "Purchase has been deleted successfully." });
     },
     onError: (error) => {
