@@ -87,8 +87,8 @@ export default function Finances() {
   const [pnlStartDate, setPnlStartDate] = useState('');
   const [pnlEndDate, setPnlEndDate] = useState('');
   
-  const { sales, analytics: salesAnalytics, isLoading: salesLoading } = useSales();
-  const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading } = usePurchases();
+  const { sales, analytics: salesAnalytics, isLoading: salesLoading, deleteSale, isDeleting: isDeletingSale } = useSales();
+  const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading, deletePurchase, isDeleting: isDeletingPurchase } = usePurchases();
   const profitLossMutation = useProfitLossCalculation();
   const { profile } = useAuth();
   const printedByName = profile?.name || "System User";
