@@ -26,6 +26,7 @@ import {
   Bug,
   DollarSign,
   ShoppingCart,
+  Landmark,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import {
