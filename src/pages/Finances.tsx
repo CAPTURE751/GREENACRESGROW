@@ -78,7 +78,7 @@ export default function Finances() {
   const farmLocation = activeFarm?.location || '';
   const farmSlogan = activeFarm?.slogan || '';
   const logoUrl = activeFarm?.logo_url || farmLogo;
-  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [filter, setFilter] = useState<'all' | 'income' | 'expense' | 'capital_injection'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [txnStartDate, setTxnStartDate] = useState('');
   const [txnEndDate, setTxnEndDate] = useState('');
