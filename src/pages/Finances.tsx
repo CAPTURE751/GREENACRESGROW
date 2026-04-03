@@ -136,7 +136,17 @@ export default function Finances() {
       date: purchase.purchase_date,
       status: purchase.payment_status === 'paid' ? 'completed' as const : 'pending' as const,
       originalData: purchase
-    }))
+    })),
+    ...capitalInjections.map(ci => ({
+      id: ci.id,
+      type: 'capital_injection' as const,
+      category: 'Capital Injection',
+      description: `${ci.source}${ci.description ? ' - ' + ci.description : ''}`,
+      amount: ci.amount || 0,
+      date: ci.injection_date,
+      status: 'completed' as const,
+      originalData: ci
+    })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const filteredTransactions = allTransactions.filter(t => {
