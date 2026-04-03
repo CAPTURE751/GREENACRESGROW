@@ -573,9 +573,11 @@ export default function Finances() {
                       .map((transaction) => (
                       <div key={`${transaction.type}-${transaction.id}`} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
                         <div className="flex items-center gap-4">
-                          <div className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
+                          <div className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : transaction.type === 'capital_injection' ? 'bg-blue-100' : 'bg-red-100'}`}>
                             {transaction.type === 'income' ? (
                               <TrendingUp className="h-4 w-4 text-green-600" />
+                            ) : transaction.type === 'capital_injection' ? (
+                              <Landmark className="h-4 w-4 text-blue-600" />
                             ) : (
                               <TrendingDown className="h-4 w-4 text-red-600" />
                             )}
