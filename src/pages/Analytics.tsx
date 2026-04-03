@@ -397,7 +397,7 @@ export default function Analytics() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card className="border-l-4 border-l-blue-500">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
@@ -450,13 +450,27 @@ export default function Analytics() {
               </div>
             </CardContent>
           </Card>
+          <Card className="border-l-4 border-l-indigo-500">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Capital Injected</p>
+                  <p className="text-2xl font-bold text-indigo-600 mt-1">{formatKES(totals.totalCapital)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{filteredCapital.length} injections · Equity</p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center">
+                  <Landmark className="h-6 w-6 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           <Card className="border-l-4 border-l-amber-500">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Farm Assets</p>
-                  <p className="text-2xl font-bold text-amber-600 mt-1">
-                    {crops.length + livestock.length}
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Cash Balance</p>
+                  <p className={`text-2xl font-bold mt-1 ${totals.cashBalance >= 0 ? "text-amber-600" : "text-red-600"}`}>
+                    {formatKES(totals.cashBalance)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {crops.length} crops · {livestock.length} livestock
