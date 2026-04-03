@@ -34,6 +34,7 @@ export function Dashboard() {
   const { livestock, isLoading: livestockLoading } = useLivestock();
   const { sales, analytics, isLoading: salesLoading } = useSales();
   const { purchases } = usePurchases();
+  const { totalCapital } = useCapitalInjections();
   const { lowStockItems } = useInventory();
   
   const inventoryAlerts = useInventoryAlerts();
