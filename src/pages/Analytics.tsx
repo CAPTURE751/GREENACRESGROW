@@ -152,14 +152,23 @@ export default function Analytics() {
     [purchases, cutoffDate, endDate]
   );
 
+  const filteredCapital = useMemo(() => {
+    let filtered = capitalData;
+    if (cutoffDate) filtered = filtered.filter((c) => c.injection_date >= cutoffDate);
+    if (endDate) filtered = filtered.filter((c) => c.injection_date <= endDate);
+    return filtered;
+  }, [capitalData, cutoffDate, endDate]);
+
   // ── KPI Summaries ──
   const totals = useMemo(() => {
     const totalRevenue = filteredSales.reduce((s, r) => s + (r.total_amount || 0), 0);
     const totalCosts = filteredPurchases.reduce((s, r) => s + (r.total_cost || 0), 0);
+    const totalCapitalFiltered = filteredCapital.reduce((s, c) => s + (c.amount || 0), 0);
     const netProfit = totalRevenue - totalCosts;
     const margin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-    return { totalRevenue, totalCosts, netProfit, margin };
-  }, [filteredSales, filteredPurchases]);
+    const cashBalance = totalRevenue + totalCapitalFiltered - totalCosts;
+    return { totalRevenue, totalCosts, netProfit, margin, totalCapital: totalCapitalFiltered, cashBalance };
+  }, [filteredSales, filteredPurchases, filteredCapital]);
 
   // ── Monthly Revenue vs Costs (bar chart) ──
   const monthlyFinancials = useMemo(() => {
