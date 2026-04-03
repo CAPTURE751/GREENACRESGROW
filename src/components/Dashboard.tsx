@@ -21,6 +21,7 @@ import { useCrops } from "@/hooks/useCrops";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useInventory } from "@/hooks/useInventory";
 import { useInventoryAlerts, useGenerateFarmReport, useProfitLossCalculation } from "@/hooks/useEdgeFunctions";
 import { format, parseISO } from "date-fns";
