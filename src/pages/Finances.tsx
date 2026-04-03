@@ -164,9 +164,9 @@ export default function Finances() {
     .reduce((sum, t) => sum + t.amount, 0);
 
   const getTypeColor = (type: string) => {
-    return type === 'income' 
-      ? 'bg-green-100 text-green-800 border-green-200'
-      : 'bg-red-100 text-red-800 border-red-200';
+    if (type === 'income') return 'bg-green-100 text-green-800 border-green-200';
+    if (type === 'capital_injection') return 'bg-blue-100 text-blue-800 border-blue-200';
+    return 'bg-red-100 text-red-800 border-red-200';
   };
 
   const getStatusColor = (status: string) => {
