@@ -602,7 +602,6 @@ export default function Finances() {
                               <Badge className={getTypeColor(transaction.type)}>
                                 {transaction.type === 'capital_injection' ? 'capital' : transaction.type}
                               </Badge>
-                              </Badge>
                               <Badge className={getStatusColor(transaction.status)}>
                                 {transaction.status}
                               </Badge>
