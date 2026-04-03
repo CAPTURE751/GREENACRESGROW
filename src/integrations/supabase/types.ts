@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      capital_injections: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          description: string | null
+          farm_id: string | null
+          id: string
+          injection_date: string
+          notes: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          description?: string | null
+          farm_id?: string | null
+          id?: string
+          injection_date?: string
+          notes?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          farm_id?: string | null
+          id?: string
+          injection_date?: string
+          notes?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_injections_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crops: {
         Row: {
           acreage: number | null
