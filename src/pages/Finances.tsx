@@ -600,7 +600,8 @@ export default function Finances() {
                             </p>
                             <div className="flex gap-2 mt-1">
                               <Badge className={getTypeColor(transaction.type)}>
-                                {transaction.type}
+                                {transaction.type === 'capital_injection' ? 'capital' : transaction.type}
+                              </Badge>
                               </Badge>
                               <Badge className={getStatusColor(transaction.status)}>
                                 {transaction.status}
