@@ -91,12 +91,12 @@ export default function Finances() {
   
   const { sales, analytics: salesAnalytics, isLoading: salesLoading, deleteSale, isDeleting: isDeletingSale } = useSales();
   const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading, deletePurchase, isDeleting: isDeletingPurchase } = usePurchases();
+  const { capitalInjections, totalCapital, isLoading: capitalLoading, deleteInjection, isDeleting: isDeletingInjection } = useCapitalInjections();
   const profitLossMutation = useProfitLossCalculation();
   const { profile } = useAuth();
   const printedByName = profile?.name || "System User";
 
-
-  const isLoading = salesLoading || purchasesLoading;
+  const isLoading = salesLoading || purchasesLoading || capitalLoading;
 
   const handleGeneratePnL = () => {
     profitLossMutation.mutate(
