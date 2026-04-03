@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatKES } from "@/lib/currency";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useProfitLossCalculation } from "@/hooks/useEdgeFunctions";
 import { TransactionForm } from "@/components/TransactionForm";
 import { 
