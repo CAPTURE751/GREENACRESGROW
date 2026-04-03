@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import {
   BarChart3,
   TrendingUp,
