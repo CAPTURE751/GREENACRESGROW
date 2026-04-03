@@ -617,7 +617,7 @@ export default function Finances() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete this {transaction.type === 'income' ? 'sale' : 'purchase'}? This will also update inventory and analytics data.
+                                  Are you sure you want to delete this {transaction.type === 'income' ? 'sale' : transaction.type === 'capital_injection' ? 'capital injection' : 'purchase'}? This will also update financial summaries.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -627,6 +627,8 @@ export default function Finances() {
                                   onClick={() => {
                                     if (transaction.type === 'income') {
                                       deleteSale(transaction.id);
+                                    } else if (transaction.type === 'capital_injection') {
+                                      deleteInjection(transaction.id);
                                     } else {
                                       deletePurchase(transaction.id);
                                     }
