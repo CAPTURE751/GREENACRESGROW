@@ -115,7 +115,9 @@ export default function Analytics() {
     },
   });
 
-  const isLoading = sl || pl || cl || ll || il;
+  const { capitalInjections: capitalData, totalCapital, isLoading: cil } = useCapitalInjections();
+
+  const isLoading = sl || pl || cl || ll || il || cil;
 
   // ── Time filter helper ──
   const cutoffDate = useMemo(() => {
