@@ -506,6 +506,13 @@ export default function Finances() {
             >
               Expenses Only
             </Button>
+            <Button
+              variant={filter === 'capital_injection' ? 'default' : 'outline'}
+              onClick={() => { setFilter('capital_injection'); setCurrentPage(1); }}
+              className="text-blue-700"
+            >
+              Capital Injections
+            </Button>
           </div>
           <div className="flex gap-2 items-end ml-auto">
             <div className="space-y-1">
