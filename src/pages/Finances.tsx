@@ -203,7 +203,7 @@ export default function Finances() {
         </div>
 
         {/* Financial Summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -242,14 +242,28 @@ export default function Finances() {
             </CardContent>
           </Card>
 
+          <Card className="border-l-4 border-l-blue-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Capital Injected</p>
+                  <p className="text-2xl font-bold text-blue-600">{formatKES(totalCapital)}</p>
+                  <p className="text-xs text-muted-foreground">Owner's Equity</p>
+                </div>
+                <Landmark className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-bold text-farm-harvest">
-                    {formatKES(pendingAmount)}
+                  <p className="text-sm text-muted-foreground">Cash Balance</p>
+                  <p className={`text-2xl font-bold ${(totalIncome + totalCapital - totalExpenses) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatKES(totalIncome + totalCapital - totalExpenses)}
                   </p>
+                  <p className="text-xs text-muted-foreground">Income + Capital − Expenses</p>
                 </div>
                 <Receipt className="h-8 w-8 text-farm-harvest" />
               </div>
