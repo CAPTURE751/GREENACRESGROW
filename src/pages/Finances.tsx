@@ -595,8 +595,8 @@ export default function Finances() {
                         </div>
                         <div className="text-right flex items-center gap-3">
                           <div>
-                            <p className={`text-lg font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                              {transaction.type === 'income' ? '+' : '-'}{formatKES(transaction.amount).replace('KSh ', '')}
+                            <p className={`text-lg font-bold ${transaction.type === 'income' || transaction.type === 'capital_injection' ? 'text-green-600' : 'text-red-600'}`}>
+                              {transaction.type === 'expense' ? '-' : '+'}{formatKES(transaction.amount).replace('KSh ', '')}
                             </p>
                             <div className="flex gap-2 mt-1">
                               <Badge className={getTypeColor(transaction.type)}>
