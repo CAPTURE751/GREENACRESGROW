@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatKES } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import {
   BarChart3,
   TrendingUp,
@@ -25,6 +26,7 @@ import {
   Bug,
   DollarSign,
   ShoppingCart,
+  Landmark,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import {
@@ -113,7 +115,9 @@ export default function Analytics() {
     },
   });
 
-  const isLoading = sl || pl || cl || ll || il;
+  const { capitalInjections: capitalData, totalCapital, isLoading: cil } = useCapitalInjections();
+
+  const isLoading = sl || pl || cl || ll || il || cil;
 
   // ── Time filter helper ──
   const cutoffDate = useMemo(() => {
@@ -148,14 +152,23 @@ export default function Analytics() {
     [purchases, cutoffDate, endDate]
   );
 
+  const filteredCapital = useMemo(() => {
+    let filtered = capitalData;
+    if (cutoffDate) filtered = filtered.filter((c) => c.injection_date >= cutoffDate);
+    if (endDate) filtered = filtered.filter((c) => c.injection_date <= endDate);
+    return filtered;
+  }, [capitalData, cutoffDate, endDate]);
+
   // ── KPI Summaries ──
   const totals = useMemo(() => {
     const totalRevenue = filteredSales.reduce((s, r) => s + (r.total_amount || 0), 0);
     const totalCosts = filteredPurchases.reduce((s, r) => s + (r.total_cost || 0), 0);
+    const totalCapitalFiltered = filteredCapital.reduce((s, c) => s + (c.amount || 0), 0);
     const netProfit = totalRevenue - totalCosts;
     const margin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-    return { totalRevenue, totalCosts, netProfit, margin };
-  }, [filteredSales, filteredPurchases]);
+    const cashBalance = totalRevenue + totalCapitalFiltered - totalCosts;
+    return { totalRevenue, totalCosts, netProfit, margin, totalCapital: totalCapitalFiltered, cashBalance };
+  }, [filteredSales, filteredPurchases, filteredCapital]);
 
   // ── Monthly Revenue vs Costs (bar chart) ──
   const monthlyFinancials = useMemo(() => {
@@ -384,7 +397,7 @@ export default function Analytics() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card className="border-l-4 border-l-blue-500">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
@@ -437,13 +450,27 @@ export default function Analytics() {
               </div>
             </CardContent>
           </Card>
+          <Card className="border-l-4 border-l-indigo-500">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Capital Injected</p>
+                  <p className="text-2xl font-bold text-indigo-600 mt-1">{formatKES(totals.totalCapital)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{filteredCapital.length} injections · Equity</p>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center">
+                  <Landmark className="h-6 w-6 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
           <Card className="border-l-4 border-l-amber-500">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Farm Assets</p>
-                  <p className="text-2xl font-bold text-amber-600 mt-1">
-                    {crops.length + livestock.length}
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Cash Balance</p>
+                  <p className={`text-2xl font-bold mt-1 ${totals.cashBalance >= 0 ? "text-amber-600" : "text-red-600"}`}>
+                    {formatKES(totals.cashBalance)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {crops.length} crops · {livestock.length} livestock

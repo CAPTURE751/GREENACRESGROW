@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatKES } from "@/lib/currency";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useProfitLossCalculation } from "@/hooks/useEdgeFunctions";
 import { TransactionForm } from "@/components/TransactionForm";
 import { 
@@ -26,6 +27,7 @@ import {
   Download,
   FileSpreadsheet,
   Trash2,
+  Landmark,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -76,7 +78,7 @@ export default function Finances() {
   const farmLocation = activeFarm?.location || '';
   const farmSlogan = activeFarm?.slogan || '';
   const logoUrl = activeFarm?.logo_url || farmLogo;
-  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [filter, setFilter] = useState<'all' | 'income' | 'expense' | 'capital_injection'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [txnStartDate, setTxnStartDate] = useState('');
   const [txnEndDate, setTxnEndDate] = useState('');
@@ -89,12 +91,12 @@ export default function Finances() {
   
   const { sales, analytics: salesAnalytics, isLoading: salesLoading, deleteSale, isDeleting: isDeletingSale } = useSales();
   const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading, deletePurchase, isDeleting: isDeletingPurchase } = usePurchases();
+  const { capitalInjections, totalCapital, isLoading: capitalLoading, deleteInjection, isDeleting: isDeletingInjection } = useCapitalInjections();
   const profitLossMutation = useProfitLossCalculation();
   const { profile } = useAuth();
   const printedByName = profile?.name || "System User";
 
-
-  const isLoading = salesLoading || purchasesLoading;
+  const isLoading = salesLoading || purchasesLoading || capitalLoading;
 
   const handleGeneratePnL = () => {
     profitLossMutation.mutate(
@@ -134,7 +136,17 @@ export default function Finances() {
       date: purchase.purchase_date,
       status: purchase.payment_status === 'paid' ? 'completed' as const : 'pending' as const,
       originalData: purchase
-    }))
+    })),
+    ...capitalInjections.map(ci => ({
+      id: ci.id,
+      type: 'capital_injection' as const,
+      category: 'Capital Injection',
+      description: `${ci.source}${ci.description ? ' - ' + ci.description : ''}`,
+      amount: ci.amount || 0,
+      date: ci.injection_date,
+      status: 'completed' as const,
+      originalData: ci
+    })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const filteredTransactions = allTransactions.filter(t => {
@@ -152,9 +164,9 @@ export default function Finances() {
     .reduce((sum, t) => sum + t.amount, 0);
 
   const getTypeColor = (type: string) => {
-    return type === 'income' 
-      ? 'bg-green-100 text-green-800 border-green-200'
-      : 'bg-red-100 text-red-800 border-red-200';
+    if (type === 'income') return 'bg-green-100 text-green-800 border-green-200';
+    if (type === 'capital_injection') return 'bg-blue-100 text-blue-800 border-blue-200';
+    return 'bg-red-100 text-red-800 border-red-200';
   };
 
   const getStatusColor = (status: string) => {
@@ -191,7 +203,7 @@ export default function Finances() {
         </div>
 
         {/* Financial Summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -230,14 +242,28 @@ export default function Finances() {
             </CardContent>
           </Card>
 
+          <Card className="border-l-4 border-l-blue-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Capital Injected</p>
+                  <p className="text-2xl font-bold text-blue-600">{formatKES(totalCapital)}</p>
+                  <p className="text-xs text-muted-foreground">Owner's Equity</p>
+                </div>
+                <Landmark className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-bold text-farm-harvest">
-                    {formatKES(pendingAmount)}
+                  <p className="text-sm text-muted-foreground">Cash Balance</p>
+                  <p className={`text-2xl font-bold ${(totalIncome + totalCapital - totalExpenses) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {formatKES(totalIncome + totalCapital - totalExpenses)}
                   </p>
+                  <p className="text-xs text-muted-foreground">Income + Capital − Expenses</p>
                 </div>
                 <Receipt className="h-8 w-8 text-farm-harvest" />
               </div>
@@ -480,6 +506,13 @@ export default function Finances() {
             >
               Expenses Only
             </Button>
+            <Button
+              variant={filter === 'capital_injection' ? 'default' : 'outline'}
+              onClick={() => { setFilter('capital_injection'); setCurrentPage(1); }}
+              className="text-blue-700"
+            >
+              Capital Injections
+            </Button>
           </div>
           <div className="flex gap-2 items-end ml-auto">
             <div className="space-y-1">
@@ -540,9 +573,11 @@ export default function Finances() {
                       .map((transaction) => (
                       <div key={`${transaction.type}-${transaction.id}`} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
                         <div className="flex items-center gap-4">
-                          <div className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
+                          <div className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : transaction.type === 'capital_injection' ? 'bg-blue-100' : 'bg-red-100'}`}>
                             {transaction.type === 'income' ? (
                               <TrendingUp className="h-4 w-4 text-green-600" />
+                            ) : transaction.type === 'capital_injection' ? (
+                              <Landmark className="h-4 w-4 text-blue-600" />
                             ) : (
                               <TrendingDown className="h-4 w-4 text-red-600" />
                             )}
@@ -560,12 +595,12 @@ export default function Finances() {
                         </div>
                         <div className="text-right flex items-center gap-3">
                           <div>
-                            <p className={`text-lg font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                              {transaction.type === 'income' ? '+' : '-'}{formatKES(transaction.amount).replace('KSh ', '')}
+                            <p className={`text-lg font-bold ${transaction.type === 'income' || transaction.type === 'capital_injection' ? 'text-green-600' : 'text-red-600'}`}>
+                              {transaction.type === 'expense' ? '-' : '+'}{formatKES(transaction.amount).replace('KSh ', '')}
                             </p>
                             <div className="flex gap-2 mt-1">
                               <Badge className={getTypeColor(transaction.type)}>
-                                {transaction.type}
+                                {transaction.type === 'capital_injection' ? 'capital' : transaction.type}
                               </Badge>
                               <Badge className={getStatusColor(transaction.status)}>
                                 {transaction.status}
@@ -582,7 +617,7 @@ export default function Finances() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete this {transaction.type === 'income' ? 'sale' : 'purchase'}? This will also update inventory and analytics data.
+                                  Are you sure you want to delete this {transaction.type === 'income' ? 'sale' : transaction.type === 'capital_injection' ? 'capital injection' : 'purchase'}? This will also update financial summaries.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -592,6 +627,8 @@ export default function Finances() {
                                   onClick={() => {
                                     if (transaction.type === 'income') {
                                       deleteSale(transaction.id);
+                                    } else if (transaction.type === 'capital_injection') {
+                                      deleteInjection(transaction.id);
                                     } else {
                                       deletePurchase(transaction.id);
                                     }

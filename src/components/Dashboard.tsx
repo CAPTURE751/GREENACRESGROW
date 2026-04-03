@@ -21,6 +21,7 @@ import { useCrops } from "@/hooks/useCrops";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useInventory } from "@/hooks/useInventory";
 import { useInventoryAlerts, useGenerateFarmReport, useProfitLossCalculation } from "@/hooks/useEdgeFunctions";
 import { format, parseISO } from "date-fns";
@@ -33,6 +34,7 @@ export function Dashboard() {
   const { livestock, isLoading: livestockLoading } = useLivestock();
   const { sales, analytics, isLoading: salesLoading } = useSales();
   const { purchases } = usePurchases();
+  const { totalCapital } = useCapitalInjections();
   const { lowStockItems } = useInventory();
   
   const inventoryAlerts = useInventoryAlerts();
