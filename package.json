@@ -8,7 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:8080 && electron .\"",
+    "electron:build": "vite build && electron-builder --win",
+    "start": "npm run electron:dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -82,5 +85,27 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
+  },
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "com.farmos.management",
+    "productName": "FarmOS Management",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/icon.png"
+    }
   }
 }
