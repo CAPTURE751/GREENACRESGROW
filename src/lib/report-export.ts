@@ -538,6 +538,15 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   doc.text(formatKES(finalNetProfit), pageWidth - 18, y + 5, { align: "right" });
   y += 18;
 
+  // Capital Injections / Owner's Equity section
+  checkPage(30);
+  sectionHeader("9", "OWNER'S EQUITY (CAPITAL INJECTIONS)");
+  doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+  doc.text("Capital injections are NOT revenue — they represent owner funds added to the business.", 18, y);
+  y += 6;
+  lineItem("Note: Capital data shown separately in Capital Injections Report", 0, 18);
+  y += 4;
+
   // Paid amounts summary
   checkPage(20);
   doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
