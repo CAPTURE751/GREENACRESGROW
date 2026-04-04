@@ -12,26 +12,14 @@ import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useProfitLossCalculation } from "@/hooks/useEdgeFunctions";
 import { TransactionForm } from "@/components/TransactionForm";
 import { 
-  DollarSign,
-  Plus,
-  TrendingUp,
-  TrendingDown,
-  Receipt,
-  CreditCard,
-  Calendar,
-  Filter,
-  Loader2,
-  FileBarChart,
-  BarChart3,
-  X,
-  Download,
-  FileSpreadsheet,
-  Trash2,
-  Landmark,
+  DollarSign, Plus, TrendingUp, TrendingDown, Receipt, CreditCard, Calendar,
+  Filter, Loader2, FileBarChart, BarChart3, X, Download, FileSpreadsheet,
+  Trash2, Landmark, Pencil,
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
+import { exportCapitalInjectionsPDF } from "@/lib/capital-injection-export";
 import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,6 +68,8 @@ export default function Finances() {
   const logoUrl = activeFarm?.logo_url || farmLogo;
   const [filter, setFilter] = useState<'all' | 'income' | 'expense' | 'capital_injection'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editTransaction, setEditTransaction] = useState<{ type: 'income' | 'expense' | 'capital_injection'; data: any } | null>(null);
   const [txnStartDate, setTxnStartDate] = useState('');
   const [txnEndDate, setTxnEndDate] = useState('');
   const [showPnL, setShowPnL] = useState(false);
@@ -100,10 +90,7 @@ export default function Finances() {
 
   const handleGeneratePnL = () => {
     profitLossMutation.mutate(
-      {
-        start_date: pnlStartDate || undefined,
-        end_date: pnlEndDate || undefined,
-      },
+      { start_date: pnlStartDate || undefined, end_date: pnlEndDate || undefined },
       {
         onSuccess: (data) => {
           if (data?.profit_loss_report) {
@@ -115,37 +102,54 @@ export default function Finances() {
     );
   };
 
+  const handleEdit = (type: 'income' | 'expense' | 'capital_injection', originalData: any) => {
+    let data: any = {};
+    if (type === 'income') {
+      data = {
+        id: originalData.id, product_name: originalData.product_name, product_type: originalData.product_type,
+        buyer: originalData.buyer, buyer_contact: originalData.buyer_contact, quantity: originalData.quantity,
+        unit: originalData.unit, unit_price: originalData.unit_price, date: originalData.sale_date,
+        payment_status: originalData.payment_status, notes: originalData.notes,
+      };
+    } else if (type === 'expense') {
+      data = {
+        id: originalData.id, item_name: originalData.item_name, category: originalData.category,
+        supplier: originalData.supplier, supplier_contact: originalData.supplier_contact,
+        quantity: originalData.quantity, unit: originalData.unit, unit_price: originalData.unit_cost,
+        date: originalData.purchase_date, received_date: originalData.received_date,
+        payment_status: originalData.payment_status, notes: originalData.notes,
+      };
+    } else {
+      data = {
+        id: originalData.id, amount: originalData.amount, date: originalData.injection_date,
+        source: originalData.source, description: originalData.description, notes: originalData.notes,
+      };
+    }
+    setEditTransaction({ type, data });
+    setEditDialogOpen(true);
+  };
+
   // Combine sales and purchases into transactions
   const allTransactions = [
     ...sales.map(sale => ({
-      id: sale.id,
-      type: 'income' as const,
-      category: sale.product_type,
+      id: sale.id, type: 'income' as const, category: sale.product_type,
       description: `${sale.product_name} - ${sale.buyer}`,
-      amount: sale.total_amount || 0,
-      date: sale.sale_date,
+      amount: sale.total_amount || 0, date: sale.sale_date,
       status: sale.payment_status === 'paid' ? 'completed' as const : 'pending' as const,
       originalData: sale
     })),
     ...purchases.map(purchase => ({
-      id: purchase.id,
-      type: 'expense' as const,
-      category: purchase.category,
+      id: purchase.id, type: 'expense' as const, category: purchase.category,
       description: `${purchase.item_name} - ${purchase.supplier}`,
-      amount: purchase.total_cost || 0,
-      date: purchase.purchase_date,
+      amount: purchase.total_cost || 0, date: purchase.purchase_date,
       status: purchase.payment_status === 'paid' ? 'completed' as const : 'pending' as const,
       originalData: purchase
     })),
     ...capitalInjections.map(ci => ({
-      id: ci.id,
-      type: 'capital_injection' as const,
-      category: 'Capital Injection',
+      id: ci.id, type: 'capital_injection' as const, category: 'Capital Injection',
       description: `${ci.source}${ci.description ? ' - ' + ci.description : ''}`,
-      amount: ci.amount || 0,
-      date: ci.injection_date,
-      status: 'completed' as const,
-      originalData: ci
+      amount: ci.amount || 0, date: ci.injection_date,
+      status: 'completed' as const, originalData: ci
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -159,9 +163,7 @@ export default function Finances() {
   const totalIncome = salesAnalytics?.totalRevenue || 0;
   const totalExpenses = purchaseAnalytics?.totalExpenses || 0;
   const netProfit = totalIncome - totalExpenses;
-  const pendingAmount = allTransactions
-    .filter(t => t.status === 'pending')
-    .reduce((sum, t) => sum + t.amount, 0);
+  const pendingAmount = allTransactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + t.amount, 0);
 
   const getTypeColor = (type: string) => {
     if (type === 'income') return 'bg-green-100 text-green-800 border-green-200';
@@ -170,9 +172,7 @@ export default function Finances() {
   };
 
   const getStatusColor = (status: string) => {
-    return status === 'completed'
-      ? 'bg-blue-100 text-blue-800 border-blue-200'
-      : 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    return status === 'completed' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200';
   };
 
   return (
@@ -202,6 +202,23 @@ export default function Finances() {
           </div>
         </div>
 
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Transaction</DialogTitle>
+            </DialogHeader>
+            {editTransaction && (
+              <TransactionForm
+                onClose={() => { setEditDialogOpen(false); setEditTransaction(null); }}
+                editMode
+                editType={editTransaction.type}
+                editData={editTransaction.data}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Financial Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
@@ -215,7 +232,6 @@ export default function Finances() {
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -227,7 +243,6 @@ export default function Finances() {
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -241,7 +256,6 @@ export default function Finances() {
               </div>
             </CardContent>
           </Card>
-
           <Card className="border-l-4 border-l-blue-500">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -254,7 +268,6 @@ export default function Finances() {
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -283,33 +296,26 @@ export default function Finances() {
             <div className="flex flex-col sm:flex-row gap-4 items-end">
               <div className="space-y-2 flex-1">
                 <Label htmlFor="pnl-start">Start Date</Label>
-                <Input
-                  id="pnl-start"
-                  type="date"
-                  value={pnlStartDate}
-                  onChange={(e) => setPnlStartDate(e.target.value)}
-                />
+                <Input id="pnl-start" type="date" value={pnlStartDate} onChange={(e) => setPnlStartDate(e.target.value)} />
               </div>
               <div className="space-y-2 flex-1">
                 <Label htmlFor="pnl-end">End Date</Label>
-                <Input
-                  id="pnl-end"
-                  type="date"
-                  value={pnlEndDate}
-                  onChange={(e) => setPnlEndDate(e.target.value)}
-                />
+                <Input id="pnl-end" type="date" value={pnlEndDate} onChange={(e) => setPnlEndDate(e.target.value)} />
               </div>
-              <Button
-                onClick={handleGeneratePnL}
-                disabled={profitLossMutation.isPending}
-                className="bg-farm-green hover:bg-farm-green/90"
-              >
-                {profitLossMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                )}
+              <Button onClick={handleGeneratePnL} disabled={profitLossMutation.isPending} className="bg-farm-green hover:bg-farm-green/90">
+                {profitLossMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <BarChart3 className="h-4 w-4 mr-2" />}
                 Generate Report
+              </Button>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await exportCapitalInjectionsPDF(capitalInjections, totalCapital, printedByName);
+                  } catch (e) { console.error(e); }
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Capital Report
               </Button>
             </div>
 
@@ -358,33 +364,35 @@ export default function Finances() {
                   <div className="p-4 rounded-lg bg-green-50 border border-green-200">
                     <p className="text-xs text-muted-foreground font-medium">Total Revenue</p>
                     <p className="text-lg font-bold text-green-700">{formatKES(pnlReport.summary.total_revenue)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Paid: {formatKES(pnlReport.summary.paid_revenue)}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Paid: {formatKES(pnlReport.summary.paid_revenue)}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-red-50 border border-red-200">
                     <p className="text-xs text-muted-foreground font-medium">Total Costs</p>
                     <p className="text-lg font-bold text-red-700">{formatKES(pnlReport.summary.total_costs)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Paid: {formatKES(pnlReport.summary.paid_costs)}
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Paid: {formatKES(pnlReport.summary.paid_costs)}</p>
                   </div>
                   <div className={`p-4 rounded-lg border ${pnlReport.summary.gross_profit >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
                     <p className="text-xs text-muted-foreground font-medium">Gross Profit</p>
                     <p className={`text-lg font-bold ${pnlReport.summary.gross_profit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
                       {formatKES(pnlReport.summary.gross_profit)}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Margin: {pnlReport.summary.profit_margin_percent.toFixed(1)}%
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Margin: {pnlReport.summary.profit_margin_percent.toFixed(1)}%</p>
                   </div>
-                  <div className={`p-4 rounded-lg border ${pnlReport.summary.net_profit >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
-                    <p className="text-xs text-muted-foreground font-medium">Net Profit</p>
-                    <p className={`text-lg font-bold ${pnlReport.summary.net_profit >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
-                      {formatKES(pnlReport.summary.net_profit)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {pnlReport.summary.total_sales_transactions} sales · {pnlReport.summary.total_purchase_transactions} purchases
+                  <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                    <p className="text-xs text-muted-foreground font-medium">Capital Injected</p>
+                    <p className="text-lg font-bold text-blue-700">{formatKES(totalCapital)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Owner's Equity</p>
+                  </div>
+                </div>
+
+                {/* Cash Balance row */}
+                <div className="p-4 rounded-lg bg-muted border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Cash Balance (Income + Capital − Expenses)</p>
+                    </div>
+                    <p className={`text-xl font-bold ${(pnlReport.summary.total_revenue + totalCapital - pnlReport.summary.total_costs) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                      {formatKES(pnlReport.summary.total_revenue + totalCapital - pnlReport.summary.total_costs)}
                     </p>
                   </div>
                 </div>
@@ -457,9 +465,7 @@ export default function Finances() {
                             <Badge variant="secondary">{cat.transactions} sales</Badge>
                           </div>
                           <p className="text-lg font-bold text-green-600">{formatKES(cat.revenue)}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Avg: {formatKES(cat.avg_transaction_value)} per transaction
-                          </p>
+                          <p className="text-xs text-muted-foreground">Avg: {formatKES(cat.avg_transaction_value)} per transaction</p>
                         </div>
                       ))}
                     </div>
@@ -486,54 +492,19 @@ export default function Finances() {
         {/* Transaction Filters */}
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex gap-2">
-            <Button
-              variant={filter === 'all' ? 'default' : 'outline'}
-              onClick={() => { setFilter('all'); setCurrentPage(1); }}
-            >
-              All Transactions
-            </Button>
-            <Button
-              variant={filter === 'income' ? 'default' : 'outline'}
-              onClick={() => { setFilter('income'); setCurrentPage(1); }}
-              className="text-green-700"
-            >
-              Income Only
-            </Button>
-            <Button
-              variant={filter === 'expense' ? 'default' : 'outline'}
-              onClick={() => { setFilter('expense'); setCurrentPage(1); }}
-              className="text-red-700"
-            >
-              Expenses Only
-            </Button>
-            <Button
-              variant={filter === 'capital_injection' ? 'default' : 'outline'}
-              onClick={() => { setFilter('capital_injection'); setCurrentPage(1); }}
-              className="text-blue-700"
-            >
-              Capital Injections
-            </Button>
+            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setCurrentPage(1); }}>All Transactions</Button>
+            <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setCurrentPage(1); }} className="text-green-700">Income Only</Button>
+            <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setCurrentPage(1); }} className="text-red-700">Expenses Only</Button>
+            <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setCurrentPage(1); }} className="text-blue-700">Capital Injections</Button>
           </div>
           <div className="flex gap-2 items-end ml-auto">
             <div className="space-y-1">
               <Label htmlFor="txn-start" className="text-xs">From</Label>
-              <Input
-                id="txn-start"
-                type="date"
-                value={txnStartDate}
-                onChange={(e) => setTxnStartDate(e.target.value)}
-                className="h-9 w-[140px]"
-              />
+              <Input id="txn-start" type="date" value={txnStartDate} onChange={(e) => setTxnStartDate(e.target.value)} className="h-9 w-[140px]" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="txn-end" className="text-xs">To</Label>
-              <Input
-                id="txn-end"
-                type="date"
-                value={txnEndDate}
-                onChange={(e) => setTxnEndDate(e.target.value)}
-                className="h-9 w-[140px]"
-              />
+              <Input id="txn-end" type="date" value={txnEndDate} onChange={(e) => setTxnEndDate(e.target.value)} className="h-9 w-[140px]" />
             </div>
             {(txnStartDate || txnEndDate) && (
               <Button variant="ghost" size="sm" onClick={() => { setTxnStartDate(''); setTxnEndDate(''); }}>
@@ -550,9 +521,7 @@ export default function Finances() {
               <CreditCard className="h-5 w-5" />
               Recent Transactions
               {(txnStartDate || txnEndDate) && (
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  {txnStartDate || '...'} → {txnEndDate || '...'}
-                </Badge>
+                <Badge variant="secondary" className="ml-2 text-xs">{txnStartDate || '...'} → {txnEndDate || '...'}</Badge>
               )}
             </CardTitle>
           </CardHeader>
@@ -587,13 +556,11 @@ export default function Finances() {
                             <p className="text-sm text-muted-foreground">{transaction.category}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <Calendar className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(transaction.date).toLocaleDateString()}
-                              </span>
+                              <span className="text-xs text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="text-right flex items-center gap-3">
+                        <div className="text-right flex items-center gap-2">
                           <div>
                             <p className={`text-lg font-bold ${transaction.type === 'income' || transaction.type === 'capital_injection' ? 'text-green-600' : 'text-red-600'}`}>
                               {transaction.type === 'expense' ? '-' : '+'}{formatKES(transaction.amount).replace('KSh ', '')}
@@ -602,11 +569,17 @@ export default function Finances() {
                               <Badge className={getTypeColor(transaction.type)}>
                                 {transaction.type === 'capital_injection' ? 'capital' : transaction.type}
                               </Badge>
-                              <Badge className={getStatusColor(transaction.status)}>
-                                {transaction.status}
-                              </Badge>
+                              <Badge className={getStatusColor(transaction.status)}>{transaction.status}</Badge>
                             </div>
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-foreground"
+                            onClick={() => handleEdit(transaction.type, transaction.originalData)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50">
@@ -625,13 +598,9 @@ export default function Finances() {
                                 <AlertDialogAction
                                   className="bg-red-600 hover:bg-red-700"
                                   onClick={() => {
-                                    if (transaction.type === 'income') {
-                                      deleteSale(transaction.id);
-                                    } else if (transaction.type === 'capital_injection') {
-                                      deleteInjection(transaction.id);
-                                    } else {
-                                      deletePurchase(transaction.id);
-                                    }
+                                    if (transaction.type === 'income') deleteSale(transaction.id);
+                                    else if (transaction.type === 'capital_injection') deleteInjection(transaction.id);
+                                    else deletePurchase(transaction.id);
                                   }}
                                 >
                                   Delete
@@ -650,33 +619,11 @@ export default function Finances() {
                           Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length}
                         </p>
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage((p) => p - 1)}
-                          >
-                            Previous
-                          </Button>
+                          <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
                           {Array.from({ length: Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE) }, (_, i) => (
-                            <Button
-                              key={i + 1}
-                              variant={currentPage === i + 1 ? 'default' : 'outline'}
-                              size="sm"
-                              className="w-9"
-                              onClick={() => setCurrentPage(i + 1)}
-                            >
-                              {i + 1}
-                            </Button>
+                            <Button key={i + 1} variant={currentPage === i + 1 ? 'default' : 'outline'} size="sm" className="w-9" onClick={() => setCurrentPage(i + 1)}>{i + 1}</Button>
                           ))}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={currentPage >= Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)}
-                            onClick={() => setCurrentPage((p) => p + 1)}
-                          >
-                            Next
-                          </Button>
+                          <Button variant="outline" size="sm" disabled={currentPage >= Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
                         </div>
                       </div>
                     )}
