@@ -25,6 +25,14 @@ export interface CapitalInjectionInsert {
   notes?: string;
 }
 
+export interface CapitalInjectionUpdate {
+  amount?: number;
+  injection_date?: string;
+  source?: string;
+  description?: string;
+  notes?: string;
+}
+
 export function useCapitalInjections() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -66,11 +74,33 @@ export function useCapitalInjections() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['capital_injections'] });
       queryClient.invalidateQueries({ queryKey: ['analytics-capital'] });
-      queryClient.invalidateQueries({ queryKey: ['sales'] }); // refresh dashboard totals
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
       toast({ title: "Capital injection recorded", description: "Owner funds have been added to the business." });
     },
     onError: (error) => {
       toast({ variant: "destructive", title: "Error recording capital injection", description: error.message });
+    },
+  });
+
+  const updateInjection = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: CapitalInjectionUpdate }) => {
+      const { data, error } = await supabase
+        .from('capital_injections' as any)
+        .update(updates as any)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['capital_injections'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-capital'] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      toast({ title: "Capital injection updated", description: "Record has been updated." });
+    },
+    onError: (error) => {
+      toast({ variant: "destructive", title: "Error updating capital injection", description: error.message });
     },
   });
 
@@ -107,8 +137,10 @@ export function useCapitalInjections() {
     error,
     refetch,
     createInjection: createInjection.mutate,
+    updateInjection: updateInjection.mutate,
     deleteInjection: deleteInjection.mutate,
     isCreating: createInjection.isPending,
+    isUpdating: updateInjection.isPending,
     isDeleting: deleteInjection.isPending,
   };
 }
