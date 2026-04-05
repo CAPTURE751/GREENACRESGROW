@@ -147,7 +147,12 @@ export async function exportPnLToCSV(report: PnLReport, printedBy?: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
+export interface CapitalInjectionData {
+  injections: Array<{ amount: number; injection_date: string; source: string; description: string | null }>;
+  totalCapital: number;
+}
+
+export async function exportPnLToPDF(report: PnLReport, printedBy?: string, capitalData?: CapitalInjectionData) {
   const settings = await getFarmSettings();
   const FARM_NAME = settings?.farm_name || DEFAULT_FARM_NAME;
   const FARM_LOCATION = settings?.location || DEFAULT_LOCATION;
@@ -538,25 +543,80 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string) {
   doc.text(formatKES(finalNetProfit), pageWidth - 18, y + 5, { align: "right" });
   y += 18;
 
-  // Capital Injections / Owner's Equity section
+  // ============================================================
+  // 9. OWNER'S EQUITY (CAPITAL INJECTIONS)
+  // ============================================================
+  const capTotal = capitalData?.totalCapital || 0;
+  const capInjections = capitalData?.injections || [];
+
   checkPage(30);
   sectionHeader("9", "OWNER'S EQUITY (CAPITAL INJECTIONS)");
   doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
   doc.text("Capital injections are NOT revenue — they represent owner funds added to the business.", 18, y);
   y += 6;
-  lineItem("Note: Capital data shown separately in Capital Injections Report", 0, 18);
-  y += 4;
 
-  // Paid amounts summary
-  checkPage(20);
-  doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
-  doc.text("Cash Flow Summary (Paid Only)", 14, y);
+  if (capInjections.length > 0) {
+    autoTable(doc, {
+      startY: y,
+      head: [["Date", "Source", "Description", "Amount"]],
+      body: capInjections.map(ci => [
+        new Date(ci.injection_date).toLocaleDateString(),
+        ci.source,
+        ci.description || "—",
+        formatKES(ci.amount),
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [60, 90, 140] as [number, number, number] },
+      styles: { fontSize: 8 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 6;
+  } else {
+    lineItem("No capital injections recorded", 0, 18);
+  }
+  totalLine("Total Owner's Equity (Capital Injected)", capTotal, true);
+
+  // ============================================================
+  // 10. CASH FLOW STATEMENT
+  // ============================================================
+  checkPage(40);
+  sectionHeader("10", "CASH FLOW STATEMENT");
+
+  const cashInflows = report.summary.paid_revenue + capTotal;
+  const cashOutflows = report.summary.paid_costs;
+  const netCashFlow = cashInflows - cashOutflows;
+
+  subHeader("Cash Inflows");
+  lineItem("Revenue Received (Paid Sales)", report.summary.paid_revenue);
+  lineItem("Capital Injections (Owner's Equity)", capTotal);
+  totalLine("Total Cash Inflows", cashInflows);
+
+  subHeader("Cash Outflows");
+  lineItem("Expenses Paid (Paid Purchases)", report.summary.paid_costs);
+  totalLine("Total Cash Outflows", cashOutflows);
+
+  doubleTotalLine("Net Cash Flow", netCashFlow);
+
+  // ============================================================
+  // 11. BALANCE SHEET SUMMARY
+  // ============================================================
+  checkPage(40);
+  sectionHeader("11", "BALANCE SHEET SUMMARY");
+  doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+  doc.text("Simplified balance sheet based on available financial data.", 18, y);
   y += 6;
-  lineItem("Paid Revenue", report.summary.paid_revenue, 18);
-  lineItem("Paid Costs", report.summary.paid_costs, 18);
-  totalLine("Net Cash Profit", report.summary.net_profit);
 
-  // Profit Margin
+  const cashBalance = report.summary.paid_revenue + capTotal - report.summary.paid_costs;
+
+  subHeader("Assets");
+  lineItem("Cash / Bank Balance", cashBalance);
+  totalLine("Total Assets", cashBalance);
+
+  subHeader("Liabilities & Owner's Equity");
+  lineItem("Retained Earnings (Net Profit)", finalNetProfit);
+  lineItem("Owner's Capital Injected", capTotal);
+  totalLine("Total Liabilities & Equity", finalNetProfit + capTotal);
+
+  // Profit Margin note
   lineItem(`Profit Margin: ${report.summary.profit_margin_percent.toFixed(1)}%`, 0, 18);
   y += 4;
 
