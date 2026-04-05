@@ -350,7 +350,7 @@ export default function Finances() {
                       <FileSpreadsheet className="h-4 w-4 mr-1" />
                       CSV
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => exportPnLToPDF(pnlReport, printedByName)}>
+                    <Button variant="outline" size="sm" onClick={() => exportPnLToPDF(pnlReport, printedByName, { injections: capitalInjections, totalCapital })}>
                       <Download className="h-4 w-4 mr-1" />
                       PDF
                     </Button>
