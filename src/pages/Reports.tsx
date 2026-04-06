@@ -12,6 +12,7 @@ import { useCrops } from "@/hooks/useCrops";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useInventory } from "@/hooks/useInventory";
 import { useEquipment } from "@/hooks/useEquipment";
+import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useToast } from "@/hooks/use-toast";
 import {
   generateIncomeStatement,
