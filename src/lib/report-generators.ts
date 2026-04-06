@@ -16,6 +16,8 @@ interface ReportData {
   livestock: any[];
   inventory: any[];
   equipment?: any[];
+  capitalInjections?: Array<{ amount: number; injection_date: string; source: string; description: string | null }>;
+  totalCapital?: number;
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
 }
@@ -157,6 +159,8 @@ export async function generateIncomeStatement(data: ReportData) {
   const totalExpenses = data.purchases.reduce((s, p) => s + (p.total_cost || 0), 0);
   const grossProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (grossProfit / totalRevenue * 100) : 0;
+  const capTotal = data.totalCapital || 0;
+  const capInjections = data.capitalInjections || [];
 
   // Revenue by product
   const revenueByProduct: Record<string, number> = {};
@@ -201,11 +205,38 @@ export async function generateIncomeStatement(data: ReportData) {
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
+  // Owner's Equity / Capital Injections section
+  checkPage(30);
+  doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(60, 90, 140);
+  doc.text("OWNER'S EQUITY (CAPITAL INJECTIONS)", 14, y); y += 4;
+  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+  doc.text("Capital injections are NOT revenue — they represent owner funds added to the business.", 14, y); y += 5;
+
+  if (capInjections.length > 0) {
+    const capRows = capInjections.map(ci => [
+      new Date(ci.injection_date).toLocaleDateString(),
+      ci.source,
+      ci.description || "—",
+      formatKES(ci.amount),
+    ]);
+    capRows.push(["", "", "Total Capital Injected", formatKES(capTotal)]);
+    autoTable(doc, {
+      startY: y, head: [["Date", "Source", "Description", "Amount (KES)"]], body: capRows,
+      theme: "grid", headStyles: { fillColor: [60, 90, 140] as [number, number, number] }, styles: { fontSize: 9 },
+      didParseCell: (d: any) => { if (d.row.index === capRows.length - 1 && d.section === "body") d.cell.styles.fontStyle = "bold"; },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  } else {
+    doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
+    doc.text("No capital injections recorded.", 14, y); y += 8;
+  }
+
   // Summary
   checkPage(40);
   doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
   doc.text("NET INCOME SUMMARY", 14, y); y += 6;
 
+  const cashBalance = totalRevenue + capTotal - totalExpenses;
   autoTable(doc, {
     startY: y, head: [["Metric", "Value"]],
     body: [
@@ -213,6 +244,8 @@ export async function generateIncomeStatement(data: ReportData) {
       ["Total Expenses", formatKES(totalExpenses)],
       ["Gross Profit", formatKES(grossProfit)],
       ["Profit Margin", `${profitMargin.toFixed(1)}%`],
+      ["Capital Injected (Owner's Equity)", formatKES(capTotal)],
+      ["Cash Balance (Revenue + Capital − Expenses)", formatKES(cashBalance)],
     ],
     theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 9 },
   });
