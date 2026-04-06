@@ -96,6 +96,7 @@ export default function Reports() {
   const { livestock, isLoading: livestockLoading } = useLivestock();
   const { inventory, lowStockItems, isLoading: inventoryLoading } = useInventory();
   const { equipment } = useEquipment();
+  const { capitalInjections, totalCapital } = useCapitalInjections();
   const { toast } = useToast();
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [reportStartDate, setReportStartDate] = useState<Date | undefined>(undefined);
@@ -105,7 +106,8 @@ export default function Reports() {
 
   const reportData = useMemo(() => ({
     sales, purchases, crops, livestock, inventory, equipment,
-  }), [sales, purchases, crops, livestock, inventory, equipment]);
+    capitalInjections, totalCapital,
+  }), [sales, purchases, crops, livestock, inventory, equipment, capitalInjections, totalCapital]);
 
   const handleGenerateReport = async (reportId: string, generator: (data: any) => Promise<void>) => {
     setGeneratingId(reportId);
