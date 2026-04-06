@@ -16,6 +16,8 @@ interface ReportData {
   livestock: any[];
   inventory: any[];
   equipment?: any[];
+  capitalInjections?: Array<{ amount: number; injection_date: string; source: string; description: string | null }>;
+  totalCapital?: number;
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
 }
@@ -157,6 +159,8 @@ export async function generateIncomeStatement(data: ReportData) {
   const totalExpenses = data.purchases.reduce((s, p) => s + (p.total_cost || 0), 0);
   const grossProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (grossProfit / totalRevenue * 100) : 0;
+  const capTotal = data.totalCapital || 0;
+  const capInjections = data.capitalInjections || [];
 
   // Revenue by product
   const revenueByProduct: Record<string, number> = {};
@@ -201,11 +205,38 @@ export async function generateIncomeStatement(data: ReportData) {
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
+  // Owner's Equity / Capital Injections section
+  checkPage(30);
+  doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(60, 90, 140);
+  doc.text("OWNER'S EQUITY (CAPITAL INJECTIONS)", 14, y); y += 4;
+  doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 100, 100);
+  doc.text("Capital injections are NOT revenue — they represent owner funds added to the business.", 14, y); y += 5;
+
+  if (capInjections.length > 0) {
+    const capRows = capInjections.map(ci => [
+      new Date(ci.injection_date).toLocaleDateString(),
+      ci.source,
+      ci.description || "—",
+      formatKES(ci.amount),
+    ]);
+    capRows.push(["", "", "Total Capital Injected", formatKES(capTotal)]);
+    autoTable(doc, {
+      startY: y, head: [["Date", "Source", "Description", "Amount (KES)"]], body: capRows,
+      theme: "grid", headStyles: { fillColor: [60, 90, 140] as [number, number, number] }, styles: { fontSize: 9 },
+      didParseCell: (d: any) => { if (d.row.index === capRows.length - 1 && d.section === "body") d.cell.styles.fontStyle = "bold"; },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  } else {
+    doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(100, 100, 100);
+    doc.text("No capital injections recorded.", 14, y); y += 8;
+  }
+
   // Summary
   checkPage(40);
   doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 30, 30);
   doc.text("NET INCOME SUMMARY", 14, y); y += 6;
 
+  const cashBalance = totalRevenue + capTotal - totalExpenses;
   autoTable(doc, {
     startY: y, head: [["Metric", "Value"]],
     body: [
@@ -213,6 +244,8 @@ export async function generateIncomeStatement(data: ReportData) {
       ["Total Expenses", formatKES(totalExpenses)],
       ["Gross Profit", formatKES(grossProfit)],
       ["Profit Margin", `${profitMargin.toFixed(1)}%`],
+      ["Capital Injected (Owner's Equity)", formatKES(capTotal)],
+      ["Cash Balance (Revenue + Capital − Expenses)", formatKES(cashBalance)],
     ],
     theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 9 },
   });
@@ -229,39 +262,67 @@ export async function generateCashFlowStatement(data: ReportData) {
   let y = ctx.getY();
 
   // Monthly cash flows
-  const months: Record<string, { inflow: number; outflow: number }> = {};
+  const months: Record<string, { inflow: number; outflow: number; capital: number }> = {};
   data.sales.forEach(s => {
     const m = s.sale_date?.slice(0, 7) || "unknown";
-    if (!months[m]) months[m] = { inflow: 0, outflow: 0 };
+    if (!months[m]) months[m] = { inflow: 0, outflow: 0, capital: 0 };
     months[m].inflow += s.total_amount || 0;
   });
   data.purchases.forEach(p => {
     const m = p.purchase_date?.slice(0, 7) || "unknown";
-    if (!months[m]) months[m] = { inflow: 0, outflow: 0 };
+    if (!months[m]) months[m] = { inflow: 0, outflow: 0, capital: 0 };
     months[m].outflow += p.total_cost || 0;
+  });
+  // Add capital injections to monthly flows
+  const capInjections = data.capitalInjections || [];
+  const capTotal = data.totalCapital || 0;
+  capInjections.forEach(ci => {
+    const m = ci.injection_date?.slice(0, 7) || "unknown";
+    if (!months[m]) months[m] = { inflow: 0, outflow: 0, capital: 0 };
+    months[m].capital += ci.amount || 0;
   });
 
   const sorted = Object.entries(months).sort(([a], [b]) => a.localeCompare(b));
   let cumulative = 0;
   const cashFlowRows = sorted.map(([month, flow]) => {
-    const net = flow.inflow - flow.outflow;
+    const totalIn = flow.inflow + flow.capital;
+    const net = totalIn - flow.outflow;
     cumulative += net;
-    return [month, formatKES(flow.inflow), formatKES(flow.outflow), formatKES(net), formatKES(cumulative)];
+    return [month, formatKES(flow.inflow), formatKES(flow.capital), formatKES(totalIn), formatKES(flow.outflow), formatKES(net), formatKES(cumulative)];
   });
 
-  if (cashFlowRows.length === 0) cashFlowRows.push(["No data", formatKES(0), formatKES(0), formatKES(0), formatKES(0)]);
+  if (cashFlowRows.length === 0) cashFlowRows.push(["No data", formatKES(0), formatKES(0), formatKES(0), formatKES(0), formatKES(0), formatKES(0)]);
 
   const totalInflow = data.sales.reduce((s, sale) => s + (sale.total_amount || 0), 0);
   const totalOutflow = data.purchases.reduce((s, p) => s + (p.total_cost || 0), 0);
-  cashFlowRows.push(["TOTAL", formatKES(totalInflow), formatKES(totalOutflow), formatKES(totalInflow - totalOutflow), formatKES(cumulative)]);
+  const grandTotalIn = totalInflow + capTotal;
+  cashFlowRows.push(["TOTAL", formatKES(totalInflow), formatKES(capTotal), formatKES(grandTotalIn), formatKES(totalOutflow), formatKES(grandTotalIn - totalOutflow), formatKES(cumulative)]);
 
   autoTable(doc, {
-    startY: y, head: [["Month", "Inflows", "Outflows", "Net Flow", "Cumulative"]],
+    startY: y, head: [["Month", "Revenue", "Capital Inj.", "Total Inflows", "Outflows", "Net Flow", "Cumulative"]],
     body: cashFlowRows,
-    theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 8 },
+    theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 7 },
     didParseCell: (d: any) => { if (d.row.index === cashFlowRows.length - 1 && d.section === "body") d.cell.styles.fontStyle = "bold"; },
   });
   y = (doc as any).lastAutoTable.finalY + 10;
+
+  // Capital Injections Detail
+  if (capInjections.length > 0) {
+    checkPage(30);
+    doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(60, 90, 140);
+    doc.text("CAPITAL INJECTIONS (Owner's Equity Inflows)", 14, y); y += 6;
+
+    const capRows = capInjections.map(ci => [
+      new Date(ci.injection_date).toLocaleDateString(), ci.source, ci.description || "—", formatKES(ci.amount),
+    ]);
+    capRows.push(["", "", "Total", formatKES(capTotal)]);
+    autoTable(doc, {
+      startY: y, head: [["Date", "Source", "Description", "Amount"]], body: capRows,
+      theme: "grid", headStyles: { fillColor: [60, 90, 140] as [number, number, number] }, styles: { fontSize: 8 },
+      didParseCell: (d: any) => { if (d.row.index === capRows.length - 1 && d.section === "body") d.cell.styles.fontStyle = "bold"; },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
 
   // By payment status
   checkPage(30);
@@ -277,8 +338,9 @@ export async function generateCashFlowStatement(data: ReportData) {
     startY: y, head: [["Category", "Paid", "Pending"]],
     body: [
       ["Sales Revenue", formatKES(paidSales), formatKES(pendingSales)],
+      ["Capital Injections", formatKES(capTotal), formatKES(0)],
       ["Purchase Costs", formatKES(paidPurchases), formatKES(pendingPurchases)],
-      ["Net Cash Position", formatKES(paidSales - paidPurchases), formatKES(pendingSales - pendingPurchases)],
+      ["Net Cash Position (incl. Capital)", formatKES(paidSales + capTotal - paidPurchases), formatKES(pendingSales - pendingPurchases)],
     ],
     theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 9 },
   });
@@ -299,8 +361,15 @@ export async function generateBalanceSheet(data: ReportData) {
   const equipmentValue = (data.equipment || []).reduce((s, e) => s + (Number(e.purchase_price) || 0), 0);
   const receivables = data.sales.filter(s => s.payment_status !== 'paid').reduce((s, sale) => s + (sale.total_amount || 0), 0);
   const payables = data.purchases.filter(p => p.payment_status !== 'paid').reduce((s, p) => s + (p.total_cost || 0), 0);
+  const capTotal = data.totalCapital || 0;
+  const capInjections = data.capitalInjections || [];
 
-  const totalAssets = inventoryValue + livestockValue + equipmentValue + receivables;
+  // Cash balance from operations + capital
+  const paidRevenue = data.sales.filter(s => s.payment_status === 'paid').reduce((s, sale) => s + (sale.total_amount || 0), 0);
+  const paidExpenses = data.purchases.filter(p => p.payment_status === 'paid').reduce((s, p) => s + (p.total_cost || 0), 0);
+  const cashBalance = paidRevenue + capTotal - paidExpenses;
+
+  const totalAssets = inventoryValue + livestockValue + equipmentValue + receivables + cashBalance;
   const totalLiabilities = payables;
   const netWorth = totalAssets - totalLiabilities;
 
@@ -311,6 +380,7 @@ export async function generateBalanceSheet(data: ReportData) {
   autoTable(doc, {
     startY: y, head: [["Asset Category", "Value (KES)"]],
     body: [
+      ["Cash / Bank Balance (Revenue + Capital − Expenses)", formatKES(cashBalance)],
       ["Inventory (Stock on Hand)", formatKES(inventoryValue)],
       ["Livestock", formatKES(livestockValue)],
       ["Equipment & Machinery", formatKES(equipmentValue)],
@@ -318,7 +388,7 @@ export async function generateBalanceSheet(data: ReportData) {
       ["Total Assets", formatKES(totalAssets)],
     ],
     theme: "grid", headStyles: { fillColor: headerColor }, styles: { fontSize: 9 },
-    didParseCell: (d: any) => { if (d.row.index === 4 && d.section === "body") d.cell.styles.fontStyle = "bold"; },
+    didParseCell: (d: any) => { if (d.row.index === 5 && d.section === "body") d.cell.styles.fontStyle = "bold"; },
   });
   y = (doc as any).lastAutoTable.finalY + 10;
 
@@ -337,6 +407,39 @@ export async function generateBalanceSheet(data: ReportData) {
     didParseCell: (d: any) => { if (d.row.index === 1 && d.section === "body") d.cell.styles.fontStyle = "bold"; },
   });
   y = (doc as any).lastAutoTable.finalY + 10;
+
+  // Owner's Equity
+  checkPage(30);
+  doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(60, 90, 140);
+  doc.text("OWNER'S EQUITY", 14, y); y += 6;
+
+  const retainedEarnings = paidRevenue - paidExpenses;
+  autoTable(doc, {
+    startY: y, head: [["Equity Component", "Value (KES)"]],
+    body: [
+      ["Capital Injected (Owner's Funds)", formatKES(capTotal)],
+      ["Retained Earnings (Net Profit from Operations)", formatKES(retainedEarnings)],
+      ["Total Owner's Equity", formatKES(capTotal + retainedEarnings)],
+    ],
+    theme: "grid", headStyles: { fillColor: [60, 90, 140] as [number, number, number] }, styles: { fontSize: 9 },
+    didParseCell: (d: any) => { if (d.row.index === 2 && d.section === "body") d.cell.styles.fontStyle = "bold"; },
+  });
+  y = (doc as any).lastAutoTable.finalY + 10;
+
+  // Capital Injection Details
+  if (capInjections.length > 0) {
+    checkPage(20);
+    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(60, 90, 140);
+    doc.text("Capital Injection Details:", 14, y); y += 5;
+    const capRows = capInjections.map(ci => [
+      new Date(ci.injection_date).toLocaleDateString(), ci.source, ci.description || "—", formatKES(ci.amount),
+    ]);
+    autoTable(doc, {
+      startY: y, head: [["Date", "Source", "Description", "Amount"]], body: capRows,
+      theme: "grid", headStyles: { fillColor: [60, 90, 140] as [number, number, number] }, styles: { fontSize: 8 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
 
   // Net Worth
   checkPage(30);
