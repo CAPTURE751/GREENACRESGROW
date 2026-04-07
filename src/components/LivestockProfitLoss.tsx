@@ -22,12 +22,14 @@ export function LivestockProfitLoss() {
       let query = supabase
         .from("sales")
         .select("*")
-        .eq("product_type", "livestock")
         .order("sale_date", { ascending: false });
       if (activeFarm?.id) query = query.eq("farm_id", activeFarm.id);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return (data || []).filter((s: any) =>
+        s.linked_module === 'livestock' ||
+        (!s.linked_module && ['livestock', 'milk', 'eggs', 'meat', 'dairy', 'poultry'].includes(s.product_type))
+      );
     },
     enabled: !!activeFarm,
   });
@@ -38,12 +40,14 @@ export function LivestockProfitLoss() {
       let query = supabase
         .from("purchases")
         .select("*")
-        .in("category", ["feeds", "medical", "livestock"])
         .order("purchase_date", { ascending: false });
       if (activeFarm?.id) query = query.eq("farm_id", activeFarm.id);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return (data || []).filter((p: any) =>
+        p.linked_module === 'livestock' ||
+        (!p.linked_module && ["feeds", "feed", "medical", "medicine", "livestock"].includes(p.category))
+      );
     },
     enabled: !!activeFarm,
   });
@@ -59,7 +63,7 @@ export function LivestockProfitLoss() {
     const map: Record<string, { revenue: number; costs: number; salesCount: number; salesDetails: typeof sales; costDetails: typeof purchases }> = {};
 
     for (const sale of sales) {
-      const name = sale.product_name;
+      const name = (sale as any).linked_record_name || sale.product_name;
       if (!map[name]) map[name] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
       map[name].revenue += sale.total_amount || 0;
       map[name].salesCount += 1;
@@ -67,18 +71,22 @@ export function LivestockProfitLoss() {
     }
 
     for (const purchase of purchases) {
+      const linkedName = (purchase as any).linked_record_name;
+      if (linkedName) {
+        if (!map[linkedName]) map[linkedName] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
+        map[linkedName].costs += purchase.total_cost || 0;
+        map[linkedName].costDetails.push(purchase);
+        continue;
+      }
       const matchedProduct = Object.keys(map).find(
         (product) =>
           purchase.item_name.toLowerCase().includes(product.toLowerCase()) ||
-          purchase.notes?.toLowerCase().includes(product.toLowerCase()) ||
-          purchase.category === "feeds" && product.toLowerCase().includes("milk") && purchase.item_name.toLowerCase().includes("dairy") ||
-          purchase.category === "feeds" && product.toLowerCase().includes("egg") && purchase.item_name.toLowerCase().includes("poultry")
+          purchase.notes?.toLowerCase().includes(product.toLowerCase())
       );
       if (matchedProduct) {
         map[matchedProduct].costs += purchase.total_cost || 0;
         map[matchedProduct].costDetails.push(purchase);
       } else {
-        // Distribute general livestock costs evenly across all products
         const productCount = Object.keys(map).length;
         if (productCount > 0) {
           const share = (purchase.total_cost || 0) / productCount;

@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLivestock } from "@/hooks/useLivestock";
 import { LivestockForm } from "@/components/LivestockForm";
+import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { calculateAge } from "@/lib/age-calculator";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
 import { toast } from "sonner";
 import { 
   Plus, Search, Beef, Calendar, MapPin, Activity, Heart, Scale,
-  Loader2, Baby, Download, Pencil, FileText,
+  Loader2, Baby, Download, Pencil, FileText, DollarSign,
 } from "lucide-react";
 
 
@@ -42,6 +43,7 @@ export function Livestock() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [healthLogOpen, setHealthLogOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<any>(null);
+  const [financialsAnimal, setFinancialsAnimal] = useState<any>(null);
   const { livestock, isLoading, createLivestock, updateLivestock, isCreating, isUpdating } = useLivestock();
   
   const filteredLivestock = livestock.filter(animal =>
@@ -288,10 +290,19 @@ export function Livestock() {
                     size="sm"
                     variant="outline"
                     className="flex-1"
+                    onClick={() => setFinancialsAnimal(animal)}
+                  >
+                    <DollarSign className="h-3 w-3 mr-1" />
+                    Financials
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
                     onClick={() => { setSelectedAnimal(animal); setHealthLogOpen(true); }}
                   >
                     <FileText className="h-3 w-3 mr-1" />
-                    Health Log
+                    Health
                   </Button>
                   <Button
                     size="sm"
@@ -299,7 +310,7 @@ export function Livestock() {
                     onClick={() => { setSelectedAnimal(animal); setEditDialogOpen(true); }}
                   >
                     <Pencil className="h-3 w-3 mr-1" />
-                    Update
+                    Edit
                   </Button>
                 </div>
               </CardContent>
@@ -320,6 +331,16 @@ export function Livestock() {
             </Button>
           </CardContent>
         </Card>
+      )}
+      {/* Linked Transactions Dialog */}
+      {financialsAnimal && (
+        <LinkedTransactionDialog
+          open={!!financialsAnimal}
+          onOpenChange={(open) => { if (!open) setFinancialsAnimal(null); }}
+          module="livestock"
+          recordId={financialsAnimal.id}
+          recordName={`${financialsAnimal.type}${financialsAnimal.breed ? ' - ' + financialsAnimal.breed : ''}`}
+        />
       )}
     </div>
   );

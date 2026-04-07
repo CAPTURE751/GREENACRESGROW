@@ -136,6 +136,8 @@ export default function Finances() {
       description: `${sale.product_name} - ${sale.buyer}`,
       amount: sale.total_amount || 0, date: sale.sale_date,
       status: sale.payment_status === 'paid' ? 'completed' as const : 'pending' as const,
+      linkedModule: (sale as any).linked_module || null,
+      linkedRecordName: (sale as any).linked_record_name || null,
       originalData: sale
     })),
     ...purchases.map(purchase => ({
@@ -143,13 +145,18 @@ export default function Finances() {
       description: `${purchase.item_name} - ${purchase.supplier}`,
       amount: purchase.total_cost || 0, date: purchase.purchase_date,
       status: purchase.payment_status === 'paid' ? 'completed' as const : 'pending' as const,
+      linkedModule: (purchase as any).linked_module || null,
+      linkedRecordName: (purchase as any).linked_record_name || null,
       originalData: purchase
     })),
     ...capitalInjections.map(ci => ({
       id: ci.id, type: 'capital_injection' as const, category: 'Capital Injection',
       description: `${ci.source}${ci.description ? ' - ' + ci.description : ''}`,
       amount: ci.amount || 0, date: ci.injection_date,
-      status: 'completed' as const, originalData: ci
+      status: 'completed' as const,
+      linkedModule: null as string | null,
+      linkedRecordName: null as string | null,
+      originalData: ci
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -553,7 +560,12 @@ export default function Finances() {
                           </div>
                           <div>
                             <p className="font-medium">{transaction.description}</p>
-                            <p className="text-sm text-muted-foreground">{transaction.category}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm text-muted-foreground">{transaction.category}</p>
+                              {transaction.linkedModule && (
+                                <Badge variant="outline" className="text-xs capitalize">{transaction.linkedModule}: {transaction.linkedRecordName}</Badge>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 mt-1">
                               <Calendar className="h-3 w-3 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</span>

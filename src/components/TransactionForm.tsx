@@ -8,6 +8,8 @@ import { Loader2, Info } from "lucide-react";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
 import { useCapitalInjections } from "@/hooks/useCapitalInjections";
+import { useCrops } from "@/hooks/useCrops";
+import { useLivestock } from "@/hooks/useLivestock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TransactionFormProps {
@@ -19,6 +21,8 @@ interface TransactionFormProps {
 
 export function TransactionForm({ onClose, editMode, editType, editData }: TransactionFormProps) {
   const [transactionType, setTransactionType] = useState<'income' | 'expense' | 'capital_injection'>(editType || 'income');
+  const [linkedModule, setLinkedModule] = useState<'none' | 'crop' | 'livestock'>(editData?.linked_module || 'none');
+  const [linkedRecordId, setLinkedRecordId] = useState<string>(editData?.linked_record_id || '');
   const [formData, setFormData] = useState({
     date: editData?.date || new Date().toISOString().split('T')[0],
     notes: editData?.notes || '',
@@ -46,6 +50,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
   const { createSale, updateSale, isCreating: isCreatingSale, isUpdating: isUpdatingSale } = useSales();
   const { createPurchase, updatePurchase, isCreating: isCreatingPurchase, isUpdating: isUpdatingPurchase } = usePurchases();
   const { createInjection, updateInjection, isCreating: isCreatingInjection, isUpdating: isUpdatingInjection } = useCapitalInjections();
+  const { crops } = useCrops();
+  const { livestock } = useLivestock();
 
   const isLoading = isCreatingSale || isCreatingPurchase || isCreatingInjection || isUpdatingSale || isUpdatingPurchase || isUpdatingInjection;
   const totalAmount = Number(formData.quantity) * Number(formData.unit_price);
@@ -101,12 +107,20 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         });
       }
     } else {
-      // CREATE new record
+      // CREATE new record - resolve linked record name
+      const linkedData = linkedModule !== 'none' && linkedRecordId ? {
+        linked_module: linkedModule,
+        linked_record_id: linkedRecordId,
+        linked_record_name: linkedModule === 'crop'
+          ? crops.find(c => c.id === linkedRecordId)?.name || ''
+          : livestock.find(l => l.id === linkedRecordId)?.type + (livestock.find(l => l.id === linkedRecordId)?.breed ? ' - ' + livestock.find(l => l.id === linkedRecordId)?.breed : '') || '',
+      } : {};
+
       if (transactionType === 'income') {
         createSale({
           product_name: formData.product_name,
           product_type: formData.product_type as any,
-          product_id: crypto.randomUUID(),
+          product_id: linkedRecordId || crypto.randomUUID(),
           buyer: formData.buyer,
           buyer_contact: formData.buyer_contact,
           quantity: Number(formData.quantity),
@@ -116,7 +130,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
           sale_date: formData.date,
           payment_status: formData.payment_status as any,
           notes: formData.notes,
-        });
+          ...linkedData,
+        } as any);
       } else if (transactionType === 'expense') {
         createPurchase({
           item_name: formData.item_name,
@@ -130,7 +145,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
           received_date: formData.received_date || undefined,
           payment_status: formData.payment_status as any,
           notes: formData.notes,
-        });
+          ...linkedData,
+        } as any);
       } else if (transactionType === 'capital_injection') {
         createInjection({
           amount: Number(formData.capital_amount),
@@ -165,6 +181,37 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
           </SelectContent>
         </Select>
       </div>
+
+      {/* Link to Module (Crop/Livestock) - only for income/expense */}
+      {transactionType !== 'capital_injection' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Link to Module</Label>
+            <Select value={linkedModule} onValueChange={(v: 'none' | 'crop' | 'livestock') => { setLinkedModule(v); setLinkedRecordId(''); }} disabled={editMode}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">General (No link)</SelectItem>
+                <SelectItem value="crop">Crop</SelectItem>
+                <SelectItem value="livestock">Livestock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {linkedModule !== 'none' && (
+            <div className="space-y-2">
+              <Label>Select {linkedModule === 'crop' ? 'Crop' : 'Livestock'} *</Label>
+              <Select value={linkedRecordId} onValueChange={setLinkedRecordId}>
+                <SelectTrigger><SelectValue placeholder={`Choose a ${linkedModule}`} /></SelectTrigger>
+                <SelectContent>
+                  {linkedModule === 'crop'
+                    ? crops.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.type})</SelectItem>)
+                    : livestock.map(l => <SelectItem key={l.id} value={l.id}>{l.type}{l.breed ? ` - ${l.breed}` : ''}</SelectItem>)
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Capital Injection Info Banner */}
       {transactionType === 'capital_injection' && (

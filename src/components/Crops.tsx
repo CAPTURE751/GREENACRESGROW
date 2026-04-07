@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useCrops } from "@/hooks/useCrops";
 import { CropForm } from "@/components/CropForm";
+import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
 import { toast } from "sonner";
 import { 
@@ -30,6 +31,7 @@ export function Crops() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState<any>(null);
+  const [financialsCrop, setFinancialsCrop] = useState<any>(null);
   const { crops, isLoading, createCrop, updateCrop, isCreating, isUpdating } = useCrops();
   
   const filteredCrops = crops.filter(crop =>
@@ -220,10 +222,10 @@ export function Crops() {
                     size="sm"
                     variant="outline"
                     className="flex-1"
-                    onClick={() => { setSelectedCrop(crop); setEditDialogOpen(true); }}
+                    onClick={() => setFinancialsCrop(crop)}
                   >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    View & Edit
+                    <DollarSign className="h-3 w-3 mr-1" />
+                    Financials
                   </Button>
                   <Button
                     size="sm"
@@ -252,6 +254,16 @@ export function Crops() {
             </Button>
           </CardContent>
         </Card>
+      )}
+      {/* Linked Transactions Dialog */}
+      {financialsCrop && (
+        <LinkedTransactionDialog
+          open={!!financialsCrop}
+          onOpenChange={(open) => { if (!open) setFinancialsCrop(null); }}
+          module="crop"
+          recordId={financialsCrop.id}
+          recordName={financialsCrop.name}
+        />
       )}
     </div>
   );
