@@ -136,6 +136,8 @@ export default function Finances() {
       description: `${sale.product_name} - ${sale.buyer}`,
       amount: sale.total_amount || 0, date: sale.sale_date,
       status: sale.payment_status === 'paid' ? 'completed' as const : 'pending' as const,
+      linkedModule: (sale as any).linked_module || null,
+      linkedRecordName: (sale as any).linked_record_name || null,
       originalData: sale
     })),
     ...purchases.map(purchase => ({
@@ -143,6 +145,8 @@ export default function Finances() {
       description: `${purchase.item_name} - ${purchase.supplier}`,
       amount: purchase.total_cost || 0, date: purchase.purchase_date,
       status: purchase.payment_status === 'paid' ? 'completed' as const : 'pending' as const,
+      linkedModule: (purchase as any).linked_module || null,
+      linkedRecordName: (purchase as any).linked_record_name || null,
       originalData: purchase
     })),
     ...capitalInjections.map(ci => ({
