@@ -557,7 +557,12 @@ export default function Finances() {
                           </div>
                           <div>
                             <p className="font-medium">{transaction.description}</p>
-                            <p className="text-sm text-muted-foreground">{transaction.category}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm text-muted-foreground">{transaction.category}</p>
+                              {transaction.linkedModule && (
+                                <Badge variant="outline" className="text-xs capitalize">{transaction.linkedModule}: {transaction.linkedRecordName}</Badge>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 mt-1">
                               <Calendar className="h-3 w-3 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</span>
