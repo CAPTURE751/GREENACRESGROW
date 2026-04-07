@@ -19,14 +19,13 @@ export function useLinkedTransactions(module: 'crop' | 'livestock', recordId: st
   const { data: sales = [], isLoading: salesLoading } = useQuery({
     queryKey: ['linked-sales', module, recordId, activeFarm?.id],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await (supabase
         .from('sales')
-        .select('*')
-        .eq('linked_module' as any, module)
-        .eq('linked_record_id' as any, recordId!)
-        .order('sale_date', { ascending: false });
-      if (activeFarm?.id) query = query.eq('farm_id', activeFarm.id);
-      const { data, error } = await query;
+        .select('*') as any)
+        .eq('linked_module', module)
+        .eq('linked_record_id', recordId!)
+        .order('sale_date', { ascending: false })
+        .eq('farm_id', activeFarm?.id || '');
       if (error) throw error;
       return data || [];
     },
@@ -36,14 +35,13 @@ export function useLinkedTransactions(module: 'crop' | 'livestock', recordId: st
   const { data: purchases = [], isLoading: purchasesLoading } = useQuery({
     queryKey: ['linked-purchases', module, recordId, activeFarm?.id],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await (supabase
         .from('purchases')
-        .select('*')
-        .eq('linked_module' as any, module)
-        .eq('linked_record_id' as any, recordId!)
-        .order('purchase_date', { ascending: false });
-      if (activeFarm?.id) query = query.eq('farm_id', activeFarm.id);
-      const { data, error } = await query;
+        .select('*') as any)
+        .eq('linked_module', module)
+        .eq('linked_record_id', recordId!)
+        .order('purchase_date', { ascending: false })
+        .eq('farm_id', activeFarm?.id || '');
       if (error) throw error;
       return data || [];
     },
