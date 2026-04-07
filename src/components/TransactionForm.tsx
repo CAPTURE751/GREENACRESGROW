@@ -182,6 +182,37 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         </Select>
       </div>
 
+      {/* Link to Module (Crop/Livestock) - only for income/expense */}
+      {transactionType !== 'capital_injection' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Link to Module</Label>
+            <Select value={linkedModule} onValueChange={(v: 'none' | 'crop' | 'livestock') => { setLinkedModule(v); setLinkedRecordId(''); }} disabled={editMode}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">General (No link)</SelectItem>
+                <SelectItem value="crop">Crop</SelectItem>
+                <SelectItem value="livestock">Livestock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {linkedModule !== 'none' && (
+            <div className="space-y-2">
+              <Label>Select {linkedModule === 'crop' ? 'Crop' : 'Livestock'} *</Label>
+              <Select value={linkedRecordId} onValueChange={setLinkedRecordId}>
+                <SelectTrigger><SelectValue placeholder={`Choose a ${linkedModule}`} /></SelectTrigger>
+                <SelectContent>
+                  {linkedModule === 'crop'
+                    ? crops.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.type})</SelectItem>)
+                    : livestock.map(l => <SelectItem key={l.id} value={l.id}>{l.type}{l.breed ? ` - ${l.breed}` : ''}</SelectItem>)
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Capital Injection Info Banner */}
       {transactionType === 'capital_injection' && (
         <Alert className="border-blue-200 bg-blue-50">
