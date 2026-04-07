@@ -8,6 +8,8 @@ import { Loader2, Info } from "lucide-react";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
 import { useCapitalInjections } from "@/hooks/useCapitalInjections";
+import { useCrops } from "@/hooks/useCrops";
+import { useLivestock } from "@/hooks/useLivestock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TransactionFormProps {
@@ -19,6 +21,8 @@ interface TransactionFormProps {
 
 export function TransactionForm({ onClose, editMode, editType, editData }: TransactionFormProps) {
   const [transactionType, setTransactionType] = useState<'income' | 'expense' | 'capital_injection'>(editType || 'income');
+  const [linkedModule, setLinkedModule] = useState<'none' | 'crop' | 'livestock'>(editData?.linked_module || 'none');
+  const [linkedRecordId, setLinkedRecordId] = useState<string>(editData?.linked_record_id || '');
   const [formData, setFormData] = useState({
     date: editData?.date || new Date().toISOString().split('T')[0],
     notes: editData?.notes || '',
@@ -46,6 +50,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
   const { createSale, updateSale, isCreating: isCreatingSale, isUpdating: isUpdatingSale } = useSales();
   const { createPurchase, updatePurchase, isCreating: isCreatingPurchase, isUpdating: isUpdatingPurchase } = usePurchases();
   const { createInjection, updateInjection, isCreating: isCreatingInjection, isUpdating: isUpdatingInjection } = useCapitalInjections();
+  const { crops } = useCrops();
+  const { livestock } = useLivestock();
 
   const isLoading = isCreatingSale || isCreatingPurchase || isCreatingInjection || isUpdatingSale || isUpdatingPurchase || isUpdatingInjection;
   const totalAmount = Number(formData.quantity) * Number(formData.unit_price);
