@@ -107,12 +107,20 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         });
       }
     } else {
-      // CREATE new record
+      // CREATE new record - resolve linked record name
+      const linkedData = linkedModule !== 'none' && linkedRecordId ? {
+        linked_module: linkedModule,
+        linked_record_id: linkedRecordId,
+        linked_record_name: linkedModule === 'crop'
+          ? crops.find(c => c.id === linkedRecordId)?.name || ''
+          : livestock.find(l => l.id === linkedRecordId)?.type + (livestock.find(l => l.id === linkedRecordId)?.breed ? ' - ' + livestock.find(l => l.id === linkedRecordId)?.breed : '') || '',
+      } : {};
+
       if (transactionType === 'income') {
         createSale({
           product_name: formData.product_name,
           product_type: formData.product_type as any,
-          product_id: crypto.randomUUID(),
+          product_id: linkedRecordId || crypto.randomUUID(),
           buyer: formData.buyer,
           buyer_contact: formData.buyer_contact,
           quantity: Number(formData.quantity),
@@ -122,7 +130,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
           sale_date: formData.date,
           payment_status: formData.payment_status as any,
           notes: formData.notes,
-        });
+          ...linkedData,
+        } as any);
       } else if (transactionType === 'expense') {
         createPurchase({
           item_name: formData.item_name,
@@ -136,7 +145,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
           received_date: formData.received_date || undefined,
           payment_status: formData.payment_status as any,
           notes: formData.notes,
-        });
+          ...linkedData,
+        } as any);
       } else if (transactionType === 'capital_injection') {
         createInjection({
           amount: Number(formData.capital_amount),
