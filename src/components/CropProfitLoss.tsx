@@ -19,15 +19,19 @@ export function CropProfitLoss() {
   const { data: sales = [], isLoading: salesLoading } = useQuery({
     queryKey: ["crop-sales", activeFarm?.id],
     queryFn: async () => {
+      // Get sales linked to crops OR with crop product_type
       let query = supabase
         .from("sales")
         .select("*")
-        .eq("product_type", "crop")
         .order("sale_date", { ascending: false });
       if (activeFarm?.id) query = query.eq("farm_id", activeFarm.id);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      // Filter: linked_module = 'crop' OR product_type is crop-related
+      return (data || []).filter((s: any) =>
+        s.linked_module === 'crop' ||
+        (!s.linked_module && ['crop', 'maize', 'beans', 'onion', 'vegetable', 'fruit'].includes(s.product_type))
+      );
     },
     enabled: !!activeFarm,
   });
@@ -38,12 +42,15 @@ export function CropProfitLoss() {
       let query = supabase
         .from("purchases")
         .select("*")
-        .in("category", ["seeds", "fertilizer", "chemicals", "casual_labour"])
         .order("purchase_date", { ascending: false });
       if (activeFarm?.id) query = query.eq("farm_id", activeFarm.id);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      // Filter: linked_module = 'crop' OR crop-related categories
+      return (data || []).filter((p: any) =>
+        p.linked_module === 'crop' ||
+        (!p.linked_module && ["seeds", "fertilizer", "chemicals", "casual_labour", "pesticides"].includes(p.category))
+      );
     },
     enabled: !!activeFarm,
   });
@@ -61,15 +68,24 @@ export function CropProfitLoss() {
     const map: Record<string, { revenue: number; costs: number; salesCount: number; salesDetails: typeof sales; costDetails: typeof purchases }> = {};
 
     for (const sale of sales) {
-      const name = sale.product_name;
+      // Use linked_record_name if available, otherwise product_name
+      const name = (sale as any).linked_record_name || sale.product_name;
       if (!map[name]) map[name] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
       map[name].revenue += sale.total_amount || 0;
       map[name].salesCount += 1;
       map[name].salesDetails.push(sale);
     }
 
-    // Distribute costs: if we can match by item_name containing crop name, assign there; else spread evenly
     for (const purchase of purchases) {
+      // If linked to a specific crop, use that
+      const linkedName = (purchase as any).linked_record_name;
+      if (linkedName) {
+        if (!map[linkedName]) map[linkedName] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
+        map[linkedName].costs += purchase.total_cost || 0;
+        map[linkedName].costDetails.push(purchase);
+        continue;
+      }
+      // Legacy matching by name
       const matchedCrop = Object.keys(map).find(
         (crop) =>
           purchase.item_name.toLowerCase().includes(crop.toLowerCase()) ||

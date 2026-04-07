@@ -22,12 +22,14 @@ export function LivestockProfitLoss() {
       let query = supabase
         .from("sales")
         .select("*")
-        .eq("product_type", "livestock")
         .order("sale_date", { ascending: false });
       if (activeFarm?.id) query = query.eq("farm_id", activeFarm.id);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return (data || []).filter((s: any) =>
+        s.linked_module === 'livestock' ||
+        (!s.linked_module && ['livestock', 'milk', 'eggs', 'meat', 'dairy', 'poultry'].includes(s.product_type))
+      );
     },
     enabled: !!activeFarm,
   });
@@ -38,12 +40,14 @@ export function LivestockProfitLoss() {
       let query = supabase
         .from("purchases")
         .select("*")
-        .in("category", ["feeds", "medical", "livestock"])
         .order("purchase_date", { ascending: false });
       if (activeFarm?.id) query = query.eq("farm_id", activeFarm.id);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return (data || []).filter((p: any) =>
+        p.linked_module === 'livestock' ||
+        (!p.linked_module && ["feeds", "feed", "medical", "medicine", "livestock"].includes(p.category))
+      );
     },
     enabled: !!activeFarm,
   });
