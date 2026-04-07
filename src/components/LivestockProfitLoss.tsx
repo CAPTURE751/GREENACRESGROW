@@ -63,7 +63,7 @@ export function LivestockProfitLoss() {
     const map: Record<string, { revenue: number; costs: number; salesCount: number; salesDetails: typeof sales; costDetails: typeof purchases }> = {};
 
     for (const sale of sales) {
-      const name = sale.product_name;
+      const name = (sale as any).linked_record_name || sale.product_name;
       if (!map[name]) map[name] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
       map[name].revenue += sale.total_amount || 0;
       map[name].salesCount += 1;
@@ -71,18 +71,22 @@ export function LivestockProfitLoss() {
     }
 
     for (const purchase of purchases) {
+      const linkedName = (purchase as any).linked_record_name;
+      if (linkedName) {
+        if (!map[linkedName]) map[linkedName] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
+        map[linkedName].costs += purchase.total_cost || 0;
+        map[linkedName].costDetails.push(purchase);
+        continue;
+      }
       const matchedProduct = Object.keys(map).find(
         (product) =>
           purchase.item_name.toLowerCase().includes(product.toLowerCase()) ||
-          purchase.notes?.toLowerCase().includes(product.toLowerCase()) ||
-          purchase.category === "feeds" && product.toLowerCase().includes("milk") && purchase.item_name.toLowerCase().includes("dairy") ||
-          purchase.category === "feeds" && product.toLowerCase().includes("egg") && purchase.item_name.toLowerCase().includes("poultry")
+          purchase.notes?.toLowerCase().includes(product.toLowerCase())
       );
       if (matchedProduct) {
         map[matchedProduct].costs += purchase.total_cost || 0;
         map[matchedProduct].costDetails.push(purchase);
       } else {
-        // Distribute general livestock costs evenly across all products
         const productCount = Object.keys(map).length;
         if (productCount > 0) {
           const share = (purchase.total_cost || 0) / productCount;
