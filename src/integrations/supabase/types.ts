@@ -487,6 +487,9 @@ export type Database = {
           farm_id: string | null
           id: string
           item_name: string
+          linked_module: string | null
+          linked_record_id: string | null
+          linked_record_name: string | null
           notes: string | null
           payment_status: string | null
           purchase_date: string
@@ -505,6 +508,9 @@ export type Database = {
           farm_id?: string | null
           id?: string
           item_name: string
+          linked_module?: string | null
+          linked_record_id?: string | null
+          linked_record_name?: string | null
           notes?: string | null
           payment_status?: string | null
           purchase_date?: string
@@ -523,6 +529,9 @@ export type Database = {
           farm_id?: string | null
           id?: string
           item_name?: string
+          linked_module?: string | null
+          linked_record_id?: string | null
+          linked_record_name?: string | null
           notes?: string | null
           payment_status?: string | null
           purchase_date?: string
@@ -602,6 +611,9 @@ export type Database = {
           created_by: string
           farm_id: string | null
           id: string
+          linked_module: string | null
+          linked_record_id: string | null
+          linked_record_name: string | null
           notes: string | null
           payment_status: string | null
           product_id: string
@@ -620,6 +632,9 @@ export type Database = {
           created_by: string
           farm_id?: string | null
           id?: string
+          linked_module?: string | null
+          linked_record_id?: string | null
+          linked_record_name?: string | null
           notes?: string | null
           payment_status?: string | null
           product_id: string
@@ -638,6 +653,9 @@ export type Database = {
           created_by?: string
           farm_id?: string | null
           id?: string
+          linked_module?: string | null
+          linked_record_id?: string | null
+          linked_record_name?: string | null
           notes?: string | null
           payment_status?: string | null
           product_id?: string
