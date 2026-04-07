@@ -153,7 +153,10 @@ export default function Finances() {
       id: ci.id, type: 'capital_injection' as const, category: 'Capital Injection',
       description: `${ci.source}${ci.description ? ' - ' + ci.description : ''}`,
       amount: ci.amount || 0, date: ci.injection_date,
-      status: 'completed' as const, originalData: ci
+      status: 'completed' as const,
+      linkedModule: null as string | null,
+      linkedRecordName: null as string | null,
+      originalData: ci
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
