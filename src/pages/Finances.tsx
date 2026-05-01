@@ -73,8 +73,8 @@ export default function Finances() {
   const [txnStartDate, setTxnStartDate] = useState('');
   const [txnEndDate, setTxnEndDate] = useState('');
   const [showPnL, setShowPnL] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(20);
-  const ITEMS_INCREMENT = 20;
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [pnlReport, setPnlReport] = useState<PnLReport | null>(null);
   const [pnlStartDate, setPnlStartDate] = useState('');
   const [pnlEndDate, setPnlEndDate] = useState('');
@@ -498,11 +498,11 @@ export default function Finances() {
 
         {/* Transaction Filters */}
         <div className="flex flex-wrap gap-4 items-end">
-          <div className="flex gap-2 flex-wrap">
-            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setVisibleCount(ITEMS_INCREMENT); }}>All Transactions</Button>
-            <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setVisibleCount(ITEMS_INCREMENT); }} className="text-green-700">Income Only</Button>
-            <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setVisibleCount(ITEMS_INCREMENT); }} className="text-red-700">Expenses Only</Button>
-            <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setVisibleCount(ITEMS_INCREMENT); }} className="text-blue-700">Capital Injections</Button>
+          <div className="flex gap-2">
+            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setCurrentPage(1); }}>All Transactions</Button>
+            <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setCurrentPage(1); }} className="text-green-700">Income Only</Button>
+            <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setCurrentPage(1); }} className="text-red-700">Expenses Only</Button>
+            <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setCurrentPage(1); }} className="text-blue-700">Capital Injections</Button>
           </div>
           <div className="flex gap-2 items-end ml-auto">
             <div className="space-y-1">
@@ -545,7 +545,7 @@ export default function Finances() {
                 ) : (
                   <>
                     {filteredTransactions
-                      .slice(0, visibleCount)
+                      .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                       .map((transaction) => (
                       <div key={`${transaction.type}-${transaction.id}`} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
                         <div className="flex items-center gap-4">
@@ -624,19 +624,19 @@ export default function Finances() {
                       </div>
                     ))}
 
-                    {/* Infinite scroll - Load More */}
-                    {visibleCount < filteredTransactions.length && (
-                      <div className="flex flex-col items-center pt-4 border-t gap-2">
+                    {/* Pagination Controls */}
+                    {filteredTransactions.length > ITEMS_PER_PAGE && (
+                      <div className="flex items-center justify-between pt-4 border-t">
                         <p className="text-sm text-muted-foreground">
-                          Showing {Math.min(visibleCount, filteredTransactions.length)} of {filteredTransactions.length}
+                          Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length}
                         </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setVisibleCount((c) => c + ITEMS_INCREMENT)}
-                        >
-                          Load More
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
+                          {Array.from({ length: Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE) }, (_, i) => (
+                            <Button key={i + 1} variant={currentPage === i + 1 ? 'default' : 'outline'} size="sm" className="w-9" onClick={() => setCurrentPage(i + 1)}>{i + 1}</Button>
+                          ))}
+                          <Button variant="outline" size="sm" disabled={currentPage >= Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
+                        </div>
                       </div>
                     )}
                   </>

@@ -481,67 +481,67 @@ export type Database = {
       }
       purchases: {
         Row: {
-          category: string | null
+          category: string
           created_at: string
           created_by: string
           farm_id: string | null
           id: string
-          item_name: string | null
+          item_name: string
           linked_module: string | null
           linked_record_id: string | null
           linked_record_name: string | null
           notes: string | null
           payment_status: string | null
           purchase_date: string
-          quantity: number | null
+          quantity: number
           received_date: string | null
-          supplier: string | null
+          supplier: string
           supplier_contact: string | null
           total_cost: number | null
-          unit: string | null
-          unit_cost: number | null
+          unit: string
+          unit_cost: number
         }
         Insert: {
-          category?: string | null
+          category: string
           created_at?: string
           created_by: string
           farm_id?: string | null
           id?: string
-          item_name?: string | null
+          item_name: string
           linked_module?: string | null
           linked_record_id?: string | null
           linked_record_name?: string | null
           notes?: string | null
           payment_status?: string | null
           purchase_date?: string
-          quantity?: number | null
+          quantity: number
           received_date?: string | null
-          supplier?: string | null
+          supplier: string
           supplier_contact?: string | null
           total_cost?: number | null
-          unit?: string | null
-          unit_cost?: number | null
+          unit: string
+          unit_cost: number
         }
         Update: {
-          category?: string | null
+          category?: string
           created_at?: string
           created_by?: string
           farm_id?: string | null
           id?: string
-          item_name?: string | null
+          item_name?: string
           linked_module?: string | null
           linked_record_id?: string | null
           linked_record_name?: string | null
           notes?: string | null
           payment_status?: string | null
           purchase_date?: string
-          quantity?: number | null
+          quantity?: number
           received_date?: string | null
-          supplier?: string | null
+          supplier?: string
           supplier_contact?: string | null
           total_cost?: number | null
-          unit?: string | null
-          unit_cost?: number | null
+          unit?: string
+          unit_cost?: number
         }
         Relationships: [
           {
@@ -605,7 +605,7 @@ export type Database = {
       }
       sales: {
         Row: {
-          buyer: string | null
+          buyer: string
           buyer_contact: string | null
           created_at: string
           created_by: string
@@ -616,17 +616,17 @@ export type Database = {
           linked_record_name: string | null
           notes: string | null
           payment_status: string | null
-          product_id: string | null
-          product_name: string | null
-          product_type: string | null
-          quantity: number | null
+          product_id: string
+          product_name: string
+          product_type: string
+          quantity: number
           sale_date: string
           total_amount: number | null
-          unit: string | null
-          unit_price: number | null
+          unit: string
+          unit_price: number
         }
         Insert: {
-          buyer?: string | null
+          buyer: string
           buyer_contact?: string | null
           created_at?: string
           created_by: string
@@ -637,17 +637,17 @@ export type Database = {
           linked_record_name?: string | null
           notes?: string | null
           payment_status?: string | null
-          product_id?: string | null
-          product_name?: string | null
-          product_type?: string | null
-          quantity?: number | null
+          product_id: string
+          product_name: string
+          product_type: string
+          quantity: number
           sale_date?: string
           total_amount?: number | null
-          unit?: string | null
-          unit_price?: number | null
+          unit: string
+          unit_price: number
         }
         Update: {
-          buyer?: string | null
+          buyer?: string
           buyer_contact?: string | null
           created_at?: string
           created_by?: string
@@ -658,14 +658,14 @@ export type Database = {
           linked_record_name?: string | null
           notes?: string | null
           payment_status?: string | null
-          product_id?: string | null
-          product_name?: string | null
-          product_type?: string | null
-          quantity?: number | null
+          product_id?: string
+          product_name?: string
+          product_type?: string
+          quantity?: number
           sale_date?: string
           total_amount?: number | null
-          unit?: string | null
-          unit_price?: number | null
+          unit?: string
+          unit_price?: number
         }
         Relationships: [
           {
