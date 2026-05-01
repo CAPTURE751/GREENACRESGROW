@@ -13,6 +13,7 @@ import { useLivestock } from "@/hooks/useLivestock";
 import { useEquipment } from "@/hooks/useEquipment";
 import { useInventory } from "@/hooks/useInventory";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 interface TransactionFormProps {
   onClose: () => void;
@@ -227,6 +228,11 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
                   ) : linkedOptions.map(o => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
                 </SelectContent>
               </Select>
+              {linkedRecordId && resolveLinkedName() && (
+                <Badge variant="secondary" className="mt-1 capitalize">
+                  {linkedModule}: {resolveLinkedName()}
+                </Badge>
+              )}
             </div>
           )}
         </div>
