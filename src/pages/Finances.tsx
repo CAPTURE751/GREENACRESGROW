@@ -498,11 +498,11 @@ export default function Finances() {
 
         {/* Transaction Filters */}
         <div className="flex flex-wrap gap-4 items-end">
-          <div className="flex gap-2">
-            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setCurrentPage(1); }}>All Transactions</Button>
-            <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setCurrentPage(1); }} className="text-green-700">Income Only</Button>
-            <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setCurrentPage(1); }} className="text-red-700">Expenses Only</Button>
-            <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setCurrentPage(1); }} className="text-blue-700">Capital Injections</Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setVisibleCount(ITEMS_INCREMENT); }}>All Transactions</Button>
+            <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setVisibleCount(ITEMS_INCREMENT); }} className="text-green-700">Income Only</Button>
+            <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setVisibleCount(ITEMS_INCREMENT); }} className="text-red-700">Expenses Only</Button>
+            <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setVisibleCount(ITEMS_INCREMENT); }} className="text-blue-700">Capital Injections</Button>
           </div>
           <div className="flex gap-2 items-end ml-auto">
             <div className="space-y-1">
