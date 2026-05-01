@@ -624,19 +624,19 @@ export default function Finances() {
                       </div>
                     ))}
 
-                    {/* Pagination Controls */}
-                    {filteredTransactions.length > ITEMS_PER_PAGE && (
-                      <div className="flex items-center justify-between pt-4 border-t">
+                    {/* Infinite scroll - Load More */}
+                    {visibleCount < filteredTransactions.length && (
+                      <div className="flex flex-col items-center pt-4 border-t gap-2">
                         <p className="text-sm text-muted-foreground">
-                          Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length}
+                          Showing {Math.min(visibleCount, filteredTransactions.length)} of {filteredTransactions.length}
                         </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
-                          {Array.from({ length: Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE) }, (_, i) => (
-                            <Button key={i + 1} variant={currentPage === i + 1 ? 'default' : 'outline'} size="sm" className="w-9" onClick={() => setCurrentPage(i + 1)}>{i + 1}</Button>
-                          ))}
-                          <Button variant="outline" size="sm" disabled={currentPage >= Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setVisibleCount((c) => c + ITEMS_INCREMENT)}
+                        >
+                          Load More
+                        </Button>
                       </div>
                     )}
                   </>
