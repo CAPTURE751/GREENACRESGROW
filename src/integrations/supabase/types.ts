@@ -182,6 +182,65 @@ export type Database = {
           },
         ]
       }
+      equipment_maintenance: {
+        Row: {
+          cost: number | null
+          created_at: string
+          created_by: string
+          description: string | null
+          equipment_id: string
+          farm_id: string | null
+          fuel_litres: number | null
+          hours_used: number | null
+          id: string
+          log_date: string
+          log_type: string
+          next_service_date: string | null
+          notes: string | null
+          performed_by: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          equipment_id: string
+          farm_id?: string | null
+          fuel_litres?: number | null
+          hours_used?: number | null
+          id?: string
+          log_date?: string
+          log_type: string
+          next_service_date?: string | null
+          notes?: string | null
+          performed_by?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          equipment_id?: string
+          farm_id?: string | null
+          fuel_litres?: number | null
+          hours_used?: number | null
+          id?: string
+          log_date?: string
+          log_type?: string
+          next_service_date?: string | null
+          notes?: string | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_maintenance_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_members: {
         Row: {
           created_at: string
@@ -288,6 +347,7 @@ export type Database = {
           farm_id: string | null
           id: string
           item_name: string
+          item_type: string
           last_updated: string
           location: string | null
           min_threshold: number | null
@@ -303,6 +363,7 @@ export type Database = {
           farm_id?: string | null
           id?: string
           item_name: string
+          item_type?: string
           last_updated?: string
           location?: string | null
           min_threshold?: number | null
@@ -318,6 +379,7 @@ export type Database = {
           farm_id?: string | null
           id?: string
           item_name?: string
+          item_type?: string
           last_updated?: string
           location?: string | null
           min_threshold?: number | null
@@ -332,6 +394,149 @@ export type Database = {
             columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_batches: {
+        Row: {
+          batch_number: string | null
+          created_at: string
+          created_by: string
+          expiry_date: string | null
+          farm_id: string | null
+          id: string
+          inventory_id: string
+          notes: string | null
+          quantity_received: number
+          quantity_remaining: number
+          received_date: string
+          source: string | null
+          unit_cost: number
+        }
+        Insert: {
+          batch_number?: string | null
+          created_at?: string
+          created_by: string
+          expiry_date?: string | null
+          farm_id?: string | null
+          id?: string
+          inventory_id: string
+          notes?: string | null
+          quantity_received: number
+          quantity_remaining: number
+          received_date?: string
+          source?: string | null
+          unit_cost?: number
+        }
+        Update: {
+          batch_number?: string | null
+          created_at?: string
+          created_by?: string
+          expiry_date?: string | null
+          farm_id?: string | null
+          id?: string
+          inventory_id?: string
+          notes?: string | null
+          quantity_received?: number
+          quantity_remaining?: number
+          received_date?: string
+          source?: string | null
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_batches_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_movements: {
+        Row: {
+          batch_id: string | null
+          batch_number: string | null
+          created_at: string
+          created_by: string
+          destination: string | null
+          expiry_date: string | null
+          farm_id: string | null
+          id: string
+          inventory_id: string
+          linked_module: string | null
+          linked_record_id: string | null
+          linked_record_name: string | null
+          movement_date: string
+          movement_type: string
+          notes: string | null
+          purpose: string | null
+          quantity: number
+          reason: string | null
+          source: string | null
+          total_cost: number | null
+          unit_cost: number | null
+        }
+        Insert: {
+          batch_id?: string | null
+          batch_number?: string | null
+          created_at?: string
+          created_by: string
+          destination?: string | null
+          expiry_date?: string | null
+          farm_id?: string | null
+          id?: string
+          inventory_id: string
+          linked_module?: string | null
+          linked_record_id?: string | null
+          linked_record_name?: string | null
+          movement_date?: string
+          movement_type: string
+          notes?: string | null
+          purpose?: string | null
+          quantity: number
+          reason?: string | null
+          source?: string | null
+          total_cost?: number | null
+          unit_cost?: number | null
+        }
+        Update: {
+          batch_id?: string | null
+          batch_number?: string | null
+          created_at?: string
+          created_by?: string
+          destination?: string | null
+          expiry_date?: string | null
+          farm_id?: string | null
+          id?: string
+          inventory_id?: string
+          linked_module?: string | null
+          linked_record_id?: string | null
+          linked_record_name?: string | null
+          movement_date?: string
+          movement_type?: string
+          notes?: string | null
+          purpose?: string | null
+          quantity?: number
+          reason?: string | null
+          source?: string | null
+          total_cost?: number | null
+          unit_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
             referencedColumns: ["id"]
           },
         ]
@@ -353,6 +558,7 @@ export type Database = {
           notes: string | null
           purchase_date: string | null
           purchase_price: number | null
+          tag_number: string | null
           type: string
           updated_at: string
           weight: number | null
@@ -373,6 +579,7 @@ export type Database = {
           notes?: string | null
           purchase_date?: string | null
           purchase_price?: number | null
+          tag_number?: string | null
           type: string
           updated_at?: string
           weight?: number | null
@@ -393,6 +600,7 @@ export type Database = {
           notes?: string | null
           purchase_date?: string | null
           purchase_price?: number | null
+          tag_number?: string | null
           type?: string
           updated_at?: string
           weight?: number | null
@@ -406,6 +614,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      livestock_batches: {
+        Row: {
+          animal_type: string
+          arrival_date: string
+          batch_id: string
+          breed: string | null
+          created_at: string
+          created_by: string
+          current_quantity: number
+          farm_id: string | null
+          id: string
+          initial_quantity: number
+          mortality_count: number
+          notes: string | null
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          animal_type: string
+          arrival_date?: string
+          batch_id: string
+          breed?: string | null
+          created_at?: string
+          created_by: string
+          current_quantity: number
+          farm_id?: string | null
+          id?: string
+          initial_quantity: number
+          mortality_count?: number
+          notes?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          animal_type?: string
+          arrival_date?: string
+          batch_id?: string
+          breed?: string | null
+          created_at?: string
+          created_by?: string
+          current_quantity?: number
+          farm_id?: string | null
+          id?: string
+          initial_quantity?: number
+          mortality_count?: number
+          notes?: string | null
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       notification_preferences: {
         Row: {
