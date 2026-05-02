@@ -19,6 +19,7 @@ import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
 import Equipment from "./pages/Equipment";
 import BudgetSimulator from "./pages/BudgetSimulator";
+import Inventory from "./pages/Inventory";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -69,6 +70,11 @@ const App = () => (
             <Route path="/settings" element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            } />
+            <Route path="/inventory" element={
+              <ProtectedRoute>
+                <Inventory />
               </ProtectedRoute>
             } />
             <Route path="/equipment" element={

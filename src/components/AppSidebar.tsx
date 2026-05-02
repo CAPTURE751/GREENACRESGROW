@@ -10,7 +10,8 @@ import {
   Home,
   Users,
   Wrench,
-  Calculator
+  Calculator,
+  Package
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -31,6 +32,7 @@ const navigationItems = [
   { title: "Crops", url: "/crops", icon: Wheat },
   { title: "Livestock", url: "/livestock", icon: Beef },
   { title: "Finances", url: "/finances", icon: DollarSign },
+  { title: "Inventory", url: "/inventory", icon: Package },
   { title: "Equipment", url: "/equipment", icon: Wrench },
   { title: "Calendar", url: "/calendar", icon: Calendar },
   { title: "Reports", url: "/reports", icon: FileText },
