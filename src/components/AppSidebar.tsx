@@ -11,7 +11,9 @@ import {
   Users,
   Wrench,
   Calculator,
-  Package
+  Package,
+  BookOpen,
+  Receipt
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -35,6 +37,8 @@ const navigationItems = [
   { title: "Inventory", url: "/inventory", icon: Package },
   { title: "Equipment", url: "/equipment", icon: Wrench },
   { title: "Calendar", url: "/calendar", icon: Calendar },
+  { title: "Notebook", url: "/notebook", icon: BookOpen },
+  { title: "Expenses", url: "/expenses", icon: Receipt },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Budget Simulator", url: "/budget-simulator", icon: Calculator },

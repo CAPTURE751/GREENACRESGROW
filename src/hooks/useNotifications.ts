@@ -51,6 +51,22 @@ export function useNotifications() {
           });
         });
 
+        // High-severity unresolved season challenges
+        let chQuery = supabase.from('season_challenges' as any).select('id, title, severity, status');
+        if (activeFarm?.id) chQuery = chQuery.eq('farm_id', activeFarm.id);
+        const { data: chs } = await chQuery;
+        (chs as any[] || []).filter((c: any) => c.severity === 'high' && c.status !== 'resolved').forEach((c: any) => {
+          sampleNotifications.push({
+            id: `challenge-${c.id}`,
+            type: NOTIFICATION_TYPES.ADMIN_ALERT,
+            title: 'High-Severity Challenge',
+            message: c.title,
+            read: false,
+            created_at: new Date().toISOString(),
+            user_id: user.id,
+          });
+        });
+
         // Admin-specific notifications
         if (hasRole('admin')) {
           sampleNotifications.push({
