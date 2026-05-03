@@ -666,6 +666,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notebook_notes: {
+        Row: {
+          content: string | null
+          created_at: string
+          created_by: string
+          crop_id: string | null
+          farm_id: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          created_by: string
+          crop_id?: string | null
+          farm_id?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          crop_id?: string | null
+          farm_id?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           audit_reminders: boolean
@@ -936,6 +969,45 @@ export type Database = {
           },
         ]
       }
+      season_challenges: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          farm_id: string | null
+          id: string
+          season: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          farm_id?: string | null
+          id?: string
+          season?: string | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          farm_id?: string | null
+          id?: string
+          season?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       task_notifications: {
         Row: {
           created_at: string
@@ -983,15 +1055,20 @@ export type Database = {
           description: string | null
           farm_id: string | null
           id: string
+          inputs_used: Json | null
+          notes: string | null
           parent_task_id: string | null
           priority: string
           recurrence: string | null
           recurrence_end_date: string | null
           reminder_sent: boolean | null
+          status: string | null
           task_date: string
+          task_time: string | null
           task_type: string
           title: string
           updated_at: string
+          workers: string[] | null
         }
         Insert: {
           assigned_to?: string | null
@@ -1001,15 +1078,20 @@ export type Database = {
           description?: string | null
           farm_id?: string | null
           id?: string
+          inputs_used?: Json | null
+          notes?: string | null
           parent_task_id?: string | null
           priority?: string
           recurrence?: string | null
           recurrence_end_date?: string | null
           reminder_sent?: boolean | null
+          status?: string | null
           task_date: string
+          task_time?: string | null
           task_type: string
           title: string
           updated_at?: string
+          workers?: string[] | null
         }
         Update: {
           assigned_to?: string | null
@@ -1019,15 +1101,20 @@ export type Database = {
           description?: string | null
           farm_id?: string | null
           id?: string
+          inputs_used?: Json | null
+          notes?: string | null
           parent_task_id?: string | null
           priority?: string
           recurrence?: string | null
           recurrence_end_date?: string | null
           reminder_sent?: boolean | null
+          status?: string | null
           task_date?: string
+          task_time?: string | null
           task_type?: string
           title?: string
           updated_at?: string
+          workers?: string[] | null
         }
         Relationships: [
           {
