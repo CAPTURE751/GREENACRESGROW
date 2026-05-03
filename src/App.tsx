@@ -20,6 +20,8 @@ import UserManagement from "./pages/UserManagement";
 import Equipment from "./pages/Equipment";
 import BudgetSimulator from "./pages/BudgetSimulator";
 import Inventory from "./pages/Inventory";
+import Notebook from "./pages/Notebook";
+import Expenses from "./pages/Expenses";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -91,6 +93,12 @@ const App = () => (
               <ProtectedRoute>
                 <BudgetSimulator />
               </ProtectedRoute>
+            } />
+            <Route path="/notebook" element={
+              <ProtectedRoute><Notebook /></ProtectedRoute>
+            } />
+            <Route path="/expenses" element={
+              <ProtectedRoute allowedRoles={['admin', 'staff']}><Expenses /></ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
