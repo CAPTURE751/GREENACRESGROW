@@ -384,6 +384,31 @@ export default function CalendarPage() {
           </Card>
         </div>
 
+        {/* Daily Summary */}
+        {selectedDate && (() => {
+          const dayTasks = getTasksForDate(selectedDate);
+          const allWorkers = new Set<string>();
+          const inputsAgg: Record<string, number> = {};
+          dayTasks.forEach((t: any) => {
+            const orig = backendTasks.find(b => b.id === t.originalId) as any;
+            (orig?.workers || []).forEach((w: string) => allWorkers.add(w));
+            (orig?.inputs_used || []).forEach((i: any) => { inputsAgg[i.name] = (inputsAgg[i.name] || 0) + Number(i.quantity || 0); });
+          });
+          return (
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-base">Daily Summary — {selectedDate.toLocaleDateString()}</CardTitle></CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div><div className="text-muted-foreground">Tasks</div><div className="text-xl font-bold">{dayTasks.length}</div><div className="text-xs">{dayTasks.filter(t => t.completed).length} completed</div></div>
+                <div><div className="text-muted-foreground">Active Workers</div><div className="text-xl font-bold">{allWorkers.size}</div><div className="text-xs truncate">{Array.from(allWorkers).join(', ') || '—'}</div></div>
+                <div><div className="text-muted-foreground">Inputs Used</div>
+                  {Object.keys(inputsAgg).length === 0 ? <div className="text-xs">—</div> :
+                    <ul className="text-xs space-y-0.5">{Object.entries(inputsAgg).map(([k, v]) => <li key={k}>{k}: {v}</li>)}</ul>}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
