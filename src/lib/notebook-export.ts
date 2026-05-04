@@ -1,25 +1,13 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { farmFileName } from './report-export';
-import { getFarmSettings } from './farm-settings-cache';
-
-async function header(doc: jsPDF, title: string) {
-  const settings = await getFarmSettings();
-  const farmName = settings?.farm_name || 'My Farm';
-  doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-  doc.text(farmName, 14, 16);
-  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-  doc.text(settings?.location || '', 14, 22);
-  doc.setFontSize(13); doc.setFont('helvetica', 'bold');
-  doc.text(title, 14, 32);
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-  doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 38);
-  return 44;
-}
+import { applyBrandedHeader, applyBrandedFooter, BRAND_HEADER_COLOR } from './pdf-branding';
 
 export async function exportNotesPDF(notes: any[], crops: any[], opts: { cropFilter?: string } = {}) {
   const doc = new jsPDF();
-  const startY = await header(doc, opts.cropFilter ? `Notes for ${opts.cropFilter}` : 'Farm Notebook - Notes');
+  const startY = await applyBrandedHeader(doc, {
+    title: opts.cropFilter ? `Notes for ${opts.cropFilter}` : 'Farm Notebook - Notes',
+  });
   autoTable(doc, {
     startY,
     head: [['Date', 'Title', 'Crop', 'Content']],
@@ -29,16 +17,17 @@ export async function exportNotesPDF(notes: any[], crops: any[], opts: { cropFil
       crops.find(c => c.id === n.crop_id)?.name || '-',
       n.content || '-',
     ]),
-    headStyles: { fillColor: [76, 119, 62] },
+    headStyles: { fillColor: BRAND_HEADER_COLOR },
     styles: { fontSize: 9, cellWidth: 'wrap' },
     columnStyles: { 3: { cellWidth: 80 } },
   });
+  await applyBrandedFooter(doc);
   doc.save(await farmFileName('Farm-Notes', 'pdf'));
 }
 
 export async function exportChallengesPDF(challenges: any[]) {
   const doc = new jsPDF();
-  const startY = await header(doc, 'Season Challenges Report');
+  const startY = await applyBrandedHeader(doc, { title: 'Season Challenges Report' });
   const high = challenges.filter(c => c.severity === 'high').length;
   const inProg = challenges.filter(c => c.status === 'in_progress').length;
   const resolved = challenges.filter(c => c.status === 'resolved').length;
@@ -46,7 +35,7 @@ export async function exportChallengesPDF(challenges: any[]) {
     startY,
     head: [['High Severity', 'In Progress', 'Resolved', 'Total']],
     body: [[high, inProg, resolved, challenges.length]],
-    headStyles: { fillColor: [76, 119, 62] },
+    headStyles: { fillColor: BRAND_HEADER_COLOR },
   });
   autoTable(doc, {
     startY: (doc as any).lastAutoTable.finalY + 8,
@@ -58,8 +47,9 @@ export async function exportChallengesPDF(challenges: any[]) {
       c.status,
       c.description || '-',
     ]),
-    headStyles: { fillColor: [76, 119, 62] },
+    headStyles: { fillColor: BRAND_HEADER_COLOR },
     styles: { fontSize: 9 },
   });
+  await applyBrandedFooter(doc);
   doc.save(await farmFileName('Season-Challenges', 'pdf'));
 }
