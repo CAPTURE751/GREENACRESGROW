@@ -11,12 +11,6 @@ interface ExportOpts {
 }
 
 export async function exportInventoryPDF(items: any[], opts: ExportOpts) {
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  // Use mm-friendly helper but we're in pt — convert by re-creating in mm
-}
-
-// Re-implemented in mm to align with shared branding helpers
-export async function exportInventoryReport(items: any[], opts: ExportOpts) {
   const doc = new jsPDF();
   const startY = await applyBrandedHeader(doc, { title: opts.title || 'Inventory Report', filters: opts.filters });
 
@@ -85,6 +79,3 @@ export async function exportMovementsPDF(movements: any[], itemMap: Record<strin
   await applyBrandedFooter(doc);
   doc.save(await farmFileName('Inventory-Movements', 'pdf'));
 }
-
-// Backward-compatible alias used by Inventory page
-export { exportInventoryReport as exportInventoryPDFBranded };
