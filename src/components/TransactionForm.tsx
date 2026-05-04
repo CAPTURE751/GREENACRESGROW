@@ -34,7 +34,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
     quantity: editData?.quantity?.toString() || '',
     unit: editData?.unit || '',
     unit_price: editData?.unit_price?.toString() || '',
-    payment_status: editData?.payment_status || 'pending',
+    payment_status: editData?.payment_status || (editMode ? 'pending' : 'paid'),
     // Purchase fields
     item_name: editData?.item_name || '',
     category: editData?.category || '',
@@ -290,8 +290,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="buyer">Buyer *</Label>
-              <Input id="buyer" value={formData.buyer} onChange={(e) => handleInputChange('buyer', e.target.value)} placeholder="Buyer name" required />
+              <Label htmlFor="buyer">Buyer</Label>
+              <Input id="buyer" value={formData.buyer} onChange={(e) => handleInputChange('buyer', e.target.value)} placeholder="Buyer name (optional)" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="buyer_contact">Buyer Contact</Label>
@@ -324,8 +324,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="supplier">Supplier *</Label>
-              <Input id="supplier" value={formData.supplier} onChange={(e) => handleInputChange('supplier', e.target.value)} placeholder="Supplier name" required />
+              <Label htmlFor="supplier">Supplier</Label>
+              <Input id="supplier" value={formData.supplier} onChange={(e) => handleInputChange('supplier', e.target.value)} placeholder="Supplier name (optional)" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="supplier_contact">Supplier Contact</Label>
@@ -338,21 +338,21 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         {transactionType !== 'capital_injection' && (
           <>
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input id="quantity" type="number" value={formData.quantity} onChange={(e) => handleInputChange('quantity', e.target.value)} placeholder="0" required min="0" step="0.1" />
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input id="quantity" type="number" value={formData.quantity} onChange={(e) => handleInputChange('quantity', e.target.value)} placeholder="0 (optional)" min="0" step="0.1" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="unit">Unit</Label>
               <Input id="unit" value={formData.unit} onChange={(e) => handleInputChange('unit', e.target.value)} placeholder="e.g., kg, lbs, pieces" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unit_price">{transactionType === 'income' ? 'Unit Price' : 'Unit Cost'} *</Label>
-              <Input id="unit_price" type="number" value={formData.unit_price} onChange={(e) => handleInputChange('unit_price', e.target.value)} placeholder="0.00" required min="0" step="0.01" />
+              <Label htmlFor="unit_price">{transactionType === 'income' ? 'Unit Price' : 'Unit Cost'}</Label>
+              <Input id="unit_price" type="number" value={formData.unit_price} onChange={(e) => handleInputChange('unit_price', e.target.value)} placeholder="0.00 (optional)" min="0" step="0.01" />
             </div>
             {transactionType === 'income' && (
               <div className="space-y-2">
                 <Label>Total Amount</Label>
-                <Input type="number" value={totalAmount} readOnly className="bg-muted" />
+                <Input type="number" value={totalAmount || ''} readOnly className="bg-muted" placeholder="Auto-calculated" />
               </div>
             )}
             <div className="space-y-2">
