@@ -8,8 +8,9 @@ import { Layout } from "@/components/Layout";
 import { useEquipment } from "@/hooks/useEquipment";
 import { EquipmentForm } from "@/components/EquipmentForm";
 import { formatKES } from "@/lib/currency";
-import { Plus, Wrench, Loader2, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Wrench, Loader2, Pencil, Trash2, Search, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { EquipmentMaintenanceDialog } from "@/components/EquipmentMaintenanceDialog";
 
 const statusColors: Record<string, string> = {
   available: "bg-green-100 text-green-800",
@@ -22,6 +23,7 @@ export default function Equipment() {
   const { equipment, isLoading, createEquipment, updateEquipment, deleteEquipment, isCreating, isUpdating } = useEquipment();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [maintenanceFor, setMaintenanceFor] = useState<{ id: string; name: string } | null>(null);
   const [search, setSearch] = useState("");
 
   const filtered = equipment.filter((e) =>
@@ -158,6 +160,7 @@ export default function Equipment() {
                       <Badge className={statusColors[item.status || "available"] || statusColors.available}>
                         {(item.status || "available").replace("_", " ")}
                       </Badge>
+                      <Button variant="ghost" size="icon" onClick={() => setMaintenanceFor({ id: item.id, name: item.name })} title="Maintenance log"><ClipboardList className="h-4 w-4" /></Button>
                       <Dialog open={editingId === item.id} onOpenChange={(open) => setEditingId(open ? item.id : null)}>
                         <DialogTrigger asChild>
                           <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
@@ -223,6 +226,14 @@ export default function Equipment() {
             )}
           </CardContent>
         </Card>
+        {maintenanceFor && (
+          <EquipmentMaintenanceDialog
+            open={!!maintenanceFor}
+            onOpenChange={(o) => !o && setMaintenanceFor(null)}
+            equipmentId={maintenanceFor.id}
+            equipmentName={maintenanceFor.name}
+          />
+        )}
       </div>
     </Layout>
   );
