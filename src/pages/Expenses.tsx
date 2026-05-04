@@ -12,6 +12,7 @@ import { formatKES } from '@/lib/currency';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { farmFileName } from '@/lib/report-export';
+import { applyBrandedHeader, applyBrandedFooter, BRAND_HEADER_COLOR } from '@/lib/pdf-branding';
 
 export default function Expenses() {
   const { purchases } = usePurchases();
@@ -42,19 +43,20 @@ export default function Expenses() {
 
   const exportPDF = async () => {
     const doc = new jsPDF();
-    doc.setFontSize(16); doc.text('Expenses Report', 14, 16);
-    doc.setFontSize(9); doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+    const filterText = [from && `from ${from}`, to && `to ${to}`, cat !== 'all' && `category: ${cat}`].filter(Boolean).join(' • ') || undefined;
+    const startY = await applyBrandedHeader(doc, { title: 'Expenses Report', filters: filterText });
     autoTable(doc, {
-      startY: 28, head: [['Category', 'Total']],
+      startY, head: [['Category', 'Total']],
       body: byCategory.map(([k, v]) => [k, formatKES(v)]),
-      headStyles: { fillColor: [76, 119, 62] },
+      headStyles: { fillColor: BRAND_HEADER_COLOR },
     });
     autoTable(doc, {
       startY: (doc as any).lastAutoTable.finalY + 6,
       head: [['Date', 'Item', 'Category', 'Qty', 'Total', 'Linked']],
       body: filtered.map(p => [p.purchase_date, p.item_name || '-', p.category || '-', String(p.quantity || ''), formatKES(Number(p.total_cost || 0)), p.linked_record_name || '-']),
-      headStyles: { fillColor: [76, 119, 62] }, styles: { fontSize: 8 },
+      headStyles: { fillColor: BRAND_HEADER_COLOR }, styles: { fontSize: 8 },
     });
+    await applyBrandedFooter(doc);
     doc.save(await farmFileName('Expenses', 'pdf'));
   };
 
