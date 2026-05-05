@@ -260,7 +260,10 @@ export function Livestock() {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg">{animal.type}</CardTitle>
+                    <CardTitle className="text-lg capitalize">{animal.type}</CardTitle>
+                    {animal.tag_number && (
+                      <p className="text-xs font-mono text-foreground">Tag: {animal.tag_number}</p>
+                    )}
                     <p className="text-sm text-muted-foreground">{animal.breed} {animal.gender && `• ${animal.gender}`}</p>
                   </div>
                   <Badge variant="outline" className="text-xs">Age: {calculateAge(animal.date_of_birth, animal.date_of_birth_on_farm)}</Badge>
