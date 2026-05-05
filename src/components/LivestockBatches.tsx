@@ -8,14 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Skull } from 'lucide-react';
+import { Plus, Trash2, Skull, Wheat } from 'lucide-react';
 import { useLivestockBatches } from '@/hooks/useLivestockBatches';
 
 export function LivestockBatches() {
-  const { batches, createBatch, recordMortality, deleteBatch, isCreating } = useLivestockBatches();
+  const { batches, createBatch, recordMortality, recordFeed, deleteBatch, isCreating } = useLivestockBatches();
   const [open, setOpen] = useState(false);
   const [mortalityFor, setMortalityFor] = useState<string | null>(null);
   const [mortalityCount, setMortalityCount] = useState('1');
+  const [feedFor, setFeedFor] = useState<string | null>(null);
+  const [feedAmount, setFeedAmount] = useState('');
+  const [feedUnit, setFeedUnit] = useState('kg');
   const [form, setForm] = useState({
     animal_type: 'chicken',
     breed: '',
@@ -53,11 +56,12 @@ export function LivestockBatches() {
           <TableHeader><TableRow>
             <TableHead>Batch ID</TableHead><TableHead>Type</TableHead><TableHead>Breed</TableHead>
             <TableHead>Initial</TableHead><TableHead>Current</TableHead><TableHead>Mortality</TableHead>
+            <TableHead>Feed</TableHead>
             <TableHead>Arrival</TableHead><TableHead></TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {batches.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">No batches yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-6">No batches yet</TableCell></TableRow>
             ) : batches.map((b) => (
               <TableRow key={b.id}>
                 <TableCell className="font-mono text-xs">{b.batch_id}</TableCell>
@@ -66,8 +70,10 @@ export function LivestockBatches() {
                 <TableCell>{b.initial_quantity}</TableCell>
                 <TableCell><Badge>{b.current_quantity}</Badge></TableCell>
                 <TableCell><Badge variant="destructive">{b.mortality_count}</Badge></TableCell>
+                <TableCell className="text-xs">{b.feed_consumed || 0} {b.feed_unit || 'kg'}</TableCell>
                 <TableCell className="text-xs">{b.arrival_date}</TableCell>
                 <TableCell className="flex gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => { setFeedFor(b.id); setFeedUnit(b.feed_unit || 'kg'); }} title="Record feed"><Wheat className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => setMortalityFor(b.id)} title="Record mortality"><Skull className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => deleteBatch(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
@@ -117,6 +123,34 @@ export function LivestockBatches() {
               if (mortalityFor) recordMortality({ id: mortalityFor, count: Number(mortalityCount) || 1 });
               setMortalityFor(null);
               setMortalityCount('1');
+            }}>Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!feedFor} onOpenChange={(o) => !o && setFeedFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record Feed</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Amount *</Label><Input type="number" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} min="0" step="0.01" /></div>
+            <div><Label>Unit</Label>
+              <Select value={feedUnit} onValueChange={setFeedUnit}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">kg</SelectItem>
+                  <SelectItem value="g">g</SelectItem>
+                  <SelectItem value="bag">bag</SelectItem>
+                  <SelectItem value="litre">litre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setFeedFor(null); setFeedAmount(''); }}>Cancel</Button>
+            <Button onClick={() => {
+              const amt = Number(feedAmount);
+              if (feedFor && amt > 0) recordFeed({ id: feedFor, amount: amt, unit: feedUnit });
+              setFeedFor(null); setFeedAmount('');
             }}>Record</Button>
           </DialogFooter>
         </DialogContent>

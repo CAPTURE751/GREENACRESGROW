@@ -625,6 +625,8 @@ export type Database = {
           created_by: string
           current_quantity: number
           farm_id: string | null
+          feed_consumed: number
+          feed_unit: string | null
           id: string
           initial_quantity: number
           mortality_count: number
@@ -641,6 +643,8 @@ export type Database = {
           created_by: string
           current_quantity: number
           farm_id?: string | null
+          feed_consumed?: number
+          feed_unit?: string | null
           id?: string
           initial_quantity: number
           mortality_count?: number
@@ -657,6 +661,8 @@ export type Database = {
           created_by?: string
           current_quantity?: number
           farm_id?: string | null
+          feed_consumed?: number
+          feed_unit?: string | null
           id?: string
           initial_quantity?: number
           mortality_count?: number

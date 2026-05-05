@@ -53,6 +53,10 @@ export function Livestock() {
   );
 
   const handleCreateLivestock = async (livestockData: any) => {
+    if (livestockData.tag_number && livestock.some(a => (a.tag_number || '').toLowerCase() === String(livestockData.tag_number).toLowerCase())) {
+      toast.error(`Tag number "${livestockData.tag_number}" is already in use`);
+      return;
+    }
     createLivestock(livestockData);
     setIsDialogOpen(false);
   };
@@ -152,6 +156,7 @@ export function Livestock() {
               isLoading={isUpdating}
               initialData={{
                 type: selectedAnimal.type,
+                tag_number: selectedAnimal.tag_number || '',
                 breed: selectedAnimal.breed || '',
                 farm_location: selectedAnimal.farm_location,
                 gender: selectedAnimal.gender || '',
@@ -255,7 +260,10 @@ export function Livestock() {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg">{animal.type}</CardTitle>
+                    <CardTitle className="text-lg capitalize">{animal.type}</CardTitle>
+                    {animal.tag_number && (
+                      <p className="text-xs font-mono text-foreground">Tag: {animal.tag_number}</p>
+                    )}
                     <p className="text-sm text-muted-foreground">{animal.breed} {animal.gender && `• ${animal.gender}`}</p>
                   </div>
                   <Badge variant="outline" className="text-xs">Age: {calculateAge(animal.date_of_birth, animal.date_of_birth_on_farm)}</Badge>

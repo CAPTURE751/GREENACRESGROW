@@ -13,6 +13,7 @@ import { calculateAge } from "@/lib/age-calculator";
 
 interface LivestockFormData {
   type: string;
+  tag_number?: string;
   breed?: string;
   farm_location: string;
   gender?: string;
@@ -37,6 +38,7 @@ interface LivestockFormProps {
 export function LivestockForm({ onSubmit, onCancel, isLoading, initialData }: LivestockFormProps) {
   const [formData, setFormData] = useState<LivestockFormData>({
     type: initialData?.type || "",
+    tag_number: initialData?.tag_number || "",
     breed: initialData?.breed || "",
     farm_location: initialData?.farm_location || "",
     gender: initialData?.gender || "",
@@ -80,22 +82,38 @@ export function LivestockForm({ onSubmit, onCancel, isLoading, initialData }: Li
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="type">Animal Type *</Label>
-          <Select value={formData.type} onValueChange={(value) => handleInputChange("type", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select animal type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cattle">Cattle</SelectItem>
-              <SelectItem value="pig">Pig</SelectItem>
-              <SelectItem value="chicken">Chicken</SelectItem>
-              <SelectItem value="sheep">Sheep</SelectItem>
-              <SelectItem value="goat">Goat</SelectItem>
-              <SelectItem value="horse">Horse</SelectItem>
-              <SelectItem value="duck">Duck</SelectItem>
-              <SelectItem value="turkey">Turkey</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            id="type"
+            value={formData.type}
+            onChange={(e) => handleInputChange("type", e.target.value)}
+            placeholder="e.g., Cattle, Sheep, Goat, Pig…"
+            list="animal-type-suggestions"
+            required
+          />
+          <datalist id="animal-type-suggestions">
+            <option value="Cattle" />
+            <option value="Sheep" />
+            <option value="Goat" />
+            <option value="Pig" />
+            <option value="Horse" />
+            <option value="Donkey" />
+            <option value="Rabbit" />
+          </datalist>
+          <p className="text-xs text-muted-foreground">For Chicken / Turkey / Duck use the Bulk Batch entry below.</p>
         </div>
+
+        {['cattle','sheep','goat'].includes((formData.type || '').toLowerCase()) && (
+          <div className="space-y-2">
+            <Label htmlFor="tag_number">Animal Tag Number *</Label>
+            <Input
+              id="tag_number"
+              value={formData.tag_number || ''}
+              onChange={(e) => handleInputChange("tag_number", e.target.value)}
+              placeholder="Unique tag e.g. C-001"
+              required
+            />
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="breed">Breed</Label>
