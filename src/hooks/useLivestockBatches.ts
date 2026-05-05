@@ -12,6 +12,8 @@ export interface LivestockBatch {
   initial_quantity: number;
   current_quantity: number;
   mortality_count: number;
+  feed_consumed: number;
+  feed_unit: string | null;
   arrival_date: string;
   source: string | null;
   notes: string | null;
@@ -78,6 +80,23 @@ export function useLivestockBatches() {
     onError: (e: any) => toast({ variant: 'destructive', title: 'Error', description: e.message }),
   });
 
+  const recordFeed = useMutation({
+    mutationFn: async ({ id, amount, unit }: { id: string; amount: number; unit?: string }) => {
+      const batch = batches.find((b) => b.id === id);
+      if (!batch) throw new Error('Batch not found');
+      const newTotal = (batch.feed_consumed || 0) + amount;
+      const { error } = await (supabase as any).from('livestock_batches')
+        .update({ feed_consumed: newTotal, feed_unit: unit || batch.feed_unit || 'kg', updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['livestock_batches'] });
+      toast({ title: 'Feed recorded' });
+    },
+    onError: (e: any) => toast({ variant: 'destructive', title: 'Error', description: e.message }),
+  });
+
   const deleteBatch = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await (supabase as any).from('livestock_batches').delete().eq('id', id);
@@ -103,6 +122,7 @@ export function useLivestockBatches() {
     batches, isLoading,
     createBatch: createBatch.mutate, isCreating: createBatch.isPending,
     recordMortality: recordMortality.mutate,
+    recordFeed: recordFeed.mutate,
     deleteBatch: deleteBatch.mutate,
   };
 }
