@@ -56,11 +56,12 @@ export function LivestockBatches() {
           <TableHeader><TableRow>
             <TableHead>Batch ID</TableHead><TableHead>Type</TableHead><TableHead>Breed</TableHead>
             <TableHead>Initial</TableHead><TableHead>Current</TableHead><TableHead>Mortality</TableHead>
+            <TableHead>Feed</TableHead>
             <TableHead>Arrival</TableHead><TableHead></TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {batches.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">No batches yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-6">No batches yet</TableCell></TableRow>
             ) : batches.map((b) => (
               <TableRow key={b.id}>
                 <TableCell className="font-mono text-xs">{b.batch_id}</TableCell>
@@ -69,8 +70,10 @@ export function LivestockBatches() {
                 <TableCell>{b.initial_quantity}</TableCell>
                 <TableCell><Badge>{b.current_quantity}</Badge></TableCell>
                 <TableCell><Badge variant="destructive">{b.mortality_count}</Badge></TableCell>
+                <TableCell className="text-xs">{b.feed_consumed || 0} {b.feed_unit || 'kg'}</TableCell>
                 <TableCell className="text-xs">{b.arrival_date}</TableCell>
                 <TableCell className="flex gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => { setFeedFor(b.id); setFeedUnit(b.feed_unit || 'kg'); }} title="Record feed"><Wheat className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => setMortalityFor(b.id)} title="Record mortality"><Skull className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" onClick={() => deleteBatch(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
