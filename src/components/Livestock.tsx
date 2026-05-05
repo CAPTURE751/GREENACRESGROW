@@ -53,6 +53,10 @@ export function Livestock() {
   );
 
   const handleCreateLivestock = async (livestockData: any) => {
+    if (livestockData.tag_number && livestock.some(a => (a.tag_number || '').toLowerCase() === String(livestockData.tag_number).toLowerCase())) {
+      toast.error(`Tag number "${livestockData.tag_number}" is already in use`);
+      return;
+    }
     createLivestock(livestockData);
     setIsDialogOpen(false);
   };
@@ -152,6 +156,7 @@ export function Livestock() {
               isLoading={isUpdating}
               initialData={{
                 type: selectedAnimal.type,
+                tag_number: selectedAnimal.tag_number || '',
                 breed: selectedAnimal.breed || '',
                 farm_location: selectedAnimal.farm_location,
                 gender: selectedAnimal.gender || '',
