@@ -8,14 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Skull } from 'lucide-react';
+import { Plus, Trash2, Skull, Wheat } from 'lucide-react';
 import { useLivestockBatches } from '@/hooks/useLivestockBatches';
 
 export function LivestockBatches() {
-  const { batches, createBatch, recordMortality, deleteBatch, isCreating } = useLivestockBatches();
+  const { batches, createBatch, recordMortality, recordFeed, deleteBatch, isCreating } = useLivestockBatches();
   const [open, setOpen] = useState(false);
   const [mortalityFor, setMortalityFor] = useState<string | null>(null);
   const [mortalityCount, setMortalityCount] = useState('1');
+  const [feedFor, setFeedFor] = useState<string | null>(null);
+  const [feedAmount, setFeedAmount] = useState('');
+  const [feedUnit, setFeedUnit] = useState('kg');
   const [form, setForm] = useState({
     animal_type: 'chicken',
     breed: '',
