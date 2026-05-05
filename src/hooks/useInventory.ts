@@ -110,7 +110,7 @@ export function useInventory() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('inventory-changes')
+      .channel(`inventory-changes-${Date.now()}-${Math.random()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
         queryClient.invalidateQueries({ queryKey: ['inventory'] });
       })
