@@ -127,6 +127,34 @@ export function LivestockBatches() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!feedFor} onOpenChange={(o) => !o && setFeedFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record Feed</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Amount *</Label><Input type="number" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} min="0" step="0.01" /></div>
+            <div><Label>Unit</Label>
+              <Select value={feedUnit} onValueChange={setFeedUnit}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">kg</SelectItem>
+                  <SelectItem value="g">g</SelectItem>
+                  <SelectItem value="bag">bag</SelectItem>
+                  <SelectItem value="litre">litre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setFeedFor(null); setFeedAmount(''); }}>Cancel</Button>
+            <Button onClick={() => {
+              const amt = Number(feedAmount);
+              if (feedFor && amt > 0) recordFeed({ id: feedFor, amount: amt, unit: feedUnit });
+              setFeedFor(null); setFeedAmount('');
+            }}>Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
