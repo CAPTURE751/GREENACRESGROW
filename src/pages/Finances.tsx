@@ -544,9 +544,8 @@ export default function Finances() {
                   <p className="text-muted-foreground text-center py-8">No transactions found</p>
                 ) : (
                   <>
-                    {filteredTransactions
-                      .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                      .map((transaction) => (
+                    <div className="max-h-[600px] overflow-y-auto space-y-3 pr-1">
+                      {filteredTransactions.slice(0, visibleCount).map((transaction) => (
                       <div key={`${transaction.type}-${transaction.id}`} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
                         <div className="flex items-center gap-4">
                           <div className={`p-2 rounded-full ${transaction.type === 'income' ? 'bg-green-100' : transaction.type === 'capital_injection' ? 'bg-blue-100' : 'bg-red-100'}`}>
@@ -623,22 +622,18 @@ export default function Finances() {
                         </div>
                       </div>
                     ))}
+                    </div>
 
-                    {/* Pagination Controls */}
-                    {filteredTransactions.length > ITEMS_PER_PAGE && (
-                      <div className="flex items-center justify-between pt-4 border-t">
-                        <p className="text-sm text-muted-foreground">
-                          Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Previous</Button>
-                          {Array.from({ length: Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE) }, (_, i) => (
-                            <Button key={i + 1} variant={currentPage === i + 1 ? 'default' : 'outline'} size="sm" className="w-9" onClick={() => setCurrentPage(i + 1)}>{i + 1}</Button>
-                          ))}
-                          <Button variant="outline" size="sm" disabled={currentPage >= Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)} onClick={() => setCurrentPage((p) => p + 1)}>Next</Button>
-                        </div>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {Math.min(visibleCount, filteredTransactions.length)} of {filteredTransactions.length}
+                      </p>
+                      {visibleCount < filteredTransactions.length && (
+                        <Button variant="outline" size="sm" onClick={() => setVisibleCount((c) => c + PAGE_INCREMENT)}>
+                          Load more
+                        </Button>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
