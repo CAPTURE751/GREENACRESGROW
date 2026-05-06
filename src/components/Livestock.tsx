@@ -149,7 +149,64 @@ export function Livestock() {
               <DialogHeader>
                 <DialogTitle>Add New Animal</DialogTitle>
               </DialogHeader>
-              <LivestockForm onSubmit={handleCreateLivestock} onCancel={() => setIsDialogOpen(false)} isLoading={isCreating} />
+              <Tabs value={addMode} onValueChange={(v) => setAddMode(v as 'individual' | 'batch')}>
+                <TabsList className="grid grid-cols-2 w-full">
+                  <TabsTrigger value="individual">Individual Animal</TabsTrigger>
+                  <TabsTrigger value="batch">Bulk Batch (Poultry/Group)</TabsTrigger>
+                </TabsList>
+                <TabsContent value="individual" className="pt-4">
+                  <LivestockForm onSubmit={handleCreateLivestock} onCancel={() => setIsDialogOpen(false)} isLoading={isCreating} />
+                </TabsContent>
+                <TabsContent value="batch" className="pt-4 space-y-4">
+                  <p className="text-sm text-muted-foreground">Use for groups counted as a total (e.g. 100 chickens). Each batch is counted toward Total Animals.</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Animal Type *</Label>
+                      <Input
+                        value={batchForm.animal_type}
+                        onChange={(e) => setBatchForm({ ...batchForm, animal_type: e.target.value })}
+                        list="batch-animal-types"
+                        placeholder="e.g. chicken, turkey, duck"
+                      />
+                      <datalist id="batch-animal-types">
+                        <option value="chicken" /><option value="turkey" /><option value="duck" />
+                        <option value="quail" /><option value="rabbit" /><option value="goat" /><option value="sheep" />
+                      </datalist>
+                    </div>
+                    <div><Label>Batch ID *</Label><Input value={batchForm.batch_id} onChange={(e) => setBatchForm({ ...batchForm, batch_id: e.target.value })} placeholder="e.g. B-001" /></div>
+                    <div><Label>Breed</Label><Input value={batchForm.breed} onChange={(e) => setBatchForm({ ...batchForm, breed: e.target.value })} /></div>
+                    <div><Label>Quantity *</Label><Input type="number" min="1" value={batchForm.initial_quantity} onChange={(e) => setBatchForm({ ...batchForm, initial_quantity: e.target.value })} /></div>
+                    <div><Label>Arrival Date</Label><Input type="date" value={batchForm.arrival_date} onChange={(e) => setBatchForm({ ...batchForm, arrival_date: e.target.value })} /></div>
+                    <div><Label>Source</Label><Input value={batchForm.source} onChange={(e) => setBatchForm({ ...batchForm, source: e.target.value })} /></div>
+                    <div className="col-span-2"><Label>Notes</Label><Textarea value={batchForm.notes} onChange={(e) => setBatchForm({ ...batchForm, notes: e.target.value })} /></div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                    <Button
+                      disabled={isCreatingBatch || !batchForm.batch_id || !batchForm.initial_quantity || !batchForm.animal_type}
+                      onClick={() => {
+                        const qty = Number(batchForm.initial_quantity);
+                        if (!qty || qty < 1) { toast.error('Enter a valid quantity'); return; }
+                        createBatch({
+                          animal_type: batchForm.animal_type.toLowerCase(),
+                          breed: batchForm.breed || null,
+                          batch_id: batchForm.batch_id,
+                          initial_quantity: qty,
+                          current_quantity: qty,
+                          arrival_date: batchForm.arrival_date,
+                          source: batchForm.source || null,
+                          notes: batchForm.notes || null,
+                        } as any);
+                        setIsDialogOpen(false);
+                        setBatchForm({ animal_type: 'chicken', breed: '', batch_id: '', initial_quantity: '', arrival_date: new Date().toISOString().split('T')[0], source: '', notes: '' });
+                      }}
+                    >
+                      {isCreatingBatch && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Batch
+                    </Button>
+                  </DialogFooter>
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
         </div>
