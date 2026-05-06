@@ -100,7 +100,8 @@ export function Livestock() {
     setSelectedAnimal(null);
   };
 
-  const totalAnimals = livestock.length;
+  const batchAnimalsTotal = batches.reduce((s, b) => s + (b.current_quantity || 0), 0);
+  const totalAnimals = livestock.length + batchAnimalsTotal;
   const healthyAnimals = livestock.filter(animal => animal.health_status === 'healthy').length;
   const needAttentionAnimals = livestock.filter(animal => animal.health_status === 'needs_attention' || animal.health_status === 'sick').length;
   const avgWeight = livestock.length > 0 
