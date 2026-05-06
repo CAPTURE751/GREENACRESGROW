@@ -50,7 +50,13 @@ export function Livestock() {
   const [selectedAnimal, setSelectedAnimal] = useState<any>(null);
   const [financialsAnimal, setFinancialsAnimal] = useState<any>(null);
   const { livestock, isLoading, createLivestock, updateLivestock, isCreating, isUpdating } = useLivestock();
-  
+  const { batches, createBatch, isCreating: isCreatingBatch } = useLivestockBatches();
+  const [addMode, setAddMode] = useState<'individual' | 'batch'>('individual');
+  const [batchForm, setBatchForm] = useState({
+    animal_type: 'chicken', breed: '', batch_id: '', initial_quantity: '',
+    arrival_date: new Date().toISOString().split('T')[0], source: '', notes: '',
+  });
+
   const filteredLivestock = livestock.filter(animal =>
     (animal.type?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
     (animal.breed?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
