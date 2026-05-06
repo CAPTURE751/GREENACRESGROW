@@ -4,14 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useLivestock } from "@/hooks/useLivestock";
+import { useLivestockBatches } from "@/hooks/useLivestockBatches";
 import { LivestockForm } from "@/components/LivestockForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { calculateAge } from "@/lib/age-calculator";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
 import { toast } from "sonner";
-import { 
+import {
   Plus, Search, Beef, Calendar, MapPin, Activity, Heart, Scale,
   Loader2, Baby, Download, Pencil, FileText, DollarSign,
 } from "lucide-react";
