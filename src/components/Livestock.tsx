@@ -43,19 +43,31 @@ const getTypeIcon = (type: string) => {
   }
 };
 
+const autoBatchId = (type: string, date: string) =>
+  `${(type || 'BATCH').toUpperCase().replace(/\s+/g, '')}${date}`;
+
 export function Livestock() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [healthLogOpen, setHealthLogOpen] = useState(false);
+  const [birthsOpen, setBirthsOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<any>(null);
   const [financialsAnimal, setFinancialsAnimal] = useState<any>(null);
+  const [financialsBatch, setFinancialsBatch] = useState<any>(null);
+  const [editBatch, setEditBatch] = useState<any>(null);
+  const [mortalityFor, setMortalityFor] = useState<string | null>(null);
+  const [mortalityCount, setMortalityCount] = useState('1');
+  const [feedFor, setFeedFor] = useState<string | null>(null);
+  const [feedAmount, setFeedAmount] = useState('');
+  const [feedUnit, setFeedUnit] = useState('kg');
   const { livestock, isLoading, createLivestock, updateLivestock, isCreating, isUpdating } = useLivestock();
-  const { batches, createBatch, isCreating: isCreatingBatch } = useLivestockBatches();
+  const { batches, createBatch, updateBatch, recordMortality, recordFeed, deleteBatch, isCreating: isCreatingBatch } = useLivestockBatches();
   const [addMode, setAddMode] = useState<'individual' | 'batch'>('individual');
+  const today = new Date().toISOString().split('T')[0];
   const [batchForm, setBatchForm] = useState({
-    animal_type: 'chicken', breed: '', batch_id: '', initial_quantity: '',
-    arrival_date: new Date().toISOString().split('T')[0], source: '', notes: '',
+    animal_type: 'chicken', breed: '', batch_id: autoBatchId('chicken', today), initial_quantity: '',
+    arrival_date: today, source: '', notes: '',
   });
 
   const filteredLivestock = livestock.filter(animal =>
