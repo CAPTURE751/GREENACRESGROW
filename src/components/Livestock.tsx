@@ -177,7 +177,10 @@ export function Livestock() {
                       <Label>Animal Type *</Label>
                       <Input
                         value={batchForm.animal_type}
-                        onChange={(e) => setBatchForm({ ...batchForm, animal_type: e.target.value })}
+                        onChange={(e) => {
+                          const t = e.target.value;
+                          setBatchForm({ ...batchForm, animal_type: t, batch_id: autoBatchId(t, batchForm.arrival_date) });
+                        }}
                         list="batch-animal-types"
                         placeholder="e.g. chicken, turkey, duck"
                       />
@@ -186,10 +189,13 @@ export function Livestock() {
                         <option value="quail" /><option value="rabbit" /><option value="goat" /><option value="sheep" />
                       </datalist>
                     </div>
-                    <div><Label>Batch ID *</Label><Input value={batchForm.batch_id} onChange={(e) => setBatchForm({ ...batchForm, batch_id: e.target.value })} placeholder="e.g. B-001" /></div>
+                    <div><Label>Batch ID * (auto)</Label><Input value={batchForm.batch_id} onChange={(e) => setBatchForm({ ...batchForm, batch_id: e.target.value })} placeholder="e.g. CHICKEN2026-05-09" /></div>
                     <div><Label>Breed</Label><Input value={batchForm.breed} onChange={(e) => setBatchForm({ ...batchForm, breed: e.target.value })} /></div>
                     <div><Label>Quantity *</Label><Input type="number" min="1" value={batchForm.initial_quantity} onChange={(e) => setBatchForm({ ...batchForm, initial_quantity: e.target.value })} /></div>
-                    <div><Label>Arrival Date</Label><Input type="date" value={batchForm.arrival_date} onChange={(e) => setBatchForm({ ...batchForm, arrival_date: e.target.value })} /></div>
+                    <div><Label>Arrival Date</Label><Input type="date" value={batchForm.arrival_date} onChange={(e) => {
+                      const d = e.target.value;
+                      setBatchForm({ ...batchForm, arrival_date: d, batch_id: autoBatchId(batchForm.animal_type, d) });
+                    }} /></div>
                     <div><Label>Source</Label><Input value={batchForm.source} onChange={(e) => setBatchForm({ ...batchForm, source: e.target.value })} /></div>
                     <div className="col-span-2"><Label>Notes</Label><Textarea value={batchForm.notes} onChange={(e) => setBatchForm({ ...batchForm, notes: e.target.value })} /></div>
                   </div>
