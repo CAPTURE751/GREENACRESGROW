@@ -13,12 +13,13 @@ import { useLivestock } from "@/hooks/useLivestock";
 import { useLivestockBatches } from "@/hooks/useLivestockBatches";
 import { LivestockForm } from "@/components/LivestockForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
+import { BirthsDialog } from "@/components/BirthsDialog";
 import { calculateAge } from "@/lib/age-calculator";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
 import { toast } from "sonner";
 import {
   Plus, Search, Beef, Calendar, MapPin, Activity, Heart, Scale,
-  Loader2, Baby, Download, Pencil, FileText, DollarSign,
+  Loader2, Baby, Download, Pencil, FileText, DollarSign, Skull, Wheat, Users,
 } from "lucide-react";
 
 
