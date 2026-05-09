@@ -555,6 +555,7 @@ export type Database = {
           gender: string | null
           health_status: string | null
           id: string
+          mother_id: string | null
           notes: string | null
           purchase_date: string | null
           purchase_price: number | null
@@ -576,6 +577,7 @@ export type Database = {
           gender?: string | null
           health_status?: string | null
           id?: string
+          mother_id?: string | null
           notes?: string | null
           purchase_date?: string | null
           purchase_price?: number | null
@@ -597,6 +599,7 @@ export type Database = {
           gender?: string | null
           health_status?: string | null
           id?: string
+          mother_id?: string | null
           notes?: string | null
           purchase_date?: string | null
           purchase_price?: number | null
@@ -669,6 +672,39 @@ export type Database = {
           notes?: string | null
           source?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      livestock_births: {
+        Row: {
+          birth_date: string
+          created_at: string
+          created_by: string
+          farm_id: string | null
+          id: string
+          mother_id: string
+          newborn_count: number
+          notes: string | null
+        }
+        Insert: {
+          birth_date?: string
+          created_at?: string
+          created_by: string
+          farm_id?: string | null
+          id?: string
+          mother_id: string
+          newborn_count?: number
+          notes?: string | null
+        }
+        Update: {
+          birth_date?: string
+          created_at?: string
+          created_by?: string
+          farm_id?: string | null
+          id?: string
+          mother_id?: string
+          newborn_count?: number
+          notes?: string | null
         }
         Relationships: []
       }
