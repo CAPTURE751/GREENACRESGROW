@@ -2,7 +2,6 @@
 import { Layout } from "@/components/Layout";
 import { Livestock } from "@/components/Livestock";
 import { LivestockProfitLoss } from "@/components/LivestockProfitLoss";
-import { LivestockBatches } from "@/components/LivestockBatches";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LivestockPage() {
@@ -15,7 +14,6 @@ export default function LivestockPage() {
         </TabsList>
         <TabsContent value="management" className="space-y-6">
           <Livestock />
-          <LivestockBatches />
         </TabsContent>
         <TabsContent value="pnl">
           <div className="space-y-4">
