@@ -382,32 +382,75 @@ export function Livestock() {
                   </div>
                 )}
                 
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setFinancialsAnimal(animal)}
-                  >
-                    <DollarSign className="h-3 w-3 mr-1" />
-                    Financials
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[90px]" onClick={() => setFinancialsAnimal(animal)}>
+                    <DollarSign className="h-3 w-3 mr-1" />Financials
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => { setSelectedAnimal(animal); setHealthLogOpen(true); }}
-                  >
-                    <FileText className="h-3 w-3 mr-1" />
-                    Health
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[90px]" onClick={() => { setSelectedAnimal(animal); setHealthLogOpen(true); }}>
+                    <FileText className="h-3 w-3 mr-1" />Health
                   </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-farm-barn hover:bg-farm-barn/90 text-white"
-                    onClick={() => { setSelectedAnimal(animal); setEditDialogOpen(true); }}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Edit
+                  {(animal.gender || '').toLowerCase() === 'female' && (
+                    <Button size="sm" variant="outline" className="flex-1 min-w-[90px]" onClick={() => { setSelectedAnimal(animal); setBirthsOpen(true); }}>
+                      <Baby className="h-3 w-3 mr-1" />Births
+                    </Button>
+                  )}
+                  <Button size="sm" className="flex-1 min-w-[90px] bg-farm-barn hover:bg-farm-barn/90 text-white" onClick={() => { setSelectedAnimal(animal); setEditDialogOpen(true); }}>
+                    <Pencil className="h-3 w-3 mr-1" />Edit
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Batch cards rendered alongside individual animals */}
+          {batches
+            .filter((b) =>
+              !searchTerm ||
+              b.animal_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              b.batch_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              (b.breed || '').toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .map((b) => (
+            <Card key={`batch-${b.id}`} className="hover:shadow-lg transition-shadow group border-farm-sage/40">
+              <div className="relative h-48 bg-gradient-to-br from-farm-sage to-farm-earth rounded-t-lg overflow-hidden flex items-center justify-center">
+                <div className="text-7xl">{getTypeIcon(b.animal_type)}</div>
+                <div className="absolute top-4 left-4">
+                  <Badge variant="secondary" className="font-mono text-xs">{b.batch_id}</Badge>
+                </div>
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-blue-100 text-blue-800">Batch</Badge>
+                </div>
+              </div>
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg capitalize">{b.animal_type}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{b.breed || '—'}</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{b.current_quantity} / {b.initial_quantity}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" /><span>Current: {b.current_quantity}</span></div>
+                  <div className="flex items-center gap-2"><Skull className="h-4 w-4 text-muted-foreground" /><span>Mortality: {b.mortality_count}</span></div>
+                  <div className="flex items-center gap-2"><Wheat className="h-4 w-4 text-muted-foreground" /><span>Feed: {b.feed_consumed || 0} {b.feed_unit || 'kg'}</span></div>
+                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /><span>{b.arrival_date}</span></div>
+                </div>
+                {b.source && <div className="text-xs text-muted-foreground">Source: {b.source}</div>}
+
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[80px]" onClick={() => setFinancialsBatch(b)}>
+                    <DollarSign className="h-3 w-3 mr-1" />Financials
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[80px]" onClick={() => { setFeedFor(b.id); setFeedUnit(b.feed_unit || 'kg'); }}>
+                    <Wheat className="h-3 w-3 mr-1" />Feed
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[80px]" onClick={() => setMortalityFor(b.id)}>
+                    <Skull className="h-3 w-3 mr-1" />Health
+                  </Button>
+                  <Button size="sm" className="flex-1 min-w-[80px] bg-farm-barn hover:bg-farm-barn/90 text-white" onClick={() => setEditBatch(b)}>
+                    <Pencil className="h-3 w-3 mr-1" />Edit
                   </Button>
                 </div>
               </CardContent>
