@@ -482,6 +482,95 @@ export function Livestock() {
           recordName={`${financialsAnimal.type}${financialsAnimal.breed ? ' - ' + financialsAnimal.breed : ''}`}
         />
       )}
+
+      {/* Batch financials */}
+      {financialsBatch && (
+        <LinkedTransactionDialog
+          open={!!financialsBatch}
+          onOpenChange={(open) => { if (!open) setFinancialsBatch(null); }}
+          module="livestock"
+          recordId={financialsBatch.id}
+          recordName={`${financialsBatch.animal_type} batch ${financialsBatch.batch_id}`}
+        />
+      )}
+
+      {/* Births dialog */}
+      <BirthsDialog open={birthsOpen} onOpenChange={(o) => { setBirthsOpen(o); if (!o) setSelectedAnimal(null); }} mother={selectedAnimal} />
+
+      {/* Mortality dialog */}
+      <Dialog open={!!mortalityFor} onOpenChange={(o) => !o && setMortalityFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record Mortality</DialogTitle></DialogHeader>
+          <Label>How many died?</Label>
+          <Input type="number" value={mortalityCount} onChange={(e) => setMortalityCount(e.target.value)} min="1" />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMortalityFor(null)}>Cancel</Button>
+            <Button onClick={() => {
+              if (mortalityFor) recordMortality({ id: mortalityFor, count: Number(mortalityCount) || 1 });
+              setMortalityFor(null); setMortalityCount('1');
+            }}>Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Feed dialog */}
+      <Dialog open={!!feedFor} onOpenChange={(o) => !o && setFeedFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record Feed</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Amount *</Label><Input type="number" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} min="0" step="0.01" /></div>
+            <div><Label>Unit</Label>
+              <Select value={feedUnit} onValueChange={setFeedUnit}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">kg</SelectItem>
+                  <SelectItem value="g">g</SelectItem>
+                  <SelectItem value="bag">bag</SelectItem>
+                  <SelectItem value="litre">litre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setFeedFor(null); setFeedAmount(''); }}>Cancel</Button>
+            <Button onClick={() => {
+              const amt = Number(feedAmount);
+              if (feedFor && amt > 0) recordFeed({ id: feedFor, amount: amt, unit: feedUnit });
+              setFeedFor(null); setFeedAmount('');
+            }}>Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit batch dialog */}
+      <Dialog open={!!editBatch} onOpenChange={(o) => { if (!o) setEditBatch(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Batch</DialogTitle></DialogHeader>
+          {editBatch && (
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Animal Type</Label><Input value={editBatch.animal_type} onChange={(e) => setEditBatch({ ...editBatch, animal_type: e.target.value })} /></div>
+              <div><Label>Batch ID</Label><Input value={editBatch.batch_id} onChange={(e) => setEditBatch({ ...editBatch, batch_id: e.target.value })} /></div>
+              <div><Label>Breed</Label><Input value={editBatch.breed || ''} onChange={(e) => setEditBatch({ ...editBatch, breed: e.target.value })} /></div>
+              <div><Label>Current Quantity</Label><Input type="number" value={editBatch.current_quantity} onChange={(e) => setEditBatch({ ...editBatch, current_quantity: Number(e.target.value) })} /></div>
+              <div><Label>Arrival Date</Label><Input type="date" value={editBatch.arrival_date} onChange={(e) => setEditBatch({ ...editBatch, arrival_date: e.target.value })} /></div>
+              <div><Label>Source</Label><Input value={editBatch.source || ''} onChange={(e) => setEditBatch({ ...editBatch, source: e.target.value })} /></div>
+              <div className="col-span-2"><Label>Notes</Label><Textarea value={editBatch.notes || ''} onChange={(e) => setEditBatch({ ...editBatch, notes: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" className="text-destructive mr-auto" onClick={() => {
+              if (editBatch && confirm('Delete this batch?')) { deleteBatch(editBatch.id); setEditBatch(null); }
+            }}>Delete</Button>
+            <Button variant="outline" onClick={() => setEditBatch(null)}>Cancel</Button>
+            <Button onClick={() => {
+              if (!editBatch) return;
+              const { id, animal_type, batch_id, breed, current_quantity, arrival_date, source, notes } = editBatch;
+              updateBatch({ id, updates: { animal_type, batch_id, breed, current_quantity, arrival_date, source, notes } });
+              setEditBatch(null);
+            }}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
