@@ -134,6 +134,7 @@ export function useLivestockBatches() {
   return {
     batches, isLoading,
     createBatch: createBatch.mutate, isCreating: createBatch.isPending,
+    updateBatch: updateBatch.mutate, isUpdating: updateBatch.isPending,
     recordMortality: recordMortality.mutate,
     recordFeed: recordFeed.mutate,
     deleteBatch: deleteBatch.mutate,
