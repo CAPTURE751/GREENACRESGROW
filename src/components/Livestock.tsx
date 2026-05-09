@@ -217,7 +217,8 @@ export function Livestock() {
                           notes: batchForm.notes || null,
                         } as any);
                         setIsDialogOpen(false);
-                        setBatchForm({ animal_type: 'chicken', breed: '', batch_id: '', initial_quantity: '', arrival_date: new Date().toISOString().split('T')[0], source: '', notes: '' });
+                        const nd = new Date().toISOString().split('T')[0];
+                        setBatchForm({ animal_type: 'chicken', breed: '', batch_id: autoBatchId('chicken', nd), initial_quantity: '', arrival_date: nd, source: '', notes: '' });
                       }}
                     >
                       {isCreatingBatch && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
