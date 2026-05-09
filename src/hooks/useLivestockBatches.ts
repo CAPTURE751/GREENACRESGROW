@@ -97,6 +97,19 @@ export function useLivestockBatches() {
     onError: (e: any) => toast({ variant: 'destructive', title: 'Error', description: e.message }),
   });
 
+  const updateBatch = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<LivestockBatch> }) => {
+      const { error } = await (supabase as any).from('livestock_batches')
+        .update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['livestock_batches'] });
+      toast({ title: 'Batch updated' });
+    },
+    onError: (e: any) => toast({ variant: 'destructive', title: 'Error', description: e.message }),
+  });
+
   const deleteBatch = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await (supabase as any).from('livestock_batches').delete().eq('id', id);
@@ -121,6 +134,7 @@ export function useLivestockBatches() {
   return {
     batches, isLoading,
     createBatch: createBatch.mutate, isCreating: createBatch.isPending,
+    updateBatch: updateBatch.mutate, isUpdating: updateBatch.isPending,
     recordMortality: recordMortality.mutate,
     recordFeed: recordFeed.mutate,
     deleteBatch: deleteBatch.mutate,

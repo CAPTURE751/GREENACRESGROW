@@ -13,12 +13,13 @@ import { useLivestock } from "@/hooks/useLivestock";
 import { useLivestockBatches } from "@/hooks/useLivestockBatches";
 import { LivestockForm } from "@/components/LivestockForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
+import { BirthsDialog } from "@/components/BirthsDialog";
 import { calculateAge } from "@/lib/age-calculator";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
 import { toast } from "sonner";
 import {
   Plus, Search, Beef, Calendar, MapPin, Activity, Heart, Scale,
-  Loader2, Baby, Download, Pencil, FileText, DollarSign,
+  Loader2, Baby, Download, Pencil, FileText, DollarSign, Skull, Wheat, Users,
 } from "lucide-react";
 
 
@@ -42,19 +43,31 @@ const getTypeIcon = (type: string) => {
   }
 };
 
+const autoBatchId = (type: string, date: string) =>
+  `${(type || 'BATCH').toUpperCase().replace(/\s+/g, '')}${date}`;
+
 export function Livestock() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [healthLogOpen, setHealthLogOpen] = useState(false);
+  const [birthsOpen, setBirthsOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<any>(null);
   const [financialsAnimal, setFinancialsAnimal] = useState<any>(null);
+  const [financialsBatch, setFinancialsBatch] = useState<any>(null);
+  const [editBatch, setEditBatch] = useState<any>(null);
+  const [mortalityFor, setMortalityFor] = useState<string | null>(null);
+  const [mortalityCount, setMortalityCount] = useState('1');
+  const [feedFor, setFeedFor] = useState<string | null>(null);
+  const [feedAmount, setFeedAmount] = useState('');
+  const [feedUnit, setFeedUnit] = useState('kg');
   const { livestock, isLoading, createLivestock, updateLivestock, isCreating, isUpdating } = useLivestock();
-  const { batches, createBatch, isCreating: isCreatingBatch } = useLivestockBatches();
+  const { batches, createBatch, updateBatch, recordMortality, recordFeed, deleteBatch, isCreating: isCreatingBatch } = useLivestockBatches();
   const [addMode, setAddMode] = useState<'individual' | 'batch'>('individual');
+  const today = new Date().toISOString().split('T')[0];
   const [batchForm, setBatchForm] = useState({
-    animal_type: 'chicken', breed: '', batch_id: '', initial_quantity: '',
-    arrival_date: new Date().toISOString().split('T')[0], source: '', notes: '',
+    animal_type: 'chicken', breed: '', batch_id: autoBatchId('chicken', today), initial_quantity: '',
+    arrival_date: today, source: '', notes: '',
   });
 
   const filteredLivestock = livestock.filter(animal =>
@@ -164,7 +177,10 @@ export function Livestock() {
                       <Label>Animal Type *</Label>
                       <Input
                         value={batchForm.animal_type}
-                        onChange={(e) => setBatchForm({ ...batchForm, animal_type: e.target.value })}
+                        onChange={(e) => {
+                          const t = e.target.value;
+                          setBatchForm({ ...batchForm, animal_type: t, batch_id: autoBatchId(t, batchForm.arrival_date) });
+                        }}
                         list="batch-animal-types"
                         placeholder="e.g. chicken, turkey, duck"
                       />
@@ -173,10 +189,13 @@ export function Livestock() {
                         <option value="quail" /><option value="rabbit" /><option value="goat" /><option value="sheep" />
                       </datalist>
                     </div>
-                    <div><Label>Batch ID *</Label><Input value={batchForm.batch_id} onChange={(e) => setBatchForm({ ...batchForm, batch_id: e.target.value })} placeholder="e.g. B-001" /></div>
+                    <div><Label>Batch ID * (auto)</Label><Input value={batchForm.batch_id} onChange={(e) => setBatchForm({ ...batchForm, batch_id: e.target.value })} placeholder="e.g. CHICKEN2026-05-09" /></div>
                     <div><Label>Breed</Label><Input value={batchForm.breed} onChange={(e) => setBatchForm({ ...batchForm, breed: e.target.value })} /></div>
                     <div><Label>Quantity *</Label><Input type="number" min="1" value={batchForm.initial_quantity} onChange={(e) => setBatchForm({ ...batchForm, initial_quantity: e.target.value })} /></div>
-                    <div><Label>Arrival Date</Label><Input type="date" value={batchForm.arrival_date} onChange={(e) => setBatchForm({ ...batchForm, arrival_date: e.target.value })} /></div>
+                    <div><Label>Arrival Date</Label><Input type="date" value={batchForm.arrival_date} onChange={(e) => {
+                      const d = e.target.value;
+                      setBatchForm({ ...batchForm, arrival_date: d, batch_id: autoBatchId(batchForm.animal_type, d) });
+                    }} /></div>
                     <div><Label>Source</Label><Input value={batchForm.source} onChange={(e) => setBatchForm({ ...batchForm, source: e.target.value })} /></div>
                     <div className="col-span-2"><Label>Notes</Label><Textarea value={batchForm.notes} onChange={(e) => setBatchForm({ ...batchForm, notes: e.target.value })} /></div>
                   </div>
@@ -198,7 +217,8 @@ export function Livestock() {
                           notes: batchForm.notes || null,
                         } as any);
                         setIsDialogOpen(false);
-                        setBatchForm({ animal_type: 'chicken', breed: '', batch_id: '', initial_quantity: '', arrival_date: new Date().toISOString().split('T')[0], source: '', notes: '' });
+                        const nd = new Date().toISOString().split('T')[0];
+                        setBatchForm({ animal_type: 'chicken', breed: '', batch_id: autoBatchId('chicken', nd), initial_quantity: '', arrival_date: nd, source: '', notes: '' });
                       }}
                     >
                       {isCreatingBatch && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -362,32 +382,75 @@ export function Livestock() {
                   </div>
                 )}
                 
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setFinancialsAnimal(animal)}
-                  >
-                    <DollarSign className="h-3 w-3 mr-1" />
-                    Financials
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[90px]" onClick={() => setFinancialsAnimal(animal)}>
+                    <DollarSign className="h-3 w-3 mr-1" />Financials
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => { setSelectedAnimal(animal); setHealthLogOpen(true); }}
-                  >
-                    <FileText className="h-3 w-3 mr-1" />
-                    Health
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[90px]" onClick={() => { setSelectedAnimal(animal); setHealthLogOpen(true); }}>
+                    <FileText className="h-3 w-3 mr-1" />Health
                   </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-farm-barn hover:bg-farm-barn/90 text-white"
-                    onClick={() => { setSelectedAnimal(animal); setEditDialogOpen(true); }}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Edit
+                  {(animal.gender || '').toLowerCase() === 'female' && (
+                    <Button size="sm" variant="outline" className="flex-1 min-w-[90px]" onClick={() => { setSelectedAnimal(animal); setBirthsOpen(true); }}>
+                      <Baby className="h-3 w-3 mr-1" />Births
+                    </Button>
+                  )}
+                  <Button size="sm" className="flex-1 min-w-[90px] bg-farm-barn hover:bg-farm-barn/90 text-white" onClick={() => { setSelectedAnimal(animal); setEditDialogOpen(true); }}>
+                    <Pencil className="h-3 w-3 mr-1" />Edit
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Batch cards rendered alongside individual animals */}
+          {batches
+            .filter((b) =>
+              !searchTerm ||
+              b.animal_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              b.batch_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              (b.breed || '').toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .map((b) => (
+            <Card key={`batch-${b.id}`} className="hover:shadow-lg transition-shadow group border-farm-sage/40">
+              <div className="relative h-48 bg-gradient-to-br from-farm-sage to-farm-earth rounded-t-lg overflow-hidden flex items-center justify-center">
+                <div className="text-7xl">{getTypeIcon(b.animal_type)}</div>
+                <div className="absolute top-4 left-4">
+                  <Badge variant="secondary" className="font-mono text-xs">{b.batch_id}</Badge>
+                </div>
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-blue-100 text-blue-800">Batch</Badge>
+                </div>
+              </div>
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg capitalize">{b.animal_type}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{b.breed || '—'}</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs">{b.current_quantity} / {b.initial_quantity}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2"><Users className="h-4 w-4 text-muted-foreground" /><span>Current: {b.current_quantity}</span></div>
+                  <div className="flex items-center gap-2"><Skull className="h-4 w-4 text-muted-foreground" /><span>Mortality: {b.mortality_count}</span></div>
+                  <div className="flex items-center gap-2"><Wheat className="h-4 w-4 text-muted-foreground" /><span>Feed: {b.feed_consumed || 0} {b.feed_unit || 'kg'}</span></div>
+                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /><span>{b.arrival_date}</span></div>
+                </div>
+                {b.source && <div className="text-xs text-muted-foreground">Source: {b.source}</div>}
+
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[80px]" onClick={() => setFinancialsBatch(b)}>
+                    <DollarSign className="h-3 w-3 mr-1" />Financials
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[80px]" onClick={() => { setFeedFor(b.id); setFeedUnit(b.feed_unit || 'kg'); }}>
+                    <Wheat className="h-3 w-3 mr-1" />Feed
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex-1 min-w-[80px]" onClick={() => setMortalityFor(b.id)}>
+                    <Skull className="h-3 w-3 mr-1" />Health
+                  </Button>
+                  <Button size="sm" className="flex-1 min-w-[80px] bg-farm-barn hover:bg-farm-barn/90 text-white" onClick={() => setEditBatch(b)}>
+                    <Pencil className="h-3 w-3 mr-1" />Edit
                   </Button>
                 </div>
               </CardContent>
@@ -419,6 +482,95 @@ export function Livestock() {
           recordName={`${financialsAnimal.type}${financialsAnimal.breed ? ' - ' + financialsAnimal.breed : ''}`}
         />
       )}
+
+      {/* Batch financials */}
+      {financialsBatch && (
+        <LinkedTransactionDialog
+          open={!!financialsBatch}
+          onOpenChange={(open) => { if (!open) setFinancialsBatch(null); }}
+          module="livestock"
+          recordId={financialsBatch.id}
+          recordName={`${financialsBatch.animal_type} batch ${financialsBatch.batch_id}`}
+        />
+      )}
+
+      {/* Births dialog */}
+      <BirthsDialog open={birthsOpen} onOpenChange={(o) => { setBirthsOpen(o); if (!o) setSelectedAnimal(null); }} mother={selectedAnimal} />
+
+      {/* Mortality dialog */}
+      <Dialog open={!!mortalityFor} onOpenChange={(o) => !o && setMortalityFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record Mortality</DialogTitle></DialogHeader>
+          <Label>How many died?</Label>
+          <Input type="number" value={mortalityCount} onChange={(e) => setMortalityCount(e.target.value)} min="1" />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMortalityFor(null)}>Cancel</Button>
+            <Button onClick={() => {
+              if (mortalityFor) recordMortality({ id: mortalityFor, count: Number(mortalityCount) || 1 });
+              setMortalityFor(null); setMortalityCount('1');
+            }}>Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Feed dialog */}
+      <Dialog open={!!feedFor} onOpenChange={(o) => !o && setFeedFor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record Feed</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Amount *</Label><Input type="number" value={feedAmount} onChange={(e) => setFeedAmount(e.target.value)} min="0" step="0.01" /></div>
+            <div><Label>Unit</Label>
+              <Select value={feedUnit} onValueChange={setFeedUnit}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">kg</SelectItem>
+                  <SelectItem value="g">g</SelectItem>
+                  <SelectItem value="bag">bag</SelectItem>
+                  <SelectItem value="litre">litre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setFeedFor(null); setFeedAmount(''); }}>Cancel</Button>
+            <Button onClick={() => {
+              const amt = Number(feedAmount);
+              if (feedFor && amt > 0) recordFeed({ id: feedFor, amount: amt, unit: feedUnit });
+              setFeedFor(null); setFeedAmount('');
+            }}>Record</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit batch dialog */}
+      <Dialog open={!!editBatch} onOpenChange={(o) => { if (!o) setEditBatch(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Batch</DialogTitle></DialogHeader>
+          {editBatch && (
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Animal Type</Label><Input value={editBatch.animal_type} onChange={(e) => setEditBatch({ ...editBatch, animal_type: e.target.value })} /></div>
+              <div><Label>Batch ID</Label><Input value={editBatch.batch_id} onChange={(e) => setEditBatch({ ...editBatch, batch_id: e.target.value })} /></div>
+              <div><Label>Breed</Label><Input value={editBatch.breed || ''} onChange={(e) => setEditBatch({ ...editBatch, breed: e.target.value })} /></div>
+              <div><Label>Current Quantity</Label><Input type="number" value={editBatch.current_quantity} onChange={(e) => setEditBatch({ ...editBatch, current_quantity: Number(e.target.value) })} /></div>
+              <div><Label>Arrival Date</Label><Input type="date" value={editBatch.arrival_date} onChange={(e) => setEditBatch({ ...editBatch, arrival_date: e.target.value })} /></div>
+              <div><Label>Source</Label><Input value={editBatch.source || ''} onChange={(e) => setEditBatch({ ...editBatch, source: e.target.value })} /></div>
+              <div className="col-span-2"><Label>Notes</Label><Textarea value={editBatch.notes || ''} onChange={(e) => setEditBatch({ ...editBatch, notes: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" className="text-destructive mr-auto" onClick={() => {
+              if (editBatch && confirm('Delete this batch?')) { deleteBatch(editBatch.id); setEditBatch(null); }
+            }}>Delete</Button>
+            <Button variant="outline" onClick={() => setEditBatch(null)}>Cancel</Button>
+            <Button onClick={() => {
+              if (!editBatch) return;
+              const { id, animal_type, batch_id, breed, current_quantity, arrival_date, source, notes } = editBatch;
+              updateBatch({ id, updates: { animal_type, batch_id, breed, current_quantity, arrival_date, source, notes } });
+              setEditBatch(null);
+            }}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
