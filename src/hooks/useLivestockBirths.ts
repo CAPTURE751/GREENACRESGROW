@@ -136,6 +136,7 @@ export function useLivestockBirths(motherId?: string) {
   return {
     births, isLoading,
     recordBirth: recordBirth.mutate, isRecording: recordBirth.isPending,
+    updateBirth: updateBirth.mutate, isUpdating: updateBirth.isPending,
     deleteBirth: deleteBirth.mutate,
   };
 }
