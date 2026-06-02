@@ -20,6 +20,7 @@ import { UserSettings } from "@/components/settings/UserSettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
+import { BackupRestore } from "@/components/BackupRestore";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
@@ -83,34 +84,7 @@ export default function Settings() {
 
             {activeTab === 'appearance' && <AppearanceSettings />}
 
-            {activeTab === 'backup' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Backup & Restore</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 border rounded-lg bg-blue-50">
-                    <p className="font-medium mb-2">Last Backup</p>
-                    <p className="text-sm text-muted-foreground">January 15, 2024 at 2:30 PM</p>
-                  </div>
-                  <div className="flex gap-4">
-                    <Button className="flex-1">
-                      <Download className="h-4 w-4 mr-2" />
-                      Create Backup
-                    </Button>
-                    <Button variant="outline" className="flex-1">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Restore Backup
-                    </Button>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <p className="font-medium mb-2">Auto Backup</p>
-                    <p className="text-sm text-muted-foreground mb-2">Automatically backup data daily</p>
-                    <input type="checkbox" defaultChecked className="toggle" />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {activeTab === 'backup' && <BackupRestore />}
           </div>
         </div>
       </div>
