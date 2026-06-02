@@ -15,6 +15,19 @@ export interface LivestockBirth {
   created_at: string;
 }
 
+interface RecordBirthInput {
+  mother_id: string;
+  birth_date: string;
+  males: number;
+  females: number;
+  notes?: string | null;
+  mother_type: string;
+  mother_breed?: string | null;
+  farm_location: string;
+  mother_tag?: string | null;
+  tag_prefix?: string;
+}
+
 export function useLivestockBirths(motherId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -34,47 +47,47 @@ export function useLivestockBirths(motherId?: string) {
   });
 
   const recordBirth = useMutation({
-    mutationFn: async (input: {
-      mother_id: string;
-      birth_date: string;
-      newborn_count: number;
-      notes?: string | null;
-      mother_type: string;
-      mother_breed?: string | null;
-      farm_location: string;
-      tag_prefix?: string;
-    }) => {
+    mutationFn: async (input: RecordBirthInput) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
+
+      const total = (input.males || 0) + (input.females || 0);
+      if (total < 1) throw new Error('At least one newborn required');
 
       // Insert birth event
       const { data: birth, error: bErr } = await (supabase as any)
         .from('livestock_births').insert({
           mother_id: input.mother_id,
           birth_date: input.birth_date,
-          newborn_count: input.newborn_count,
+          newborn_count: total,
           notes: input.notes ?? null,
           farm_id: activeFarm?.id,
           created_by: user.id,
         }).select().single();
       if (bErr) throw bErr;
 
-      // Auto-create newborn livestock records
-      const rows = Array.from({ length: input.newborn_count }).map((_, i) => ({
+      // Tag base: prefer mother tag, then prefix, then NB
+      const base = (input.mother_tag || input.tag_prefix || 'NB').trim();
+
+      const buildRow = (gender: 'male' | 'female', idx: number) => ({
         type: input.mother_type,
         breed: input.mother_breed ?? null,
         farm_location: input.farm_location,
         date_of_birth_on_farm: input.birth_date,
         date_of_birth: input.birth_date,
         health_status: 'healthy',
+        gender,
         mother_id: input.mother_id,
-        tag_number: input.tag_prefix
-          ? `${input.tag_prefix}-${input.birth_date.replace(/-/g, '')}-${i + 1}`
-          : null,
+        tag_number: `${base}-${gender === 'male' ? 'M' : 'F'}-${idx}`,
         notes: `Born on farm to mother (birth event ${birth.id})`,
         farm_id: activeFarm?.id,
         created_by: user.id,
-      }));
+      });
+
+      const rows = [
+        ...Array.from({ length: input.males }).map((_, i) => buildRow('male', i + 1)),
+        ...Array.from({ length: input.females }).map((_, i) => buildRow('female', i + 1)),
+      ];
       const { error: lErr } = await supabase.from('livestock').insert(rows as any);
       if (lErr) throw lErr;
       return birth;
@@ -83,6 +96,18 @@ export function useLivestockBirths(motherId?: string) {
       queryClient.invalidateQueries({ queryKey: ['livestock_births'] });
       queryClient.invalidateQueries({ queryKey: ['livestock'] });
       toast({ title: 'Birth recorded', description: 'Newborns added to total animals.' });
+    },
+    onError: (e: any) => toast({ variant: 'destructive', title: 'Error', description: e.message }),
+  });
+
+  const updateBirth = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Pick<LivestockBirth, 'birth_date' | 'newborn_count' | 'notes'>> }) => {
+      const { error } = await (supabase as any).from('livestock_births').update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['livestock_births'] });
+      toast({ title: 'Birth updated' });
     },
     onError: (e: any) => toast({ variant: 'destructive', title: 'Error', description: e.message }),
   });
