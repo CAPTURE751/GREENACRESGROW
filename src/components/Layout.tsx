@@ -1,14 +1,15 @@
 
-import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
+import { useAutoBackup } from "@/hooks/useAutoBackup";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  useAutoBackup();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
