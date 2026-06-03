@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +24,14 @@ import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { BackupRestore } from "@/components/BackupRestore";
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('general');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'general');
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t) setActiveTab(t);
+  }, [searchParams]);
+
 
   const tabs = [
     { id: 'general', name: 'General', icon: SettingsIcon },
