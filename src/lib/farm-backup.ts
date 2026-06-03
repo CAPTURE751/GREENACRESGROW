@@ -49,29 +49,52 @@ export function downloadBackup(backup: FarmBackup) {
 
 export async function importFarmData(file: File, targetFarmId: string): Promise<{ imported: number; skipped: number; errors: string[] }> {
   const text = await file.text();
-  const backup: FarmBackup = JSON.parse(text);
-  if (!backup.data || !backup.version) throw new Error('Invalid backup file');
+  let parsed: any;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error('File is not valid JSON');
+  }
+
+  // Lenient: accept { version, data: {...} }, { data: {...} }, or a flat object of table arrays
+  let data: Record<string, any[]> | null = null;
+  if (parsed?.data && typeof parsed.data === 'object') {
+    data = parsed.data;
+  } else if (parsed && typeof parsed === 'object') {
+    const maybe: Record<string, any[]> = {};
+    for (const t of TABLES) if (Array.isArray(parsed[t])) maybe[t] = parsed[t];
+    if (Object.keys(maybe).length > 0) data = maybe;
+  }
+  if (!data) throw new Error('Unrecognized backup format. Expected a JSON file exported from Farm Backup.');
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
   let imported = 0; let skipped = 0; const errors: string[] = [];
 
-  // Strip id/created_at/updated_at and computed columns, remap farm_id & created_by
-  const sanitize = (row: any, table: string) => {
-    const { id, created_at, updated_at, last_updated, total_amount, total_cost, ...rest } = row;
-    const out: any = { ...rest, farm_id: targetFarmId, created_by: user.id };
-    return out;
+  const sanitize = (row: any) => {
+    const { created_at, updated_at, last_updated, total_amount, total_cost, ...rest } = row;
+    return { ...rest, farm_id: targetFarmId, created_by: user.id };
   };
 
   for (const table of TABLES) {
-    const rows = backup.data[table] || [];
+    const rows = Array.isArray(data[table]) ? data[table] : [];
     if (rows.length === 0) continue;
-    const payload = rows.map((r) => sanitize(r, table));
-    const { error } = await (supabase as any).from(table).insert(payload);
+    const payload = rows.map(sanitize);
+    // Upsert so duplicates (same id) are skipped, not overwritten
+    const { error } = await (supabase as any)
+      .from(table)
+      .upsert(payload, { onConflict: 'id', ignoreDuplicates: true });
     if (error) {
-      errors.push(`${table}: ${error.message}`);
-      skipped += rows.length;
+      // Fallback: drop ids and insert fresh copies so the rest still imports
+      const stripped = payload.map(({ id, ...r }: any) => r);
+      const ins = await (supabase as any).from(table).insert(stripped);
+      if (ins.error) {
+        errors.push(`${table}: ${ins.error.message}`);
+        skipped += rows.length;
+      } else {
+        imported += rows.length;
+      }
     } else {
       imported += rows.length;
     }
