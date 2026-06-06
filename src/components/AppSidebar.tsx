@@ -13,7 +13,8 @@ import {
   Calculator,
   Package,
   BookOpen,
-  Receipt
+  Receipt,
+  PieChart
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -42,6 +43,7 @@ const navigationItems = [
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Budget Simulator", url: "/budget-simulator", icon: Calculator },
+  { title: "Profit Distribution", url: "/profit-distribution", icon: PieChart },
   { title: "Users", url: "/users", icon: Users },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
