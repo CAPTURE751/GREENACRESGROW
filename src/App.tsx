@@ -22,6 +22,7 @@ import BudgetSimulator from "./pages/BudgetSimulator";
 import Inventory from "./pages/Inventory";
 import Notebook from "./pages/Notebook";
 import Expenses from "./pages/Expenses";
+import ProfitDistribution from "./pages/ProfitDistribution";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -99,6 +100,9 @@ const App = () => (
             } />
             <Route path="/expenses" element={
               <ProtectedRoute allowedRoles={['admin', 'staff']}><Expenses /></ProtectedRoute>
+            } />
+            <Route path="/profit-distribution" element={
+              <ProtectedRoute allowedRoles={['admin', 'staff']}><ProfitDistribution /></ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
