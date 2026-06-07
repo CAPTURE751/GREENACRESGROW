@@ -200,6 +200,7 @@ export async function exportCalendarToPDF(tasks: CalendarTask[]) {
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - 14, pageHeight - 10, { align: "right" });
   }
 
+  await applySignature(doc, "calendar");
   const fileName = await farmFileName("Calendar-Report", "pdf");
   doc.save(fileName);
 }
