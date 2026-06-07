@@ -13,7 +13,8 @@ import {
   Palette,
   Download,
   Upload,
-  Save
+  Save,
+  PenLine
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
@@ -22,6 +23,7 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { BackupRestore } from "@/components/BackupRestore";
+import { SignatureSettings } from "@/components/settings/SignatureSettings";
 
 export default function Settings() {
   const [searchParams] = useSearchParams();
@@ -39,6 +41,7 @@ export default function Settings() {
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'security', name: 'Security', icon: Shield },
     { id: 'backup', name: 'Backup', icon: Database },
+    { id: 'signature', name: 'Signature', icon: PenLine },
     { id: 'appearance', name: 'Appearance', icon: Palette },
   ];
 
@@ -93,6 +96,8 @@ export default function Settings() {
             {activeTab === 'appearance' && <AppearanceSettings />}
 
             {activeTab === 'backup' && <BackupRestore />}
+
+            {activeTab === 'signature' && <SignatureSettings />}
           </div>
         </div>
       </div>

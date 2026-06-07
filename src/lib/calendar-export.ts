@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { farmFileName } from "./report-export";
 import { getFarmSettings } from "./farm-settings-cache";
+import { applySignature } from "./pdf-branding";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
 
 interface CalendarTask {
@@ -199,6 +200,7 @@ export async function exportCalendarToPDF(tasks: CalendarTask[]) {
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - 14, pageHeight - 10, { align: "right" });
   }
 
+  await applySignature(doc, "calendar");
   const fileName = await farmFileName("Calendar-Report", "pdf");
   doc.save(fileName);
 }
