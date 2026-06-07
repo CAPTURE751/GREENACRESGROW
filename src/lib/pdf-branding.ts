@@ -163,7 +163,7 @@ export async function applySignature(doc: jsPDF, reportType?: string) {
   if (s.signerTitle) {
     doc.setFont("helvetica", "italic"); doc.setFontSize(7); doc.setTextColor(110, 110, 110);
     doc.text(s.signerTitle, labelX, baseY + h + 9, { align: labelAlign as any });
+  }
 }
 
 export const BRAND_HEADER_COLOR = HEADER_COLOR;
-}
