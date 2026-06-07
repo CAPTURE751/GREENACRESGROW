@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
 import { getFarmSettings } from "./farm-settings-cache";
+import { getSignatureSettings, isSignatureEnabledFor } from "./signature-store";
 
 const HEADER_COLOR: [number, number, number] = [76, 111, 60];
 
