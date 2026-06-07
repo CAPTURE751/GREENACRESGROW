@@ -4,6 +4,7 @@ import { formatKES } from "./currency";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
 import { getFarmSettings } from "./farm-settings-cache";
 import { farmFileName } from "./report-export";
+import { applySignature } from "./pdf-branding";
 
 function loadImageAsBase64(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
