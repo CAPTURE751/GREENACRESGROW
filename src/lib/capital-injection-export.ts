@@ -124,5 +124,6 @@ export async function exportCapitalInjectionsPDF(
     doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
   }
 
+  await applySignature(doc, "capital-injections");
   doc.save(await farmFileName('Capital-Injections', 'pdf'));
 }
