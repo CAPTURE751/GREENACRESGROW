@@ -481,6 +481,16 @@ export default function ProfitDistribution() {
                             <Badge variant="destructive">Below Break-Even</Badge>
                           )}
                         </TableCell>
+                        <TableCell className="text-right">
+                          {p.profit > 0 ? (
+                            <Button size="sm" variant="outline" onClick={() => setSelectedProject(p)}>
+                              <PieIcon className="h-3.5 w-3.5 mr-1" /> Distribution
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+
                       </TableRow>
                     ))}
                   </TableBody>
