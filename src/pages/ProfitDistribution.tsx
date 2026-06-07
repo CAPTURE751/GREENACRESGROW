@@ -450,14 +450,16 @@ export default function ProfitDistribution() {
                       <TableHead className="text-right">Margin</TableHead>
                       <TableHead className="text-right">ROI</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {projects.length === 0 && (
-                      <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                      <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                         No projects yet. Add crops or livestock to see analytics.
                       </TableCell></TableRow>
                     )}
+
                     {projects.map((p) => (
                       <TableRow key={`${p.kind}-${p.id}`}>
                         <TableCell>
