@@ -23,6 +23,7 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { BackupRestore } from "@/components/BackupRestore";
+import { SignatureSettings } from "@/components/settings/SignatureSettings";
 
 export default function Settings() {
   const [searchParams] = useSearchParams();
