@@ -13,7 +13,8 @@ import {
   Palette,
   Download,
   Upload,
-  Save
+  Save,
+  PenLine
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
