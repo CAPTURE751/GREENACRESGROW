@@ -117,3 +117,51 @@ export function exportProjectsCSV(projects: ProjectMetrics[]) {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+export async function exportProjectDistributionPDF(opts: {
+  project: ProjectMetrics;
+  buckets: DistributionBucket[];
+}) {
+  const { project, buckets } = opts;
+  const doc = new jsPDF();
+  let y = await applyBrandedHeader(doc, {
+    title: `Profit Distribution — ${project.name}`,
+    subtitle: `${project.kind.toUpperCase()}${project.meta ? ` · ${project.meta}` : ""}`,
+    filters: "Analytics only — no records were modified",
+  });
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Metric", "Value"]],
+    body: [
+      ["Revenue", formatKES(project.revenue)],
+      ["Expenses", formatKES(project.expenses)],
+      ["Net Profit", formatKES(project.profit)],
+      ["Profit Margin", `${project.margin.toFixed(1)}%`],
+      ["ROI", `${project.roi.toFixed(1)}%`],
+      ["Status", project.profit > 0 ? "Profitable" : "Below break-even"],
+    ],
+    theme: "grid",
+    headStyles: { fillColor: [76, 111, 60] },
+  });
+
+  const finalY = (doc as any).lastAutoTable?.finalY || y;
+  if (project.profit > 0) {
+    autoTable(doc, {
+      startY: finalY + 10,
+      head: [["Bucket", "Allocation %", "Projected Amount"]],
+      body: distribute(project.profit, buckets).map((b) => [
+        b.label, `${b.percent.toFixed(1)}%`, formatKES(b.amount),
+      ]),
+      theme: "striped",
+      headStyles: { fillColor: [76, 111, 60] },
+    });
+  } else {
+    doc.setFontSize(11);
+    doc.text("Project not profitable — no distribution available.", 14, finalY + 14);
+  }
+
+  await applyBrandedFooter(doc);
+  doc.save(`profit-distribution-${project.name.replace(/[^a-z0-9]+/gi, "-")}-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
