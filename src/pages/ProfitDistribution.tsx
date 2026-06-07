@@ -27,7 +27,10 @@ import {
   buildProjects, computeProjectMetrics, distribute, equalSplit,
   DEFAULT_BUCKETS, type DistributionBucket, type Scenario,
 } from "@/lib/profit-analytics";
-import { exportProfitDistributionPDF, exportProjectsCSV } from "@/lib/profit-distribution-export";
+import { exportProfitDistributionPDF, exportProjectsCSV, exportProjectDistributionPDF } from "@/lib/profit-distribution-export";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import type { ProjectMetrics } from "@/lib/profit-analytics";
+
 import { useToast } from "@/hooks/use-toast";
 
 const COLORS = ["hsl(var(--primary))", "#f59e0b", "#3b82f6", "#ef4444", "#8b5cf6", "#14b8a6", "#ec4899", "#84cc16", "#f97316", "#6366f1"];
@@ -107,6 +110,14 @@ export default function ProfitDistribution() {
   const [forecastExpenses, setForecastExpenses] = useState<number>(0);
   const forecastProfit = forecastRevenue - forecastExpenses;
   const forecastDist = distribute(forecastProfit, buckets);
+
+  // Per-project distribution dialog
+  const [selectedProject, setSelectedProject] = useState<ProjectMetrics | null>(null);
+  const projectDist = useMemo(
+    () => (selectedProject && selectedProject.profit > 0 ? distribute(selectedProject.profit, buckets) : []),
+    [selectedProject, buckets]
+  );
+
 
   // Monthly profit trend
   const monthlyTrend = useMemo(() => {
@@ -439,14 +450,16 @@ export default function ProfitDistribution() {
                       <TableHead className="text-right">Margin</TableHead>
                       <TableHead className="text-right">ROI</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {projects.length === 0 && (
-                      <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                      <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                         No projects yet. Add crops or livestock to see analytics.
                       </TableCell></TableRow>
                     )}
+
                     {projects.map((p) => (
                       <TableRow key={`${p.kind}-${p.id}`}>
                         <TableCell>
@@ -468,6 +481,16 @@ export default function ProfitDistribution() {
                             <Badge variant="destructive">Below Break-Even</Badge>
                           )}
                         </TableCell>
+                        <TableCell className="text-right">
+                          {p.profit > 0 ? (
+                            <Button size="sm" variant="outline" onClick={() => setSelectedProject(p)}>
+                              <PieIcon className="h-3.5 w-3.5 mr-1" /> Distribution
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+
                       </TableRow>
                     ))}
                   </TableBody>
@@ -524,10 +547,90 @@ export default function ProfitDistribution() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={!!selectedProject} onOpenChange={(o) => !o && setSelectedProject(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <PieIcon className="h-5 w-5 text-primary" />
+                {selectedProject?.name} — Profit Distribution
+              </DialogTitle>
+              <DialogDescription>
+                {selectedProject?.kind?.toUpperCase()}
+                {selectedProject?.meta ? ` · ${selectedProject.meta}` : ""} — projection only, nothing is saved.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedProject && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <KpiCard label="Revenue" value={formatKES(selectedProject.revenue)} />
+                  <KpiCard label="Expenses" value={formatKES(selectedProject.expenses)} />
+                  <KpiCard label="Net Profit" value={formatKES(selectedProject.profit)} tone="success" />
+                  <KpiCard label="ROI" value={`${selectedProject.roi.toFixed(1)}%`} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={projectDist} dataKey="amount" nameKey="label" outerRadius={80}
+                          label={(e: any) => `${e.percent.toFixed(0)}%`}>
+                          {projectDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip formatter={(v: any) => formatKES(Number(v))} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Bucket</TableHead>
+                        <TableHead>%</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {projectDist.map((b) => (
+                        <TableRow key={b.key}>
+                          <TableCell className="font-medium">{b.label}</TableCell>
+                          <TableCell>{b.percent.toFixed(1)}%</TableCell>
+                          <TableCell className="text-right font-semibold">{formatKES(b.amount)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Uses the current distribution model from the Distribution tab. Adjust buckets there to update this projection.
+                </p>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedProject(null)}>Close</Button>
+              <Button
+                onClick={async () => {
+                  if (!selectedProject) return;
+                  try {
+                    await exportProjectDistributionPDF({ project: selectedProject, buckets });
+                    toast({ title: "PDF exported", description: `${selectedProject.name} distribution downloaded.` });
+                  } catch (e: any) {
+                    toast({ variant: "destructive", title: "Export failed", description: e.message });
+                  }
+                }}
+              >
+                <FileText className="h-4 w-4 mr-1" /> Export PDF
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
 }
+
 
 function KpiCard({ label, value, sub, icon, tone }: {
   label: string; value: string; sub?: string; icon?: React.ReactNode;
