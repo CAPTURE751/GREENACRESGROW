@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { farmFileName } from "./report-export";
 import { getFarmSettings } from "./farm-settings-cache";
+import { applySignature } from "./pdf-branding";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
 
 interface CalendarTask {
