@@ -111,6 +111,14 @@ export default function ProfitDistribution() {
   const forecastProfit = forecastRevenue - forecastExpenses;
   const forecastDist = distribute(forecastProfit, buckets);
 
+  // Per-project distribution dialog
+  const [selectedProject, setSelectedProject] = useState<ProjectMetrics | null>(null);
+  const projectDist = useMemo(
+    () => (selectedProject && selectedProject.profit > 0 ? distribute(selectedProject.profit, buckets) : []),
+    [selectedProject, buckets]
+  );
+
+
   // Monthly profit trend
   const monthlyTrend = useMemo(() => {
     const map = new Map<string, { month: string; revenue: number; expenses: number; profit: number }>();
