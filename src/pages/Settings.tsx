@@ -96,6 +96,8 @@ export default function Settings() {
             {activeTab === 'appearance' && <AppearanceSettings />}
 
             {activeTab === 'backup' && <BackupRestore />}
+
+            {activeTab === 'signature' && <SignatureSettings />}
           </div>
         </div>
       </div>
