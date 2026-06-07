@@ -41,6 +41,7 @@ export default function Settings() {
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'security', name: 'Security', icon: Shield },
     { id: 'backup', name: 'Backup', icon: Database },
+    { id: 'signature', name: 'Signature', icon: PenLine },
     { id: 'appearance', name: 'Appearance', icon: Palette },
   ];
 
