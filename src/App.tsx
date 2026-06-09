@@ -23,6 +23,7 @@ import Inventory from "./pages/Inventory";
 import Notebook from "./pages/Notebook";
 import Expenses from "./pages/Expenses";
 import ProfitDistribution from "./pages/ProfitDistribution";
+import FarmCopilot from "./pages/FarmCopilot";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -103,6 +104,9 @@ const App = () => (
             } />
             <Route path="/profit-distribution" element={
               <ProtectedRoute allowedRoles={['admin', 'staff']}><ProfitDistribution /></ProtectedRoute>
+            } />
+            <Route path="/copilot" element={
+              <ProtectedRoute><FarmCopilot /></ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
