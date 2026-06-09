@@ -14,7 +14,8 @@ import {
   Package,
   BookOpen,
   Receipt,
-  PieChart
+  PieChart,
+  Sparkles
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -32,6 +33,7 @@ import {
 
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: Home },
+  { title: "FarmCopilot AI", url: "/copilot", icon: Sparkles },
   { title: "Crops", url: "/crops", icon: Wheat },
   { title: "Livestock", url: "/livestock", icon: Beef },
   { title: "Finances", url: "/finances", icon: DollarSign },
