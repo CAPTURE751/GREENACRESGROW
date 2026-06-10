@@ -259,5 +259,6 @@ export async function exportModulePnLToPDF(
   const label = moduleType === "crop" ? "Crop" : "Livestock";
   const filter = selectedFilter === "all" ? "" : `-${selectedFilter}`;
   const date = now.toISOString().slice(0, 10);
+  await applySignature(doc, "pnl");
   doc.save(`${FARM_NAME} ${label}-PnL${filter}-${date}.pdf`);
 }

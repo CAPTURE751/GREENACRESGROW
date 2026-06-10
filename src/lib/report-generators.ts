@@ -252,6 +252,7 @@ export async function generateIncomeStatement(data: ReportData) {
   });
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Income-Statement", "pdf"));
 }
 
@@ -347,6 +348,7 @@ export async function generateCashFlowStatement(data: ReportData) {
   });
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Cash-Flow-Statement", "pdf"));
 }
 
@@ -459,6 +461,7 @@ export async function generateBalanceSheet(data: ReportData) {
   });
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Balance-Sheet", "pdf"));
 }
 
@@ -513,6 +516,7 @@ export async function generateProductionBudget(data: ReportData) {
   }
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Production-Budget", "pdf"));
 }
 
@@ -579,6 +583,7 @@ export async function generateEnterpriseProfitability(data: ReportData) {
   }
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Enterprise-Profitability", "pdf"));
 }
 
@@ -620,6 +625,7 @@ export async function generateCostOfProduction(data: ReportData) {
   doc.text(`Grand Total Cost of Production: ${formatKES(grandTotal)}`, 14, y);
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Cost-of-Production", "pdf"));
 }
 
@@ -668,6 +674,7 @@ export async function generateInventoryReport(data: ReportData) {
   });
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Inventory-Stock-Report", "pdf"));
 }
 
@@ -729,6 +736,7 @@ export async function generateSalesRevenueReport(data: ReportData) {
   });
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Sales-Revenue-Report", "pdf"));
 }
 
@@ -801,6 +809,7 @@ export async function generateExpenseReport(data: ReportData) {
   });
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Expense-Report", "pdf"));
 }
 
@@ -879,5 +888,6 @@ export async function generateBreakEvenAnalysis(data: ReportData) {
   });
 
   addFooters();
+  await applySignature(doc, "reports");
   doc.save(await farmFileName("Break-Even-Analysis", "pdf"));
 }

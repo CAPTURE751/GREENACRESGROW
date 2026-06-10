@@ -244,5 +244,6 @@ export async function exportVenturePDF(
   }
 
   const date = new Date().toISOString().slice(0, 10);
+  await applySignature(doc, "venture");
   doc.save(`${FARM_NAME} Venture-Budget-${ventureName}-${date}.pdf`);
 }
