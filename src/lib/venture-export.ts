@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { applySignature } from "./pdf-branding";
 import autoTable from "jspdf-autotable";
 import { formatKES } from "./currency";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
@@ -243,5 +244,6 @@ export async function exportVenturePDF(
   }
 
   const date = new Date().toISOString().slice(0, 10);
+  await applySignature(doc, "venture");
   doc.save(`${FARM_NAME} Venture-Budget-${ventureName}-${date}.pdf`);
 }

@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { applySignature } from "./pdf-branding";
 import autoTable from "jspdf-autotable";
 import { formatKES } from "./currency";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
@@ -258,5 +259,6 @@ export async function exportModulePnLToPDF(
   const label = moduleType === "crop" ? "Crop" : "Livestock";
   const filter = selectedFilter === "all" ? "" : `-${selectedFilter}`;
   const date = now.toISOString().slice(0, 10);
+  await applySignature(doc, "pnl");
   doc.save(`${FARM_NAME} ${label}-PnL${filter}-${date}.pdf`);
 }

@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { applySignature } from "./pdf-branding";
 import autoTable from "jspdf-autotable";
 import { formatKES } from "./currency";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
@@ -372,5 +373,6 @@ export async function exportAnalyticsPDF(data: AnalyticsData) {
     doc.rect(0, ph - 2, pw, 2, "F");
   }
 
+  await applySignature(doc, "analytics");
   doc.save(`${FARM_NAME.replace(/\s+/g, "_")}_Analytics_Report_${now.toISOString().substring(0, 10)}.pdf`);
 }
