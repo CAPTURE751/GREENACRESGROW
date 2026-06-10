@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { applySignature } from "./pdf-branding";
 import autoTable from "jspdf-autotable";
 import { formatKES } from "./currency";
 import { farmFileName } from "./report-export";
