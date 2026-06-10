@@ -24,6 +24,9 @@ import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { BackupRestore } from "@/components/BackupRestore";
 import { SignatureSettings } from "@/components/settings/SignatureSettings";
+import { ThemeManagement } from "@/components/settings/ThemeManagement";
+
+
 
 export default function Settings() {
   const [searchParams] = useSearchParams();
@@ -43,6 +46,7 @@ export default function Settings() {
     { id: 'backup', name: 'Backup', icon: Database },
     { id: 'signature', name: 'Signature', icon: PenLine },
     { id: 'appearance', name: 'Appearance', icon: Palette },
+    { id: 'theme', name: 'Theme Management', icon: Palette },
   ];
 
   return (
@@ -94,6 +98,8 @@ export default function Settings() {
             {activeTab === 'security' && <SecuritySettings />}
 
             {activeTab === 'appearance' && <AppearanceSettings />}
+
+            {activeTab === 'theme' && <ThemeManagement />}
 
             {activeTab === 'backup' && <BackupRestore />}
 
