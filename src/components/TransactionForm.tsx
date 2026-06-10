@@ -59,6 +59,13 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Auto-default quantity to 1 when only a flat amount is entered (prevents 0.00 totals)
+    const qtyNum = Number(formData.quantity);
+    const priceNum = Number(formData.unit_price);
+    if (transactionType !== 'capital_injection' && (!qtyNum || qtyNum === 0) && priceNum > 0) {
+      formData.quantity = '1';
+    }
+
     if (editMode && editData?.id) {
       // UPDATE existing record
       if (transactionType === 'income') {
