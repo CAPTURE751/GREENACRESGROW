@@ -73,8 +73,8 @@ export default function Finances() {
   const [txnStartDate, setTxnStartDate] = useState('');
   const [txnEndDate, setTxnEndDate] = useState('');
   const [showPnL, setShowPnL] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(20);
-  const PAGE_INCREMENT = 20;
+  const [visibleCount, setVisibleCount] = useState(200);
+  const PAGE_INCREMENT = 200;
   const [pnlReport, setPnlReport] = useState<PnLReport | null>(null);
   const [pnlStartDate, setPnlStartDate] = useState('');
   const [pnlEndDate, setPnlEndDate] = useState('');
