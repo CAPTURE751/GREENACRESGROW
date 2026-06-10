@@ -499,10 +499,10 @@ export default function Finances() {
         {/* Transaction Filters */}
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex gap-2">
-            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setVisibleCount(20); }}>All Transactions</Button>
-            <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setVisibleCount(20); }} className="text-green-700">Income Only</Button>
-            <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setVisibleCount(20); }} className="text-red-700">Expenses Only</Button>
-            <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setVisibleCount(20); }} className="text-blue-700">Capital Injections</Button>
+            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setVisibleCount(200); }}>All Transactions</Button>
+            <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setVisibleCount(200); }} className="text-green-700">Income Only</Button>
+            <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setVisibleCount(200); }} className="text-red-700">Expenses Only</Button>
+            <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setVisibleCount(200); }} className="text-blue-700">Capital Injections</Button>
           </div>
           <div className="flex gap-2 items-end ml-auto">
             <div className="space-y-1">
