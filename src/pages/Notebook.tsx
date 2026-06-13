@@ -126,6 +126,14 @@ export default function Notebook() {
           </TabsContent>
 
           {/* CHALLENGES */}
+          <TabsContent value="programmes" className="space-y-4">
+            <ProgrammesTab />
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-4">
+            <TemplatesTab />
+          </TabsContent>
+
           <TabsContent value="challenges" className="space-y-4">
             <ChallengesTab challenges={challenges} create={createChal} update={updateChal} remove={removeChal} />
           </TabsContent>
