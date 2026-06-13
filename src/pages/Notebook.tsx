@@ -13,6 +13,8 @@ import { Plus, FileDown, Pencil, Trash2, AlertTriangle, BookOpen, Sprout } from 
 import { useCrops } from '@/hooks/useCrops';
 import { useNotebookNotes, useSeasonChallenges, NotebookNote, SeasonChallenge } from '@/hooks/useNotebook';
 import { exportNotesPDF, exportChallengesPDF } from '@/lib/notebook-export';
+import { ProgrammesTab } from '@/components/notebook/ProgrammesTab';
+import { TemplatesTab } from '@/components/notebook/TemplatesTab';
 
 export default function Notebook() {
   const { crops } = useCrops();
@@ -55,6 +57,8 @@ export default function Notebook() {
           <TabsList>
             <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="crops">Crops</TabsTrigger>
+            <TabsTrigger value="programmes">Programmes</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="challenges">Season Challenges</TabsTrigger>
           </TabsList>
 
@@ -122,6 +126,14 @@ export default function Notebook() {
           </TabsContent>
 
           {/* CHALLENGES */}
+          <TabsContent value="programmes" className="space-y-4">
+            <ProgrammesTab />
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-4">
+            <TemplatesTab />
+          </TabsContent>
+
           <TabsContent value="challenges" className="space-y-4">
             <ChallengesTab challenges={challenges} create={createChal} update={updateChal} remove={removeChal} />
           </TabsContent>
