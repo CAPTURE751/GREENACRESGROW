@@ -128,6 +128,73 @@ export type Database = {
           },
         ]
       }
+      crop_programmes: {
+        Row: {
+          anchor_date: string
+          anchor_stage: string
+          created_at: string
+          created_by: string
+          crop_id: string | null
+          farm_id: string
+          id: string
+          name: string
+          next_crop_family: string | null
+          notes: string | null
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          anchor_date: string
+          anchor_stage?: string
+          created_at?: string
+          created_by: string
+          crop_id?: string | null
+          farm_id: string
+          id?: string
+          name: string
+          next_crop_family?: string | null
+          notes?: string | null
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anchor_date?: string
+          anchor_stage?: string
+          created_at?: string
+          created_by?: string
+          crop_id?: string | null
+          farm_id?: string
+          id?: string
+          name?: string
+          next_crop_family?: string | null
+          notes?: string | null
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crop_programmes_crop_id_fkey"
+            columns: ["crop_id"]
+            isOneToOne: false
+            referencedRelation: "crops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crop_programmes_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crop_programmes_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "programme_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crops: {
         Row: {
           acreage: number | null
@@ -880,6 +947,105 @@ export type Database = {
         }
         Relationships: []
       }
+      programme_activities: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          day_offset: number
+          id: string
+          name: string
+          notes: string | null
+          priority: string | null
+          programme_id: string
+          scheduled_date: string
+          sort_order: number
+          task_id: string | null
+          task_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          day_offset?: number
+          id?: string
+          name: string
+          notes?: string | null
+          priority?: string | null
+          programme_id: string
+          scheduled_date: string
+          sort_order?: number
+          task_id?: string | null
+          task_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          day_offset?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          priority?: string | null
+          programme_id?: string
+          scheduled_date?: string
+          sort_order?: number
+          task_id?: string | null
+          task_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programme_activities_programme_id_fkey"
+            columns: ["programme_id"]
+            isOneToOne: false
+            referencedRelation: "crop_programmes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programme_activities_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programme_templates: {
+        Row: {
+          created_at: string
+          created_by: string
+          crop_type: string | null
+          description: string | null
+          id: string
+          name: string
+          next_crop_family: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          crop_type?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          next_crop_family?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          crop_type?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          next_crop_family?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       purchases: {
         Row: {
           category: string | null
@@ -1238,6 +1404,50 @@ export type Database = {
             columns: ["parent_task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_stages: {
+        Row: {
+          created_at: string
+          day_offset: number
+          id: string
+          name: string
+          notes: string | null
+          priority: string | null
+          sort_order: number
+          task_type: string | null
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_offset?: number
+          id?: string
+          name: string
+          notes?: string | null
+          priority?: string | null
+          sort_order?: number
+          task_type?: string | null
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          day_offset?: number
+          id?: string
+          name?: string
+          notes?: string | null
+          priority?: string | null
+          sort_order?: number
+          task_type?: string | null
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_stages_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "programme_templates"
             referencedColumns: ["id"]
           },
         ]
