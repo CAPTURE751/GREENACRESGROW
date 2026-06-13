@@ -57,6 +57,8 @@ export default function Notebook() {
           <TabsList>
             <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="crops">Crops</TabsTrigger>
+            <TabsTrigger value="programmes">Programmes</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="challenges">Season Challenges</TabsTrigger>
           </TabsList>
 
