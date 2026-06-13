@@ -13,6 +13,8 @@ import { Plus, FileDown, Pencil, Trash2, AlertTriangle, BookOpen, Sprout } from 
 import { useCrops } from '@/hooks/useCrops';
 import { useNotebookNotes, useSeasonChallenges, NotebookNote, SeasonChallenge } from '@/hooks/useNotebook';
 import { exportNotesPDF, exportChallengesPDF } from '@/lib/notebook-export';
+import { ProgrammesTab } from '@/components/notebook/ProgrammesTab';
+import { TemplatesTab } from '@/components/notebook/TemplatesTab';
 
 export default function Notebook() {
   const { crops } = useCrops();
