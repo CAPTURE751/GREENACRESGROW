@@ -947,6 +947,62 @@ export type Database = {
         }
         Relationships: []
       }
+      profit_disbursements: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string
+          disbursed_on: string
+          farm_id: string
+          id: string
+          notes: string | null
+          recipient: string
+          source_id: string | null
+          source_kind: string
+          source_name: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          created_by: string
+          disbursed_on?: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+          recipient: string
+          source_id?: string | null
+          source_kind: string
+          source_name: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string
+          disbursed_on?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          recipient?: string
+          source_id?: string | null
+          source_kind?: string
+          source_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profit_disbursements_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       programme_activities: {
         Row: {
           completed: boolean
