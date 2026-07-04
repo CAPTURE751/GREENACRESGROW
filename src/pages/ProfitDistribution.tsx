@@ -30,6 +30,7 @@ import {
 import { exportProfitDistributionPDF, exportProjectsCSV, exportProjectDistributionPDF } from "@/lib/profit-distribution-export";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import type { ProjectMetrics } from "@/lib/profit-analytics";
+import { DisbursementsTab } from "@/components/profit/DisbursementsTab";
 
 import { useToast } from "@/hooks/use-toast";
 
@@ -205,6 +206,7 @@ export default function ProfitDistribution() {
             <TabsTrigger value="scenarios">Scenarios</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="forecast">Forecasting</TabsTrigger>
+            <TabsTrigger value="disbursements">Disbursements</TabsTrigger>
           </TabsList>
 
           {/* DASHBOARD */}
