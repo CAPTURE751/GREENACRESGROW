@@ -548,7 +548,11 @@ export default function ProfitDistribution() {
               </CardContent>
             </Card>
           </TabsContent>
+          <TabsContent value="disbursements" className="space-y-4">
+            <DisbursementsTab projects={projects} />
+          </TabsContent>
         </Tabs>
+
 
         <Dialog open={!!selectedProject} onOpenChange={(o) => !o && setSelectedProject(null)}>
           <DialogContent className="max-w-2xl">
