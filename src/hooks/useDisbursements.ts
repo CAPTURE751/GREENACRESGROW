@@ -74,6 +74,22 @@ export function useDisbursements() {
     return data as unknown as Disbursement;
   };
 
+  const update = async (id: string, payload: Partial<NewDisbursement>) => {
+    const { data, error } = await supabase
+      .from("profit_disbursements" as any)
+      .update(payload)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) {
+      toast({ variant: "destructive", title: "Update failed", description: error.message });
+      return null;
+    }
+    toast({ title: "Disbursement updated" });
+    await fetchItems();
+    return data as unknown as Disbursement;
+  };
+
   const remove = async (id: string) => {
     const { error } = await supabase.from("profit_disbursements" as any).delete().eq("id", id);
     if (error) {
@@ -84,5 +100,5 @@ export function useDisbursements() {
     await fetchItems();
   };
 
-  return { items, loading, create, remove, refetch: fetchItems };
+  return { items, loading, create, update, remove, refetch: fetchItems };
 }
