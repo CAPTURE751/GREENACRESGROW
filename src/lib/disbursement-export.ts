@@ -4,18 +4,18 @@ import { applyBrandedHeader, applyBrandedFooter } from "./pdf-branding";
 import { formatKES } from "./currency";
 import type { Disbursement } from "@/hooks/useDisbursements";
 
-export async function exportDisbursementsPDF(items: Disbursement[]) {
+export async function exportDisbursementsPDF(items: Disbursement[], opts?: { title?: string; subtitle?: string; filters?: string }) {
   const doc = new jsPDF();
   const total = items.reduce((s, d) => s + Number(d.amount || 0), 0);
   let y = await applyBrandedHeader(doc, {
-    title: "Profit Disbursement Ledger",
-    subtitle: `${items.length} record(s) · Total ${formatKES(total)}`,
-    filters: "Records live only in the Profit Distribution module.",
+    title: opts?.title || "Profit Disbursement Ledger",
+    subtitle: opts?.subtitle || `${items.length} record(s) · Total ${formatKES(total)}`,
+    filters: opts?.filters || "Records live only in the Profit Distribution module.",
   });
 
   autoTable(doc, {
     startY: y,
-    head: [["Date", "From (Source)", "Type", "Category", "Recipient", "Amount", "Notes"]],
+    head: [["Date", "Crop / Project", "Type", "Category", "Recipient", "Amount", "Notes"]],
     body: items.map((d) => [
       d.disbursed_on,
       d.source_name,
@@ -23,12 +23,20 @@ export async function exportDisbursementsPDF(items: Disbursement[]) {
       d.category,
       d.recipient,
       formatKES(Number(d.amount)),
-      d.notes || "",
+      d.notes || "—",
     ]),
     theme: "striped",
     headStyles: { fillColor: [76, 111, 60] },
-    styles: { fontSize: 8, cellPadding: 2 },
-    columnStyles: { 5: { halign: "right" } },
+    styles: { fontSize: 8, cellPadding: 2, valign: "top" },
+    columnStyles: {
+      0: { cellWidth: 22 },
+      1: { cellWidth: 30 },
+      2: { cellWidth: 18 },
+      3: { cellWidth: 26 },
+      4: { cellWidth: 30 },
+      5: { cellWidth: 24, halign: "right" },
+      6: { cellWidth: "auto" },
+    },
   });
 
   const finalY = (doc as any).lastAutoTable?.finalY || y;
@@ -36,7 +44,6 @@ export async function exportDisbursementsPDF(items: Disbursement[]) {
   doc.setFont("helvetica", "bold");
   doc.text(`Total Disbursed: ${formatKES(total)}`, 14, finalY + 10);
 
-  // Group by category summary
   const byCategory = new Map<string, number>();
   items.forEach((d) => byCategory.set(d.category, (byCategory.get(d.category) || 0) + Number(d.amount)));
   if (byCategory.size > 0) {
@@ -50,5 +57,26 @@ export async function exportDisbursementsPDF(items: Disbursement[]) {
   }
 
   await applyBrandedFooter(doc);
-  doc.save(`profit-disbursements-${new Date().toISOString().slice(0, 10)}.pdf`);
+  const slug = (opts?.title || "profit-disbursements").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  doc.save(`${slug}-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+export async function exportDisbursementsBatch(
+  items: Disbursement[],
+  groupBy: "project" | "category"
+) {
+  const groups = new Map<string, Disbursement[]>();
+  items.forEach((d) => {
+    const key = groupBy === "project" ? d.source_name : d.category;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(d);
+  });
+  for (const [key, list] of groups) {
+    const total = list.reduce((s, d) => s + Number(d.amount || 0), 0);
+    await exportDisbursementsPDF(list, {
+      title: `Disbursements — ${key}`,
+      subtitle: `${groupBy === "project" ? "Crop/Project" : "Category"}: ${key} · ${list.length} record(s) · Total ${formatKES(total)}`,
+      filters: `Grouped by ${groupBy}. Records live only in the Profit Distribution module.`,
+    });
+  }
 }
