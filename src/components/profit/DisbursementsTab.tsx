@@ -20,11 +20,12 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { FileText, Plus, Trash2, HandCoins, Sparkles, Pencil, Filter, X, ChevronDown, Files } from "lucide-react";
+import { FileText, Plus, Trash2, HandCoins, Sparkles, Pencil, Filter, X, ChevronDown, Files, Wand2 } from "lucide-react";
 import { formatKES } from "@/lib/currency";
 import { useDisbursements, type NewDisbursement, type Disbursement } from "@/hooks/useDisbursements";
 import { exportDisbursementsPDF, exportDisbursementsBatch } from "@/lib/disbursement-export";
 import type { ProjectMetrics } from "@/lib/profit-analytics";
+import { BulkDisburseDialog } from "./BulkDisburseDialog";
 
 const CATEGORIES = [
   "Loan Repayment", "Salary", "Consultation", "Farm Reinvestment", "Owner Drawings",
