@@ -20,11 +20,12 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { FileText, Plus, Trash2, HandCoins, Sparkles, Pencil, Filter, X, ChevronDown, Files } from "lucide-react";
+import { FileText, Plus, Trash2, HandCoins, Sparkles, Pencil, Filter, X, ChevronDown, Files, Wand2 } from "lucide-react";
 import { formatKES } from "@/lib/currency";
 import { useDisbursements, type NewDisbursement, type Disbursement } from "@/hooks/useDisbursements";
 import { exportDisbursementsPDF, exportDisbursementsBatch } from "@/lib/disbursement-export";
 import type { ProjectMetrics } from "@/lib/profit-analytics";
+import { BulkDisburseDialog } from "./BulkDisburseDialog";
 
 const CATEGORIES = [
   "Loan Repayment", "Salary", "Consultation", "Farm Reinvestment", "Owner Drawings",
@@ -36,7 +37,8 @@ interface Props {
 }
 
 export function DisbursementsTab({ projects }: Props) {
-  const { items, create, update, remove } = useDisbursements();
+  const { items, create, createMany, update, remove } = useDisbursements();
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Disbursement | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -219,6 +221,9 @@ export function DisbursementsTab({ projects }: Props) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button variant="secondary" onClick={() => setBulkOpen(true)} disabled={profitableProjects.length === 0}>
+              <Wand2 className="h-4 w-4 mr-1" /> Bulk Disburse
+            </Button>
             <Button onClick={openNew} disabled={profitableProjects.length === 0}>
               <Plus className="h-4 w-4 mr-1" /> New Disbursement
             </Button>
@@ -492,6 +497,13 @@ export function DisbursementsTab({ projects }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <BulkDisburseDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        profitableProjects={profitableProjects}
+        availableFor={availableFor}
+        createMany={createMany}
+      />
     </div>
   );
 }
