@@ -221,6 +221,9 @@ export function DisbursementsTab({ projects }: Props) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button variant="secondary" onClick={() => setBulkOpen(true)} disabled={profitableProjects.length === 0}>
+              <Wand2 className="h-4 w-4 mr-1" /> Bulk Disburse
+            </Button>
             <Button onClick={openNew} disabled={profitableProjects.length === 0}>
               <Plus className="h-4 w-4 mr-1" /> New Disbursement
             </Button>
