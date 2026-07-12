@@ -90,6 +90,26 @@ export function useDisbursements() {
     return data as unknown as Disbursement;
   };
 
+  const createMany = async (payloads: NewDisbursement[]) => {
+    if (!activeFarm || !user) {
+      toast({ variant: "destructive", title: "No active farm" });
+      return null;
+    }
+    if (payloads.length === 0) return [];
+    const rows = payloads.map((p) => ({ ...p, farm_id: activeFarm.id, created_by: user.id }));
+    const { data, error } = await supabase
+      .from("profit_disbursements" as any)
+      .insert(rows)
+      .select();
+    if (error) {
+      toast({ variant: "destructive", title: "Bulk disbursement failed", description: error.message });
+      return null;
+    }
+    toast({ title: "Bulk disbursement recorded", description: `${payloads.length} record(s) created` });
+    await fetchItems();
+    return data as unknown as Disbursement[];
+  };
+
   const remove = async (id: string) => {
     const { error } = await supabase.from("profit_disbursements" as any).delete().eq("id", id);
     if (error) {
@@ -100,5 +120,5 @@ export function useDisbursements() {
     await fetchItems();
   };
 
-  return { items, loading, create, update, remove, refetch: fetchItems };
+  return { items, loading, create, createMany, update, remove, refetch: fetchItems };
 }
