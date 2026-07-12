@@ -37,7 +37,8 @@ interface Props {
 }
 
 export function DisbursementsTab({ projects }: Props) {
-  const { items, create, update, remove } = useDisbursements();
+  const { items, create, createMany, update, remove } = useDisbursements();
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Disbursement | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
