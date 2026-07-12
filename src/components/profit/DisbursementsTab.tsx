@@ -497,6 +497,13 @@ export function DisbursementsTab({ projects }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <BulkDisburseDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        profitableProjects={profitableProjects}
+        availableFor={availableFor}
+        createMany={createMany}
+      />
     </div>
   );
 }
