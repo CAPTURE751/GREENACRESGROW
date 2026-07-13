@@ -198,10 +198,13 @@ export type Database = {
       crops: {
         Row: {
           acreage: number | null
+          archived: boolean
+          archived_at: string | null
           created_at: string
           created_by: string
           farm_id: string | null
           farm_location: string
+          growth_duration_days: number | null
           harvest_date: string | null
           id: string
           name: string
@@ -211,15 +214,19 @@ export type Database = {
           status: string | null
           type: string
           updated_at: string
+          variety: string | null
           yield_quantity: number | null
           yield_unit: string | null
         }
         Insert: {
           acreage?: number | null
+          archived?: boolean
+          archived_at?: string | null
           created_at?: string
           created_by: string
           farm_id?: string | null
           farm_location: string
+          growth_duration_days?: number | null
           harvest_date?: string | null
           id?: string
           name: string
@@ -229,15 +236,19 @@ export type Database = {
           status?: string | null
           type: string
           updated_at?: string
+          variety?: string | null
           yield_quantity?: number | null
           yield_unit?: string | null
         }
         Update: {
           acreage?: number | null
+          archived?: boolean
+          archived_at?: string | null
           created_at?: string
           created_by?: string
           farm_id?: string | null
           farm_location?: string
+          growth_duration_days?: number | null
           harvest_date?: string | null
           id?: string
           name?: string
@@ -247,6 +258,7 @@ export type Database = {
           status?: string | null
           type?: string
           updated_at?: string
+          variety?: string | null
           yield_quantity?: number | null
           yield_unit?: string | null
         }
