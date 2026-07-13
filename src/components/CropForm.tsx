@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils";
 interface CropFormData {
   name: string;
   type: string;
+  variety?: string;
   farm_location: string;
   planting_date?: Date;
   harvest_date?: Date;
+  growth_duration_days?: number;
   status: string;
   yield_quantity?: number;
   yield_unit?: string;
@@ -35,6 +37,7 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
   const [formData, setFormData] = useState<CropFormData>({
     name: initialData?.name || "",
     type: initialData?.type || "",
+    variety: initialData?.variety || "",
     farm_location: initialData?.farm_location || "",
     status: initialData?.status || "planted",
     season: initialData?.season || "",
@@ -42,6 +45,7 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
     yield_quantity: initialData?.yield_quantity || undefined,
     yield_unit: initialData?.yield_unit || "",
     acreage: initialData?.acreage || undefined,
+    growth_duration_days: initialData?.growth_duration_days || undefined,
     planting_date: initialData?.planting_date,
     harvest_date: initialData?.harvest_date,
   });
@@ -81,7 +85,17 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="farm_location">Farm Location *</Label>
+          <Label htmlFor="variety">Variety</Label>
+          <Input
+            id="variety"
+            value={formData.variety || ""}
+            onChange={(e) => handleInputChange("variety", e.target.value)}
+            placeholder="e.g., Red Onion, H614"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="farm_location">Field / Block *</Label>
           <Input
             id="farm_location"
             value={formData.farm_location}
@@ -90,6 +104,19 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
             required
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="growth_duration_days">Growth Duration (days)</Label>
+          <Input
+            id="growth_duration_days"
+            type="number"
+            min="1"
+            value={formData.growth_duration_days || ""}
+            onChange={(e) => handleInputChange("growth_duration_days", e.target.value ? Number(e.target.value) : undefined)}
+            placeholder="e.g., 90"
+          />
+        </div>
+
 
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>

@@ -67,6 +67,7 @@ export default function Finances() {
   const farmSlogan = activeFarm?.slogan || '';
   const logoUrl = activeFarm?.logo_url || farmLogo;
   const [filter, setFilter] = useState<'all' | 'income' | 'expense' | 'capital_injection'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editTransaction, setEditTransaction] = useState<{ type: 'income' | 'expense' | 'capital_injection'; data: any } | null>(null);
@@ -164,6 +165,11 @@ export default function Finances() {
     if (filter !== 'all' && t.type !== filter) return false;
     if (txnStartDate && new Date(t.date) < new Date(txnStartDate)) return false;
     if (txnEndDate && new Date(t.date) > new Date(txnEndDate)) return false;
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      const hay = `${t.description} ${t.category} ${t.linkedRecordName || ''} ${t.amount}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     return true;
   });
 
@@ -497,27 +503,43 @@ export default function Finances() {
         </Card>
 
         {/* Transaction Filters */}
-        <div className="flex flex-wrap gap-4 items-end">
-          <div className="flex gap-2">
-            <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setVisibleCount(200); }}>All Transactions</Button>
-            <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setVisibleCount(200); }} className="text-green-700">Income Only</Button>
-            <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setVisibleCount(200); }} className="text-red-700">Expenses Only</Button>
-            <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setVisibleCount(200); }} className="text-blue-700">Capital Injections</Button>
-          </div>
-          <div className="flex gap-2 items-end ml-auto">
-            <div className="space-y-1">
-              <Label htmlFor="txn-start" className="text-xs">From</Label>
-              <Input id="txn-start" type="date" value={txnStartDate} onChange={(e) => setTxnStartDate(e.target.value)} className="h-9 w-[140px]" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="txn-end" className="text-xs">To</Label>
-              <Input id="txn-end" type="date" value={txnEndDate} onChange={(e) => setTxnEndDate(e.target.value)} className="h-9 w-[140px]" />
-            </div>
-            {(txnStartDate || txnEndDate) && (
-              <Button variant="ghost" size="sm" onClick={() => { setTxnStartDate(''); setTxnEndDate(''); }}>
+        <div className="space-y-3">
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search transactions by description, category, linked record, or amount..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setVisibleCount(200); }}
+            />
+            {searchTerm && (
+              <Button variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 h-7" onClick={() => setSearchTerm('')}>
                 <X className="h-4 w-4" />
               </Button>
             )}
+          </div>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex gap-2 flex-wrap">
+              <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => { setFilter('all'); setVisibleCount(200); }}>All Transactions</Button>
+              <Button variant={filter === 'income' ? 'default' : 'outline'} onClick={() => { setFilter('income'); setVisibleCount(200); }} className="text-green-700">Income Only</Button>
+              <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setVisibleCount(200); }} className="text-red-700">Expenses Only</Button>
+              <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setVisibleCount(200); }} className="text-blue-700">Capital Injections</Button>
+            </div>
+            <div className="flex gap-2 items-end ml-auto">
+              <div className="space-y-1">
+                <Label htmlFor="txn-start" className="text-xs">From</Label>
+                <Input id="txn-start" type="date" value={txnStartDate} onChange={(e) => setTxnStartDate(e.target.value)} className="h-9 w-[140px]" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="txn-end" className="text-xs">To</Label>
+                <Input id="txn-end" type="date" value={txnEndDate} onChange={(e) => setTxnEndDate(e.target.value)} className="h-9 w-[140px]" />
+              </div>
+              {(txnStartDate || txnEndDate) && (
+                <Button variant="ghost" size="sm" onClick={() => { setTxnStartDate(''); setTxnEndDate(''); }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
