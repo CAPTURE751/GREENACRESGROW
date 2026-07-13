@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils";
 interface CropFormData {
   name: string;
   type: string;
+  variety?: string;
   farm_location: string;
   planting_date?: Date;
   harvest_date?: Date;
+  growth_duration_days?: number;
   status: string;
   yield_quantity?: number;
   yield_unit?: string;
