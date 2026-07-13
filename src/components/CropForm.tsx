@@ -85,7 +85,17 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="farm_location">Farm Location *</Label>
+          <Label htmlFor="variety">Variety</Label>
+          <Input
+            id="variety"
+            value={formData.variety || ""}
+            onChange={(e) => handleInputChange("variety", e.target.value)}
+            placeholder="e.g., Red Onion, H614"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="farm_location">Field / Block *</Label>
           <Input
             id="farm_location"
             value={formData.farm_location}
@@ -94,6 +104,19 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
             required
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="growth_duration_days">Growth Duration (days)</Label>
+          <Input
+            id="growth_duration_days"
+            type="number"
+            min="1"
+            value={formData.growth_duration_days || ""}
+            onChange={(e) => handleInputChange("growth_duration_days", e.target.value ? Number(e.target.value) : undefined)}
+            placeholder="e.g., 90"
+          />
+        </div>
+
 
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
