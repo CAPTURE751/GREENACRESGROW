@@ -68,6 +68,27 @@ export function useNotifications() {
           });
         });
 
+        // Crop harvest reminders (30/14/7/3/1 days out + harvest day)
+        let cropQuery = supabase.from('crops').select('id, name, planting_date, harvest_date, growth_duration_days, status, archived');
+        if (activeFarm?.id) cropQuery = cropQuery.eq('farm_id', activeFarm.id);
+        const { data: cropRows } = await cropQuery;
+        (cropRows as any[] || []).filter((c) => !c.archived && c.status !== 'harvested').forEach((c: any) => {
+          const info = computeLifecycle(c);
+          const alert = harvestAlertFor(info.daysRemaining);
+          if (alert) {
+            sampleNotifications.push({
+              id: `harvest-${c.id}-${info.daysRemaining}`,
+              type: NOTIFICATION_TYPES.ADMIN_ALERT,
+              title: info.daysRemaining === 0 ? 'Ready for Harvest' : 'Upcoming Harvest',
+              message: `${c.name}: ${alert}`,
+              read: false,
+              created_at: new Date().toISOString(),
+              user_id: user.id,
+            });
+          }
+        });
+
+
         // Admin-specific notifications
         if (hasRole('admin')) {
           sampleNotifications.push({
