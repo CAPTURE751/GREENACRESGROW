@@ -37,6 +37,7 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
   const [formData, setFormData] = useState<CropFormData>({
     name: initialData?.name || "",
     type: initialData?.type || "",
+    variety: initialData?.variety || "",
     farm_location: initialData?.farm_location || "",
     status: initialData?.status || "planted",
     season: initialData?.season || "",
@@ -44,6 +45,7 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
     yield_quantity: initialData?.yield_quantity || undefined,
     yield_unit: initialData?.yield_unit || "",
     acreage: initialData?.acreage || undefined,
+    growth_duration_days: initialData?.growth_duration_days || undefined,
     planting_date: initialData?.planting_date,
     harvest_date: initialData?.harvest_date,
   });
