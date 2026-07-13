@@ -165,6 +165,11 @@ export default function Finances() {
     if (filter !== 'all' && t.type !== filter) return false;
     if (txnStartDate && new Date(t.date) < new Date(txnStartDate)) return false;
     if (txnEndDate && new Date(t.date) > new Date(txnEndDate)) return false;
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      const hay = `${t.description} ${t.category} ${t.linkedRecordName || ''} ${t.amount}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
     return true;
   });
 
