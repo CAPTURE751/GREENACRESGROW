@@ -69,7 +69,7 @@ export function useNotifications() {
         });
 
         // Crop harvest reminders (30/14/7/3/1 days out + harvest day)
-        let cropQuery = supabase.from('crops').select('id, name, planting_date, harvest_date, growth_duration_days, status, archived');
+        let cropQuery: any = supabase.from('crops').select('id, name, planting_date, harvest_date, growth_duration_days, status, archived');
         if (activeFarm?.id) cropQuery = cropQuery.eq('farm_id', activeFarm.id);
         const { data: cropRows } = await cropQuery;
         (cropRows as any[] || []).filter((c) => !c.archived && c.status !== 'harvested').forEach((c: any) => {
