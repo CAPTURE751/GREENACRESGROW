@@ -67,6 +67,7 @@ export default function Finances() {
   const farmSlogan = activeFarm?.slogan || '';
   const logoUrl = activeFarm?.logo_url || farmLogo;
   const [filter, setFilter] = useState<'all' | 'income' | 'expense' | 'capital_injection'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editTransaction, setEditTransaction] = useState<{ type: 'income' | 'expense' | 'capital_injection'; data: any } | null>(null);
