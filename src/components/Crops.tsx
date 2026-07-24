@@ -11,13 +11,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useCrops } from "@/hooks/useCrops";
 import { CropForm } from "@/components/CropForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
+import { CropTasksDialog } from "@/components/CropTasksDialog";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
 import { computeLifecycle, lifecycleStages, currentStageIndex, harvestAlertFor } from "@/lib/crop-lifecycle";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
   Plus, Search, Wheat, Calendar, MapPin, DollarSign, TrendingUp,
-  Sun, Loader2, Download, Pencil, CheckCircle2, Archive, Clock, Bell,
+  Sun, Loader2, Download, Pencil, CheckCircle2, Archive, Clock, Bell, ListChecks,
 } from "lucide-react";
 
 const statusColor: Record<string, string> = {
@@ -35,6 +36,7 @@ export function Crops() {
   const [showArchived, setShowArchived] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState<any>(null);
   const [financialsCrop, setFinancialsCrop] = useState<any>(null);
+  const [tasksCrop, setTasksCrop] = useState<any>(null);
   const { crops, isLoading, createCrop, updateCrop, isCreating, isUpdating } = useCrops();
 
   const filteredCrops = useMemo(() => {
@@ -283,14 +285,17 @@ export function Crops() {
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-1 mt-auto">
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => setFinancialsCrop(crop)}>
+                  <div className="grid grid-cols-2 gap-2 pt-1 mt-auto">
+                    <Button size="sm" variant="outline" onClick={() => setFinancialsCrop(crop)}>
                       <DollarSign className="h-3 w-3 mr-1" /> Financials
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => { setSelectedCrop(crop); setEditDialogOpen(true); }}>
+                    <Button size="sm" variant="outline" onClick={() => setTasksCrop(crop)}>
+                      <ListChecks className="h-3 w-3 mr-1" /> Tasks
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setSelectedCrop(crop); setEditDialogOpen(true); }}>
                       <Pencil className="h-3 w-3 mr-1" /> Edit
                     </Button>
-                    {info.status !== "harvested" && info.status !== "archived" && (
+                    {info.status !== "harvested" && info.status !== "archived" ? (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button size="sm" className="flex-1 bg-farm-green hover:bg-farm-green/90">
