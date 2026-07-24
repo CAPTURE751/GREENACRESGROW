@@ -315,6 +315,8 @@ export function Crops() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                    ) : (
+                      <div />
                     )}
                   </div>
                 </CardContent>
