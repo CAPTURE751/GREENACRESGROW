@@ -79,6 +79,9 @@ export default function Finances() {
   const [pnlReport, setPnlReport] = useState<PnLReport | null>(null);
   const [pnlStartDate, setPnlStartDate] = useState('');
   const [pnlEndDate, setPnlEndDate] = useState('');
+  const [minAmount, setMinAmount] = useState('');
+  const [maxAmount, setMaxAmount] = useState('');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
   
   const { sales, analytics: salesAnalytics, isLoading: salesLoading, deleteSale, isDeleting: isDeletingSale } = useSales();
   const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading, deletePurchase, isDeleting: isDeletingPurchase } = usePurchases();
@@ -165,12 +168,21 @@ export default function Finances() {
     if (filter !== 'all' && t.type !== filter) return false;
     if (txnStartDate && new Date(t.date) < new Date(txnStartDate)) return false;
     if (txnEndDate && new Date(t.date) > new Date(txnEndDate)) return false;
+    if (minAmount && t.amount < Number(minAmount)) return false;
+    if (maxAmount && t.amount > Number(maxAmount)) return false;
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
       const hay = `${t.description} ${t.category} ${t.linkedRecordName || ''} ${t.amount}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'date-asc': return new Date(a.date).getTime() - new Date(b.date).getTime();
+      case 'amount-desc': return b.amount - a.amount;
+      case 'amount-asc': return a.amount - b.amount;
+      default: return new Date(b.date).getTime() - new Date(a.date).getTime();
+    }
   });
 
   const totalIncome = salesAnalytics?.totalRevenue || 0;
@@ -525,7 +537,29 @@ export default function Finances() {
               <Button variant={filter === 'expense' ? 'default' : 'outline'} onClick={() => { setFilter('expense'); setVisibleCount(200); }} className="text-red-700">Expenses Only</Button>
               <Button variant={filter === 'capital_injection' ? 'default' : 'outline'} onClick={() => { setFilter('capital_injection'); setVisibleCount(200); }} className="text-blue-700">Capital Injections</Button>
             </div>
-            <div className="flex gap-2 items-end ml-auto">
+            <div className="flex gap-2 items-end ml-auto flex-wrap">
+              <div className="space-y-1">
+                <Label htmlFor="min-amt" className="text-xs">Min Amount</Label>
+                <Input id="min-amt" type="number" placeholder="0" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} className="h-9 w-[110px]" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="max-amt" className="text-xs">Max Amount</Label>
+                <Input id="max-amt" type="number" placeholder="∞" value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} className="h-9 w-[110px]" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="sort-by" className="text-xs">Sort by</Label>
+                <select
+                  id="sort-by"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                >
+                  <option value="date-desc">Newest first</option>
+                  <option value="date-asc">Oldest first</option>
+                  <option value="amount-desc">Amount: High → Low</option>
+                  <option value="amount-asc">Amount: Low → High</option>
+                </select>
+              </div>
               <div className="space-y-1">
                 <Label htmlFor="txn-start" className="text-xs">From</Label>
                 <Input id="txn-start" type="date" value={txnStartDate} onChange={(e) => setTxnStartDate(e.target.value)} className="h-9 w-[140px]" />
@@ -534,8 +568,8 @@ export default function Finances() {
                 <Label htmlFor="txn-end" className="text-xs">To</Label>
                 <Input id="txn-end" type="date" value={txnEndDate} onChange={(e) => setTxnEndDate(e.target.value)} className="h-9 w-[140px]" />
               </div>
-              {(txnStartDate || txnEndDate) && (
-                <Button variant="ghost" size="sm" onClick={() => { setTxnStartDate(''); setTxnEndDate(''); }}>
+              {(txnStartDate || txnEndDate || minAmount || maxAmount) && (
+                <Button variant="ghost" size="sm" onClick={() => { setTxnStartDate(''); setTxnEndDate(''); setMinAmount(''); setMaxAmount(''); }}>
                   <X className="h-4 w-4" />
                 </Button>
               )}

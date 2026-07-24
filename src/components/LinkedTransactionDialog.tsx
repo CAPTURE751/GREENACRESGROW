@@ -47,7 +47,7 @@ export function LinkedTransactionDialog({
     quantity: '',
     unit: '',
     unit_price: '',
-    payment_status: 'pending',
+    payment_status: 'paid',
     item_name: '',
     category: '',
     supplier: '',
@@ -105,7 +105,7 @@ export function LinkedTransactionDialog({
     setFormData({
       date: new Date().toISOString().split('T')[0],
       notes: '', product_name: recordName, buyer: '', buyer_contact: '',
-      quantity: '', unit: '', unit_price: '', payment_status: 'pending',
+      quantity: '', unit: '', unit_price: '', payment_status: 'paid',
       item_name: '', category: '', supplier: '', supplier_contact: '',
     });
   };
