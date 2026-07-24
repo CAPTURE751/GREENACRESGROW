@@ -350,6 +350,14 @@ export function Crops() {
           recordName={financialsCrop.name}
         />
       )}
+
+      {tasksCrop && (
+        <CropTasksDialog
+          open={!!tasksCrop}
+          onOpenChange={(open) => { if (!open) setTasksCrop(null); }}
+          crop={tasksCrop}
+        />
+      )}
     </div>
   );
 }
