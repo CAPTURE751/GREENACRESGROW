@@ -188,18 +188,12 @@ export function Crops() {
         </DialogContent>
       </Dialog>
 
-      {/* Search + toggle */}
+      {/* Search */}
       <Card>
         <CardContent className="p-4 flex flex-col sm:flex-row gap-4 sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search by name, variety, or field..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch id="archived-toggle" checked={showArchived} onCheckedChange={setShowArchived} />
-            <Label htmlFor="archived-toggle" className="text-sm cursor-pointer flex items-center gap-1">
-              <Archive className="h-3.5 w-3.5" /> Archived
-            </Label>
           </div>
         </CardContent>
       </Card>
@@ -213,7 +207,7 @@ export function Crops() {
       </div>
 
       {/* Upcoming harvests strip */}
-      {upcomingHarvests.length > 0 && !showArchived && (
+      {upcomingHarvests.length > 0 && (
         <Card className="border-l-4 border-l-amber-400">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
@@ -237,133 +231,165 @@ export function Crops() {
         </div>
       )}
 
-      {!isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCrops.map((crop) => {
-            const info = computeLifecycle(crop as any);
-            const alert = harvestAlertFor(info.daysRemaining);
-            const stageIdx = currentStageIndex(info);
-            const variety = (crop as any).variety;
-            return (
-              <Card key={crop.id} className="hover:shadow-lg transition-shadow group flex flex-col">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
-                      <CardTitle className="text-lg truncate">{crop.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {variety ? `${variety} · ` : ""}{crop.type}
-                      </p>
-                    </div>
-                    <Badge className={statusColor[info.status]}>{info.statusLabel}</Badge>
+      {!isLoading && (() => {
+        const renderCropCard = (crop: any) => {
+          const info = computeLifecycle(crop as any);
+          const alert = harvestAlertFor(info.daysRemaining);
+          const stageIdx = currentStageIndex(info);
+          const variety = (crop as any).variety;
+          const harvested = harvestedByCrop.get(crop.id);
+          return (
+            <Card key={crop.id} className={`hover:shadow-lg transition-shadow group flex flex-col ${(crop as any).archived ? "opacity-80" : ""}`}>
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0">
+                    <CardTitle className="text-lg truncate">{crop.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {variety ? `${variety} · ` : ""}{crop.type}
+                    </p>
                   </div>
-                </CardHeader>
+                  <Badge className={statusColor[info.status]}>{info.statusLabel}</Badge>
+                </div>
+              </CardHeader>
 
-                <CardContent className="space-y-4 flex-1 flex flex-col">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /><span className="truncate">{crop.farm_location}</span></div>
-                    <div className="flex items-center gap-2"><Sun className="h-4 w-4 text-muted-foreground" /><span>{info.ageLabel}</span></div>
-                    {crop.planting_date && (
-                      <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /><span>Planted {format(new Date(crop.planting_date + "T00:00:00"), "MMM d")}</span></div>
-                    )}
-                    {info.expectedHarvest && (
-                      <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-muted-foreground" /><span>Harvest {format(info.expectedHarvest, "MMM d")}</span></div>
-                    )}
-                  </div>
-
-                  {/* Progress */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{info.ageBreakdown}</span>
-                      <span>
-                        {info.daysRemaining === null
-                          ? "—"
-                          : info.daysRemaining > 0
-                            ? `${info.daysRemaining}d left`
-                            : info.daysRemaining === 0
-                              ? "Harvest today"
-                              : `${Math.abs(info.daysRemaining)}d overdue`}
-                      </span>
-                    </div>
-                    <Progress value={info.progressPercent} className="h-2" />
-                    <p className="text-xs text-muted-foreground text-right">{Math.round(info.progressPercent)}%</p>
-                  </div>
-
-                  {/* Lifecycle timeline */}
-                  <div>
-                    <div className="flex justify-between items-center">
-                      {lifecycleStages.map((s, i) => (
-                        <div key={s.key} className="flex-1 flex flex-col items-center relative">
-                          <div className={`h-3 w-3 rounded-full z-10 ${i <= stageIdx ? "bg-farm-green" : "bg-muted"}`} />
-                          {i < lifecycleStages.length - 1 && (
-                            <div className={`absolute top-1/2 left-1/2 h-0.5 w-full -translate-y-1/2 ${i < stageIdx ? "bg-farm-green" : "bg-muted"}`} />
-                          )}
-                          <span className={`mt-1 text-[10px] ${i === stageIdx ? "font-semibold text-farm-green" : "text-muted-foreground"}`}>{s.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {alert && (
-                    <div className="flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-2">
-                      <Bell className="h-3.5 w-3.5 mt-0.5" /> {alert}
-                    </div>
+              <CardContent className="space-y-4 flex-1 flex flex-col">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground" /><span className="truncate">{crop.farm_location}</span></div>
+                  <div className="flex items-center gap-2"><Sun className="h-4 w-4 text-muted-foreground" /><span>{info.ageLabel}</span></div>
+                  {crop.planting_date && (
+                    <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /><span>Planted {format(new Date(crop.planting_date + "T00:00:00"), "MMM d")}</span></div>
                   )}
+                  {info.expectedHarvest && (
+                    <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-muted-foreground" /><span>Harvest {format(info.expectedHarvest, "MMM d")}</span></div>
+                  )}
+                </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-1 mt-auto">
-                    <Button size="sm" variant="outline" onClick={() => setFinancialsCrop(crop)}>
-                      <DollarSign className="h-3 w-3 mr-1" /> Financials
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setTasksCrop(crop)}>
-                      <ListChecks className="h-3 w-3 mr-1" /> Tasks
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => { setSelectedCrop(crop); setEditDialogOpen(true); }}>
-                      <Pencil className="h-3 w-3 mr-1" /> Edit
-                    </Button>
-                    {info.status !== "harvested" && info.status !== "archived" ? (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" className="flex-1 bg-farm-green hover:bg-farm-green/90">
-                            <CheckCircle2 className="h-3 w-3 mr-1" /> Harvest
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Confirm Harvest</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Mark {crop.name} as harvested? It will be archived and removed from the Active Crops list, but remain in reports and analytics.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => confirmHarvest(crop)}>Confirm Harvest</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    ) : (
-                      <div />
-                    )}
+                {harvested && harvested.qty > 0 && (
+                  <div className="flex items-center justify-between text-sm bg-farm-green/5 border border-farm-green/20 rounded-md px-3 py-2">
+                    <span className="flex items-center gap-2 text-farm-green"><TrendingUp className="h-4 w-4" /> Total Harvested</span>
+                    <span className="font-semibold">{harvested.qty.toLocaleString()} {harvested.unit}</span>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                )}
 
-      {!isLoading && filteredCrops.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Wheat className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">{showArchived ? "No archived crops" : "No crops found"}</h3>
-            <p className="text-muted-foreground mb-4">{searchTerm ? "Try adjusting your search terms" : showArchived ? "Harvested crops will appear here" : "Get started by adding your first crop batch"}</p>
-            {!showArchived && (
-              <Button className="bg-farm-green hover:bg-farm-green/90" onClick={() => setIsDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" /> Add New Crop
-              </Button>
+                {/* Progress */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{info.ageBreakdown}</span>
+                    <span>
+                      {info.daysRemaining === null
+                        ? "—"
+                        : info.daysRemaining > 0
+                          ? `${info.daysRemaining}d left`
+                          : info.daysRemaining === 0
+                            ? "Harvest today"
+                            : `${Math.abs(info.daysRemaining)}d overdue`}
+                    </span>
+                  </div>
+                  <Progress value={info.progressPercent} className="h-2" />
+                  <p className="text-xs text-muted-foreground text-right">{Math.round(info.progressPercent)}%</p>
+                </div>
+
+                {/* Lifecycle timeline */}
+                <div>
+                  <div className="flex justify-between items-center">
+                    {lifecycleStages.map((s, i) => (
+                      <div key={s.key} className="flex-1 flex flex-col items-center relative">
+                        <div className={`h-3 w-3 rounded-full z-10 ${i <= stageIdx ? "bg-farm-green" : "bg-muted"}`} />
+                        {i < lifecycleStages.length - 1 && (
+                          <div className={`absolute top-1/2 left-1/2 h-0.5 w-full -translate-y-1/2 ${i < stageIdx ? "bg-farm-green" : "bg-muted"}`} />
+                        )}
+                        <span className={`mt-1 text-[10px] ${i === stageIdx ? "font-semibold text-farm-green" : "text-muted-foreground"}`}>{s.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {alert && (
+                  <div className="flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-2">
+                    <Bell className="h-3.5 w-3.5 mt-0.5" /> {alert}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-2 pt-1 mt-auto">
+                  <Button size="sm" variant="outline" onClick={() => setFinancialsCrop(crop)}>
+                    <DollarSign className="h-3 w-3 mr-1" /> Financials
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setTasksCrop(crop)}>
+                    <ListChecks className="h-3 w-3 mr-1" /> Tasks
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { setSelectedCrop(crop); setEditDialogOpen(true); }}>
+                    <Pencil className="h-3 w-3 mr-1" /> Edit
+                  </Button>
+                  {info.status !== "harvested" && info.status !== "archived" ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" className="bg-farm-green hover:bg-farm-green/90">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Harvest
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirm Harvest</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Mark {crop.name} as harvested? It will move to the Archived section but remain in reports and analytics.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => confirmHarvest(crop)}>Confirm Harvest</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : (
+                    <Badge variant="outline" className="justify-center bg-gray-50 text-gray-600">
+                      <Archive className="h-3 w-3 mr-1" /> Archived
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        };
+
+        return (
+          <div className="space-y-8">
+            <section className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold">Active Crops</h2>
+                <Badge variant="secondary">{activeCropsList.length}</Badge>
+              </div>
+              {activeCropsList.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-10">
+                    <Wheat className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-4">{searchTerm ? "No active crops match your search." : "No active crops yet."}</p>
+                    <Button className="bg-farm-green hover:bg-farm-green/90" onClick={() => setIsDialogOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" /> Add New Crop
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {activeCropsList.map(renderCropCard)}
+                </div>
+              )}
+            </section>
+
+            {archivedCropsList.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center gap-2 pt-4 border-t">
+                  <Archive className="h-4 w-4 text-muted-foreground" />
+                  <h2 className="text-lg font-semibold text-muted-foreground">Archived Crops</h2>
+                  <Badge variant="outline">{archivedCropsList.length}</Badge>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {archivedCropsList.map(renderCropCard)}
+                </div>
+              </section>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        );
+      })()}
 
       {financialsCrop && (
         <LinkedTransactionDialog
