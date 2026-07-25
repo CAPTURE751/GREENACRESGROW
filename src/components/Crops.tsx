@@ -112,7 +112,7 @@ export function Crops() {
     .map((c) => ({ crop: c, info: computeLifecycle(c as any) }))
     .filter(({ info }) => info.daysRemaining !== null && info.daysRemaining >= 0 && info.daysRemaining <= 30)
     .sort((a, b) => (a.info.daysRemaining ?? 0) - (b.info.daysRemaining ?? 0));
-  const totalYield = crops.reduce((sum, crop) => sum + (crop.yield_quantity || 0), 0);
+  const totalYield = Array.from(harvestedByCrop.values()).reduce((sum, h) => sum + h.qty, 0);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -176,7 +176,7 @@ export function Crops() {
                 status: selectedCrop.status || "planted",
                 season: selectedCrop.season || "",
                 notes: selectedCrop.notes || "",
-                yield_quantity: selectedCrop.yield_quantity || undefined,
+                yield_unit: selectedCrop.yield_unit || "",
                 yield_unit: selectedCrop.yield_unit || "",
                 acreage: selectedCrop.acreage || undefined,
                 growth_duration_days: selectedCrop.growth_duration_days || undefined,
