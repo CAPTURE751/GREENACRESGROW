@@ -177,7 +177,6 @@ export function Crops() {
                 season: selectedCrop.season || "",
                 notes: selectedCrop.notes || "",
                 yield_unit: selectedCrop.yield_unit || "",
-                yield_unit: selectedCrop.yield_unit || "",
                 acreage: selectedCrop.acreage || undefined,
                 growth_duration_days: selectedCrop.growth_duration_days || undefined,
                 planting_date: selectedCrop.planting_date ? new Date(selectedCrop.planting_date) : undefined,
