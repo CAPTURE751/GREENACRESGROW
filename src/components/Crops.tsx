@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useCrops } from "@/hooks/useCrops";
+import { useSales } from "@/hooks/useSales";
 import { CropForm } from "@/components/CropForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { CropTasksDialog } from "@/components/CropTasksDialog";
@@ -33,24 +34,47 @@ export function Crops() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState<any>(null);
   const [financialsCrop, setFinancialsCrop] = useState<any>(null);
   const [tasksCrop, setTasksCrop] = useState<any>(null);
   const { crops, isLoading, createCrop, updateCrop, isCreating, isUpdating } = useCrops();
+  const { sales } = useSales();
 
-  const filteredCrops = useMemo(() => {
-    return crops.filter((crop) => {
-      const matches =
-        crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        crop.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (crop as any).variety?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        crop.farm_location.toLowerCase().includes(searchTerm.toLowerCase());
-      if (!matches) return false;
-      const isArchived = (crop as any).archived === true;
-      return showArchived ? isArchived : !isArchived;
-    });
-  }, [crops, searchTerm, showArchived]);
+  // Aggregate harvested totals per crop from cumulative sales
+  const harvestedByCrop = useMemo(() => {
+    const map = new Map<string, { qty: number; unit: string }>();
+    for (const s of sales as any[]) {
+      const qty = Number(s.quantity) || 0;
+      if (!qty) continue;
+      let key: string | null = null;
+      if (s.linked_module === "crop" && s.linked_record_id) key = s.linked_record_id;
+      else {
+        const match = crops.find(c => c.name && s.product_name && c.name.toLowerCase() === String(s.product_name).toLowerCase());
+        if (match) key = match.id;
+      }
+      if (!key) continue;
+      const existing = map.get(key) || { qty: 0, unit: s.unit || "" };
+      existing.qty += qty;
+      if (!existing.unit && s.unit) existing.unit = s.unit;
+      map.set(key, existing);
+    }
+    return map;
+  }, [sales, crops]);
+
+  const matchesSearch = (crop: any) =>
+    crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    crop.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (crop as any).variety?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    crop.farm_location.toLowerCase().includes(searchTerm.toLowerCase());
+
+  const activeCropsList = useMemo(
+    () => crops.filter(c => !(c as any).archived && matchesSearch(c)),
+    [crops, searchTerm]
+  );
+  const archivedCropsList = useMemo(
+    () => crops.filter(c => (c as any).archived && matchesSearch(c)),
+    [crops, searchTerm]
+  );
 
   const handleCreateCrop = async (cropData: any) => {
     const formatted: any = { ...cropData };
