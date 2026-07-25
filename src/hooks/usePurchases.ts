@@ -65,9 +65,10 @@ export function usePurchases() {
 
   const updatePurchase = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: PurchaseUpdate }) => {
+      const { total_cost, ...rest } = updates as any;
       const { data, error } = await supabase
         .from('purchases')
-        .update({ ...updates, total_cost: updates.quantity && updates.unit_cost ? updates.quantity * updates.unit_cost : undefined })
+        .update(rest)
         .eq('id', id).select().single();
       if (error) throw error;
       return data;
