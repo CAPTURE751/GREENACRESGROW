@@ -56,6 +56,8 @@ export function useSales() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['crops'] });
+      queryClient.invalidateQueries({ queryKey: ['linked-sales'] });
       toast({ title: "Sale recorded", description: "New sale has been recorded successfully." });
     },
     onError: (error) => {
@@ -65,15 +67,18 @@ export function useSales() {
 
   const updateSale = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: SaleUpdate }) => {
+      const { total_amount, ...rest } = updates as any;
       const { data, error } = await supabase
         .from('sales')
-        .update({ ...updates, total_amount: updates.quantity && updates.unit_price ? updates.quantity * updates.unit_price : undefined })
+        .update(rest)
         .eq('id', id).select().single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['crops'] });
+      queryClient.invalidateQueries({ queryKey: ['linked-sales'] });
       toast({ title: "Sale updated", description: "Sale has been updated successfully." });
     },
     onError: (error) => {
@@ -91,6 +96,8 @@ export function useSales() {
       queryClient.invalidateQueries({ queryKey: ['analytics-sales'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       queryClient.invalidateQueries({ queryKey: ['analytics-inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['crops'] });
+      queryClient.invalidateQueries({ queryKey: ['linked-sales'] });
       toast({ title: "Sale deleted", description: "Sale has been deleted successfully." });
     },
     onError: (error) => {

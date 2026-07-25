@@ -155,8 +155,9 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
             id="yield_unit"
             value={formData.yield_unit}
             onChange={(e) => handleInputChange("yield_unit", e.target.value)}
-            placeholder="e.g., bushels, tons, kg"
+            placeholder="e.g., kg, bags, crates"
           />
+          <p className="text-xs text-muted-foreground">Total Harvested is calculated automatically from sales.</p>
         </div>
       </div>
 
@@ -223,18 +224,6 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
             value={formData.acreage || ""}
             onChange={(e) => handleInputChange("acreage", e.target.value ? Number(e.target.value) : undefined)}
             placeholder="e.g., 5.5"
-            min="0"
-            step="0.1"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="yield_quantity">Yield Quantity</Label>
-          <Input
-            id="yield_quantity"
-            type="number"
-            value={formData.yield_quantity || ""}
-            onChange={(e) => handleInputChange("yield_quantity", e.target.value ? Number(e.target.value) : undefined)}
-            placeholder="Expected or actual yield"
             min="0"
             step="0.1"
           />
