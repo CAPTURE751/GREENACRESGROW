@@ -696,6 +696,90 @@ export default function Finances() {
             )}
           </CardContent>
         </Card>
+
+        <AuditTimeline
+          open={!!auditTarget}
+          onOpenChange={(o) => !o && setAuditTarget(null)}
+          tableName={auditTarget?.table || 'sales'}
+          recordId={auditTarget?.id || null}
+          title={auditTarget?.label}
+        />
+
+        <Dialog open={showReconciliation} onOpenChange={setShowReconciliation}>
+          <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileBarChart className="h-5 w-5" />
+                Harvest vs Transaction Reconciliation
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Crops with sales</p>
+                <p className="text-xl font-bold">{reconSummary.cropsWithSales}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Matched</p>
+                <p className="text-xl font-bold text-green-600">{reconSummary.matched}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Mismatched</p>
+                <p className="text-xl font-bold text-red-600">{reconSummary.mismatched}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Net variance</p>
+                <p className="text-xl font-bold">{formatKES(reconSummary.netVariance)}</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border divide-y">
+              {reconciliationRows.length === 0 && (
+                <p className="p-6 text-sm text-muted-foreground text-center">No crops to reconcile.</p>
+              )}
+              {reconciliationRows.map((row) => (
+                <div key={row.cropId} className="p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{row.cropName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {row.saleCount} linked sale(s) · Harvested {row.salesQuantity} {row.unit}
+                        {row.recordedYield !== null && ` · Recorded yield ${row.recordedYield} ${row.unit}`}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm">
+                        Expected {formatKES(row.expectedValue)} · Recorded {formatKES(row.transactionTotal)}
+                      </p>
+                      <Badge
+                        className={
+                          row.status === 'matched'
+                            ? 'bg-green-100 text-green-800'
+                            : row.status === 'no-sales'
+                            ? 'bg-gray-100 text-gray-700'
+                            : 'bg-red-100 text-red-800'
+                        }
+                      >
+                        {row.status === 'matched' ? 'Matched' : row.status === 'no-sales' ? 'No sales' : 'Mismatch'}
+                      </Badge>
+                    </div>
+                  </div>
+                  {row.issues.length > 0 && (
+                    <ul className="mt-2 text-xs text-red-600 list-disc pl-5 space-y-0.5">
+                      {row.issues.map((i, idx) => <li key={idx}>{i}</li>)}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={() => exportReconciliationPDF(reconciliationRows)}>
+                <Download className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
