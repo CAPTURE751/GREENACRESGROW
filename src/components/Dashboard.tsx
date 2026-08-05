@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   CheckCircle,
   LogOut,
-  Loader2
+  Loader2,
+  History as HistoryIcon
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
 import { useCrops } from "@/hooks/useCrops";
@@ -25,6 +26,9 @@ import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useInventory } from "@/hooks/useInventory";
 import { useInventoryAlerts, useGenerateFarmReport, useProfitLossCalculation } from "@/hooks/useEdgeFunctions";
 import { format, parseISO } from "date-fns";
+import { useFarmAudit } from "@/hooks/useAuditLog";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const LIVESTOCK_COLORS = ['hsl(84, 31%, 44%)', 'hsl(43, 74%, 49%)', 'hsl(25, 65%, 45%)', 'hsl(150, 40%, 40%)', 'hsl(200, 50%, 45%)', 'hsl(340, 50%, 50%)'];
 
@@ -37,6 +41,8 @@ export function Dashboard() {
   const { totalCapital } = useCapitalInjections();
   const { lowStockItems } = useInventory();
   
+  const { data: recentActivity = [] } = useFarmAudit(15);
+
   const inventoryAlerts = useInventoryAlerts();
   const generateReport = useGenerateFarmReport();
   const calculateProfitLoss = useProfitLossCalculation();
@@ -65,6 +71,29 @@ export function Dashboard() {
       })
       .map(([month, data]) => ({ month: month.split(' ')[0], ...data }));
   }, [sales, purchases]);
+
+  const financials = useMemo(() => {
+    const revenue = sales.reduce((s, x) => s + (x.total_amount || 0), 0);
+    const expenses = purchases.reduce((s, x) => s + (x.total_cost || 0), 0);
+    const netProfit = revenue - expenses;
+    const margin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+    const outstanding = sales
+      .filter((x: any) => x.payment_status !== 'paid')
+      .reduce((s, x: any) => s + (x.total_amount || 0), 0);
+    return { revenue, expenses, netProfit, margin, outstanding };
+  }, [sales, purchases]);
+
+  const expenseByCategory = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of purchases as any[]) {
+      const key = p.category || 'Uncategorised';
+      map[key] = (map[key] || 0) + (p.total_cost || 0);
+    }
+    return Object.entries(map)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 8);
+  }, [purchases]);
 
   // Crop Yields chart — real crops with yield data
   const cropYieldData = useMemo(() => {
@@ -184,10 +213,12 @@ export function Dashboard() {
             <TrendingUp className="h-5 w-5 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {salesLoading ? '...' : analytics?.completedSales || '0'}
+            <div className={`text-2xl font-bold ${financials.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {salesLoading ? '...' : `${financials.margin.toFixed(1)}%`}
             </div>
-            <p className="text-xs text-muted-foreground">Completed sales</p>
+            <p className="text-xs text-muted-foreground">
+              Net {formatKES(financials.netProfit)} · {analytics?.completedSales || 0} completed sales
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -261,6 +292,80 @@ export function Dashboard() {
                 <p className="text-sm">No crop or livestock data yet</p>
                 <p className="text-xs">Add crops with yield data or livestock to see charts</p>
               </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Financial breakdown & recent activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Expenses by Category
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {expenseByCategory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={expenseByCategory} layout="vertical" margin={{ left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis type="category" dataKey="category" width={110} />
+                  <Tooltip formatter={(value: number) => formatKES(value)} />
+                  <Bar dataKey="amount" fill="hsl(25 65% 45%)" radius={[0, 4, 4, 0]} name="Spend" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[260px] text-muted-foreground">
+                <DollarSign className="h-10 w-10 mb-3 opacity-40" />
+                <p className="text-sm">No expenses recorded yet</p>
+              </div>
+            )}
+            <div className="grid grid-cols-3 gap-3 pt-4 mt-2 border-t text-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Revenue</p>
+                <p className="font-bold text-green-600">{formatKES(financials.revenue)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Expenses</p>
+                <p className="font-bold text-red-600">{formatKES(financials.expenses)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Unpaid sales</p>
+                <p className="font-bold text-amber-600">{formatKES(financials.outstanding)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <HistoryIcon className="h-5 w-5" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No recorded activity yet.</p>
+            ) : (
+              <ScrollArea className="h-[320px] pr-3">
+                <div className="space-y-3">
+                  {recentActivity.map((a) => (
+                    <div key={a.id} className="text-sm border-b pb-2 last:border-0">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="capitalize text-[10px]">{a.action}</Badge>
+                        <span className="font-medium capitalize">{a.table_name.replace(/_/g, ' ')}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {a.actor_name || 'System'} · {new Date(a.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             )}
           </CardContent>
         </Card>
