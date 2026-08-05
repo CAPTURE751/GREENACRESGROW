@@ -14,8 +14,11 @@ import { TransactionForm } from "@/components/TransactionForm";
 import { 
   DollarSign, Plus, TrendingUp, TrendingDown, Receipt, CreditCard, Calendar,
   Filter, Loader2, FileBarChart, BarChart3, X, Download, FileSpreadsheet,
-  Trash2, Landmark, Pencil,
+  Trash2, Landmark, Pencil, History,
 } from "lucide-react";
+import { AuditTimeline } from "@/components/AuditTimeline";
+import { useCrops } from "@/hooks/useCrops";
+import { buildReconciliation, reconciliationSummary, exportReconciliationPDF } from "@/lib/reconciliation";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
