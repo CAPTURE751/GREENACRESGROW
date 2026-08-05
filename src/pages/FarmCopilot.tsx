@@ -16,6 +16,7 @@ import ReactMarkdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import { applyBrandedHeader, applyBrandedFooter } from "@/lib/pdf-branding";
+import { CopilotActionCard, parseCopilotActions } from "@/components/copilot/CopilotActionCard";
 
 type Msg = { id: string; role: "user" | "assistant"; content: string; created_at?: string };
 type Thread = { id: string; title: string; updated_at: string };
@@ -29,6 +30,8 @@ const SUGGESTIONS = [
   "Recommend a fertilizer schedule for crops under 40 days.",
   "Generate a monthly farm performance summary.",
   "Which livestock batches are underperforming?",
+  "Schedule spraying for my capsicum this Friday.",
+  "Create a weekly feeding task for the poultry batch.",
 ];
 
 export default function FarmCopilot() {
@@ -244,10 +247,10 @@ export default function FarmCopilot() {
               FarmCopilot
             </h1>
             <p className="text-sm text-muted-foreground">
-              Your read-only AI farm analyst. Ask anything about crops, livestock, finances, inventory or operations.
+              Your AI farm analyst. Ask anything about crops, livestock, finances or inventory — and let it schedule and manage tasks for you.
             </p>
           </div>
-          <Badge variant="outline" className="gap-1"><Bot className="h-3 w-3" /> Read-only · No data is modified</Badge>
+          <Badge variant="outline" className="gap-1"><Bot className="h-3 w-3" /> Tasks &amp; notes need your confirmation</Badge>
         </div>
 
         <div className="grid md:grid-cols-[260px_1fr] gap-4 flex-1 min-h-0">
@@ -297,7 +300,7 @@ export default function FarmCopilot() {
                     </div>
                     <h2 className="font-semibold text-lg">Welcome to FarmCopilot</h2>
                     <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      I analyze your farm data to answer questions, forecast yields, monitor finances and recommend actions. I never modify your records.
+                      I analyze your farm data to answer questions, forecast yields and monitor finances. I can also schedule, update and complete tasks — every change waits for your confirmation.
                     </p>
                   </div>
                   <div>
@@ -327,9 +330,19 @@ export default function FarmCopilot() {
                       : "bg-muted/60 border"
                   }`}>
                     {m.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1">
-                        <ReactMarkdown>{m.content || "_Thinking…_"}</ReactMarkdown>
-                      </div>
+                      (() => {
+                        const { text, actions } = parseCopilotActions(m.content);
+                        return (
+                          <>
+                            <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1">
+                              <ReactMarkdown>{text || (m.content ? "" : "_Thinking…_")}</ReactMarkdown>
+                            </div>
+                            {activeFarm && actions.map((a, i) => (
+                              <CopilotActionCard key={`${m.id}-${i}`} action={a} farmId={activeFarm.id} />
+                            ))}
+                          </>
+                        );
+                      })()
                     ) : (
                       <p className="whitespace-pre-wrap text-sm">{m.content}</p>
                     )}
@@ -368,7 +381,7 @@ export default function FarmCopilot() {
                 )}
               </div>
               <p className="text-[11px] text-muted-foreground text-center">
-                FarmCopilot analyzes your data in real time and never modifies records.
+                FarmCopilot analyzes your data in real time. Task and note changes are only applied after you confirm them.
               </p>
             </div>
           </Card>
