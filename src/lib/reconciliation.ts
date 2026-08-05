@@ -92,15 +92,14 @@ export function reconciliationSummary(rows: ReconciliationRow[]) {
   };
 }
 
-export async function exportReconciliationPDF(rows: ReconciliationRow[], printedBy?: string) {
+export async function exportReconciliationPDF(rows: ReconciliationRow[]) {
   const doc = new jsPDF();
   const summary = reconciliationSummary(rows);
 
   let y = await applyBrandedHeader(doc, {
     title: 'Harvest & Transaction Reconciliation',
     subtitle: 'Sales-derived harvest totals compared against recorded transaction totals',
-    printedBy,
-  } as any);
+  });
 
   doc.setFontSize(10);
   doc.setTextColor(40, 40, 40);
