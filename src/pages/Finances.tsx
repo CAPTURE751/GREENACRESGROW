@@ -587,7 +587,7 @@ export default function Finances() {
 
         {/* Transactions List */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
               Recent Transactions
@@ -595,6 +595,13 @@ export default function Finances() {
                 <Badge variant="secondary" className="ml-2 text-xs">{txnStartDate || '...'} → {txnEndDate || '...'}</Badge>
               )}
             </CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setShowReconciliation(true)}>
+              <FileBarChart className="h-4 w-4 mr-2" />
+              Reconciliation
+              {reconSummary.mismatched > 0 && (
+                <Badge className="ml-2 bg-red-100 text-red-800">{reconSummary.mismatched}</Badge>
+              )}
+            </Button>
           </CardHeader>
           <CardContent>
             {isLoading ? (
