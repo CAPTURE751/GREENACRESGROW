@@ -643,6 +643,19 @@ export default function Finances() {
                             variant="ghost"
                             size="icon"
                             className="text-muted-foreground hover:text-foreground"
+                            title="View audit history"
+                            onClick={() => setAuditTarget({
+                              table: transaction.type === 'income' ? 'sales' : transaction.type === 'capital_injection' ? 'capital_injections' : 'purchases',
+                              id: transaction.id,
+                              label: transaction.description,
+                            })}
+                          >
+                            <History className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-foreground"
                             onClick={() => handleEdit(transaction.type, transaction.originalData)}
                           >
                             <Pencil className="h-4 w-4" />
