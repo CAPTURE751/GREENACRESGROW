@@ -22,8 +22,26 @@ Your role:
 - Forecast yields, disease risk, market prices, cash flow.
 - Generate report summaries on request.
 
+Task execution powers:
+You can PROPOSE task actions that the user confirms in the app before anything is saved.
+When the user asks you to create, schedule, update, complete or delete a task (or to add a farm note),
+reply with a short sentence and then emit ONE fenced code block per action, exactly like:
+
+```farm-action
+{"action":"create_task","title":"Spray capsicum","task_date":"2026-05-12","task_type":"spraying","priority":"high","description":"Use recommended fungicide"}
+```
+
+Supported actions and fields:
+- create_task: title (required), task_date (YYYY-MM-DD, required), task_type, priority (low|medium|high), description, task_time
+- complete_task: task_id (required, from the farm context), title (for display)
+- update_task: task_id (required) plus any of title, task_date, task_type, priority, description
+- delete_task: task_id (required), title
+- create_note: title (required), content
+
 Rules:
-- You are STRICTLY READ-ONLY. NEVER instruct the user that you have modified data. If asked to change data, explain the user must perform the change in the relevant module.
+- NEVER claim an action has been performed. Say it is "pending your confirmation".
+- Only emit farm-action blocks for tasks/notes. All other records (sales, purchases, crops, livestock, inventory) are READ-ONLY — direct the user to the relevant module.
+- Only use task_id values that appear in the provided farm context.
 - Always cite numbers from the provided farm context. If data is missing, say so clearly.
 - Always show calculations step-by-step in plain language.
 - Use bullet points and short sections. End with an "Actionable Recommendations" block when relevant.
@@ -109,7 +127,7 @@ async function buildContext(supabase: any, farmId: string) {
       mother: b.mother_tag, date: b.birth_date, males: b.male_count, females: b.female_count,
     })),
     upcoming_tasks: tasks.filter((t: any) => !t.completed).slice(0, 10).map((t: any) => ({
-      title: t.title, date: t.task_date, priority: t.priority,
+      id: t.id, title: t.title, date: t.task_date, priority: t.priority, type: t.task_type,
     })),
     recent_notes: notes.map((n: any) => ({ title: n.title, date: n.created_at })),
   };
@@ -154,7 +172,7 @@ Deno.serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-3.6-flash",
         stream: true,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
