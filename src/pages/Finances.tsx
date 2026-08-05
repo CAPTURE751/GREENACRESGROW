@@ -85,9 +85,14 @@ export default function Finances() {
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
+  const [auditTarget, setAuditTarget] = useState<{ table: string; id: string; label: string } | null>(null);
+  const [showReconciliation, setShowReconciliation] = useState(false);
   
   const { sales, analytics: salesAnalytics, isLoading: salesLoading, deleteSale, isDeleting: isDeletingSale } = useSales();
   const { purchases, analytics: purchaseAnalytics, isLoading: purchasesLoading, deletePurchase, isDeleting: isDeletingPurchase } = usePurchases();
+  const { crops } = useCrops();
+  const reconciliationRows = useMemo(() => buildReconciliation(crops || [], sales || []), [crops, sales]);
+  const reconSummary = useMemo(() => reconciliationSummary(reconciliationRows), [reconciliationRows]);
   const { capitalInjections, totalCapital, isLoading: capitalLoading, deleteInjection, isDeleting: isDeletingInjection } = useCapitalInjections();
   const profitLossMutation = useProfitLossCalculation();
   const { profile } = useAuth();
