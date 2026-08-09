@@ -15,7 +15,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
     // Authenticate user with anon key
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -31,8 +30,8 @@ serve(async (req) => {
       });
     }
 
-    // Use service role client for data operations (bypasses RLS)
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+    // Use the caller's JWT-scoped client so RLS restricts data to their farms
+    const supabaseClient = userClient;
 
     const { reportType, periodStart, periodEnd } = await req.json();
 
