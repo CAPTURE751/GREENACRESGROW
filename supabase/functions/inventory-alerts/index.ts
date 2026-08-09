@@ -13,20 +13,48 @@ serve(async (req) => {
   }
 
   try {
-    // Cron/service authentication: require shared secret
-    const cronSecret = Deno.env.get('CRON_SECRET');
-    const provided = req.headers.get('x-cron-secret');
-    if (!cronSecret || provided !== cronSecret) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const unauthorized = () =>
+      new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+
+    // Accept EITHER the cron shared secret OR an admin/staff user JWT.
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const providedSecret = req.headers.get('x-cron-secret');
+    const isCron = !!cronSecret && providedSecret === cronSecret;
+
+    if (!isCron) {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader?.startsWith('Bearer ')) return unauthorized();
+
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(
+        authHeader.replace('Bearer ', '')
+      );
+      if (claimsError || !claimsData?.claims) return unauthorized();
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', claimsData.claims.sub)
+        .single();
+
+      if (!profile || !['admin', 'staff'].includes(profile.role)) {
+        return new Response(JSON.stringify({ error: 'Insufficient permissions' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log('Checking inventory for low stock items...');
 

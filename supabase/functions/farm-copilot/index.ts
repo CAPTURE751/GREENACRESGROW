@@ -27,9 +27,9 @@ You can PROPOSE task actions that the user confirms in the app before anything i
 When the user asks you to create, schedule, update, complete or delete a task (or to add a farm note),
 reply with a short sentence and then emit ONE fenced code block per action, exactly like:
 
-```farm-action
+\`\`\`farm-action
 {"action":"create_task","title":"Spray capsicum","task_date":"2026-05-12","task_type":"spraying","priority":"high","description":"Use recommended fungicide"}
-```
+\`\`\`
 
 Supported actions and fields:
 - create_task: title (required), task_date (YYYY-MM-DD, required), task_type, priority (low|medium|high), description, task_time
