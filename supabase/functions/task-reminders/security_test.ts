@@ -50,6 +50,14 @@ Deno.test("inventory-alerts rejects a wrong cron secret", async () => {
   assertEquals(status, 401);
 });
 
+Deno.test("inventory-alerts rejects a wrong secret combined with a bogus JWT", async () => {
+  const { status } = await call("inventory-alerts", {
+    "x-cron-secret": "not-the-secret",
+    Authorization: "Bearer not-a-real-jwt",
+  });
+  assertEquals(status, 401);
+});
+
 // --- Cron endpoints must never leak internal error details ---
 
 Deno.test("cron endpoints return a generic body, never SQL or stack details", async () => {
