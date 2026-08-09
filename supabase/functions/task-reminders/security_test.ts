@@ -64,7 +64,11 @@ Deno.test("cron endpoints return a generic body, never SQL or stack details", as
 
 // --- Realtime: broadcast/presence must be denied for every client role ---
 
-Deno.test("anonymous clients cannot join a private broadcast channel", async () => {
+Deno.test({
+  name: "anonymous clients cannot join a private broadcast channel",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
   const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -82,12 +86,18 @@ Deno.test("anonymous clients cannot join a private broadcast channel", async () 
     });
   });
 
-  await client.removeAllChannels();
-  // realtime.messages has RLS on with no permissive policy, so joining must fail.
-  assertEquals(status === "SUBSCRIBED", false, `private channel join was allowed: ${status}`);
+    await client.removeAllChannels();
+    client.realtime.disconnect();
+    // realtime.messages has RLS on with no permissive policy, so joining must fail.
+    assertEquals(status === "SUBSCRIBED", false, `private channel join was allowed: ${status}`);
+  },
 });
 
-Deno.test("anonymous clients cannot broadcast onto another farm's channel", async () => {
+Deno.test({
+  name: "anonymous clients cannot broadcast onto another farm's channel",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
   const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -114,6 +124,8 @@ Deno.test("anonymous clients cannot broadcast onto another farm's channel", asyn
     payload: { secret: "cross-farm" },
   });
 
-  await client.removeAllChannels();
-  assertEquals(result === "ok" && received.length > 0, false, "cross-farm broadcast was delivered");
+    await client.removeAllChannels();
+    client.realtime.disconnect();
+    assertEquals(result === "ok" && received.length > 0, false, "cross-farm broadcast was delivered");
+  },
 });
