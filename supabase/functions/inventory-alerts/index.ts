@@ -13,6 +13,16 @@ serve(async (req) => {
   }
 
   try {
+    // Cron/service authentication: require shared secret
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const provided = req.headers.get('x-cron-secret');
+    if (!cronSecret || provided !== cronSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -84,9 +94,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in inventory-alerts function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: 'An internal error occurred.',
       success: false 
     }), {
       status: 500,

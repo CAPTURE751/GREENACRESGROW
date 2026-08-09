@@ -22,7 +22,6 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -36,7 +35,8 @@ serve(async (req) => {
     }
 
     const userId = user.id;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Use the caller's JWT-scoped client so RLS restricts data to their farms
+    const supabase = userClient;
 
     const { start_date, end_date, category } = await req.json();
 
@@ -210,8 +210,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in calculate-profit-loss function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage, success: false }), {
+    return new Response(JSON.stringify({ error: 'An internal error occurred.', success: false }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

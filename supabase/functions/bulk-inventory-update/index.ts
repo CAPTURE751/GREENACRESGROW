@@ -110,8 +110,8 @@ serve(async (req) => {
           if (error) throw error;
           return { success: true, id: update.id, data };
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          return { success: false, id: update.id, error: errorMessage };
+          console.error('Bulk update item failed:', error);
+          return { success: false, id: update.id, error: 'Update failed' };
         }
       });
 
@@ -157,9 +157,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in bulk-inventory-update function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: 'An internal error occurred.',
       success: false 
     }), {
       status: 500,
