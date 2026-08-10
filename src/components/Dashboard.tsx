@@ -196,14 +196,14 @@ export function Dashboard() {
 
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-5 w-5 text-farm-harvest" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {formatKES(analytics?.totalRevenue || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">Total sales revenue</p>
+            <p className="text-xs text-muted-foreground">All-time sales revenue</p>
           </CardContent>
         </Card>
 

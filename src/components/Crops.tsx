@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useCrops } from "@/hooks/useCrops";
 import { useSales } from "@/hooks/useSales";
+import { usePurchases } from "@/hooks/usePurchases";
 import { CropForm } from "@/components/CropForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { CropTasksDialog } from "@/components/CropTasksDialog";
@@ -39,6 +40,7 @@ export function Crops() {
   const [tasksCrop, setTasksCrop] = useState<any>(null);
   const { crops, isLoading, createCrop, updateCrop, isCreating, isUpdating } = useCrops();
   const { sales } = useSales();
+  const { purchases } = usePurchases();
 
   // Aggregate harvested totals per crop from cumulative sales
   const harvestedByCrop = useMemo(() => {
@@ -127,11 +129,39 @@ export function Crops() {
             onClick={async () => {
               try {
                 const reportData: Record<string, any> = {};
-                crops.forEach((c) => {
-                  if (!reportData[c.name]) reportData[c.name] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
-                  reportData[c.name].salesCount += 1;
+                const cropFor = (rec: any) => {
+                  if (rec.linked_module === "crop" && rec.linked_record_id) {
+                    return crops.find((c) => c.id === rec.linked_record_id) || null;
+                  }
+                  const label = rec.product_name || rec.item_name;
+                  if (!label) return null;
+                  return crops.find((c) => c.name && c.name.toLowerCase() === String(label).toLowerCase()) || null;
+                };
+                const bucket = (name: string) => {
+                  if (!reportData[name]) reportData[name] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
+                  return reportData[name];
+                };
+                crops.forEach((c) => bucket(c.name));
+                (sales as any[]).forEach((s) => {
+                  const crop = cropFor(s);
+                  if (!crop) return;
+                  const amount = Number(s.total_amount) || (Number(s.quantity) || 0) * (Number(s.unit_price) || 0);
+                  const b = bucket(crop.name);
+                  b.revenue += amount;
+                  b.salesCount += 1;
+                  b.salesDetails.push({ date: s.sale_date, buyer: s.buyer, quantity: s.quantity, unit: s.unit, amount });
                 });
-                const totals = { totalRevenue: 0, totalCosts: 0, netProfit: 0 };
+                (purchases as any[]).forEach((p) => {
+                  const crop = cropFor(p);
+                  if (!crop) return;
+                  const amount = Number(p.total_cost) || (Number(p.quantity) || 0) * (Number(p.unit_cost) || 0);
+                  const b = bucket(crop.name);
+                  b.costs += amount;
+                  b.costDetails.push({ date: p.purchase_date, item: p.item_name, supplier: p.supplier, amount });
+                });
+                const totalRevenue = Object.values(reportData).reduce((s: number, d: any) => s + d.revenue, 0);
+                const totalCosts = Object.values(reportData).reduce((s: number, d: any) => s + d.costs, 0);
+                const totals = { totalRevenue, totalCosts, netProfit: totalRevenue - totalCosts };
                 await exportModulePnLToPDF("crop", reportData, totals, "all");
                 toast.success("Crop report downloaded");
               } catch {

@@ -41,14 +41,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
-              .single();
-            
+              .maybeSingle();
+
             if (error) {
               console.error('Error fetching profile:', error);
               setProfile(null);
-            } else {
-              setProfile(profileData);
+              setLoading(false);
+              return;
             }
+
+            if (profileData) {
+              setProfile(profileData);
+              setLoading(false);
+              return;
+            }
+
+            // Self-heal: no profile row yet (e.g. account created before the
+            // profile trigger existed). Create a baseline one so the app works.
+            const { data: created } = await supabase
+              .from('profiles')
+              .insert({
+                user_id: session.user.id,
+                name: (session.user.user_metadata?.name as string) || session.user.email || 'User',
+                role: 'farmer',
+              })
+              .select()
+              .maybeSingle();
+            setProfile(created ?? null);
             setLoading(false);
           }, 0);
         } else {

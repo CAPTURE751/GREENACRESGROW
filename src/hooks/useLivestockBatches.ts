@@ -123,7 +123,7 @@ export function useLivestockBatches() {
 
   useEffect(() => {
     const ch = supabase
-      .channel(`ls-batches-${Date.now()}`)
+      .channel(`ls-batches-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'livestock_batches' }, () => {
         queryClient.invalidateQueries({ queryKey: ['livestock_batches'] });
       })

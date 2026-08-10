@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useLivestockBatches } from "@/hooks/useLivestockBatches";
+import { useSales } from "@/hooks/useSales";
+import { usePurchases } from "@/hooks/usePurchases";
+import { formatKES } from "@/lib/currency";
 import { LivestockForm } from "@/components/LivestockForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { BirthsDialog } from "@/components/BirthsDialog";
@@ -63,6 +66,8 @@ export function Livestock() {
   const [feedUnit, setFeedUnit] = useState('kg');
   const { livestock, isLoading, createLivestock, updateLivestock, isCreating, isUpdating } = useLivestock();
   const { batches, createBatch, updateBatch, recordMortality, recordFeed, deleteBatch, isCreating: isCreatingBatch } = useLivestockBatches();
+  const { sales } = useSales();
+  const { purchases } = usePurchases();
   const [addMode, setAddMode] = useState<'individual' | 'batch'>('individual');
   const today = new Date().toISOString().split('T')[0];
   const [batchForm, setBatchForm] = useState({
@@ -135,14 +140,48 @@ export function Livestock() {
             onClick={async () => {
               try {
                 const reportData: Record<string, any> = {};
-                livestock.forEach(a => {
-                  const key = `${a.type} - ${a.breed || 'Unknown'}`;
+                const keyFor = (a: any) => `${a.type} - ${a.breed || 'Unknown'}`;
+                const bucket = (key: string) => {
                   if (!reportData[key]) reportData[key] = { revenue: 0, costs: 0, salesCount: 0, salesDetails: [], costDetails: [] };
-                  reportData[key].salesCount += 1;
-                  if (a.purchase_price) reportData[key].costs += a.purchase_price;
+                  return reportData[key];
+                };
+                livestock.forEach((a: any) => {
+                  const b = bucket(keyFor(a));
+                  if (a.purchase_price) {
+                    b.costs += Number(a.purchase_price) || 0;
+                    b.costDetails.push({ date: a.purchase_date, item: `Purchase ${a.tag_number || a.type}`, amount: Number(a.purchase_price) || 0 });
+                  }
                 });
-                const totals = { totalRevenue: 0, totalCosts: Object.values(reportData).reduce((s: number, d: any) => s + d.costs, 0), netProfit: 0 };
-                totals.netProfit = -totals.totalCosts;
+                batches.forEach((b: any) => bucket(`${b.animal_type} - ${b.breed || 'Batch'}`));
+                const groupFor = (rec: any) => {
+                  if (rec.linked_module === 'livestock' && rec.linked_record_id) {
+                    const a = livestock.find((l: any) => l.id === rec.linked_record_id);
+                    if (a) return keyFor(a);
+                    const bt: any = batches.find((x: any) => x.id === rec.linked_record_id);
+                    if (bt) return `${bt.animal_type} - ${bt.breed || 'Batch'}`;
+                  }
+                  return null;
+                };
+                (sales as any[]).forEach((s) => {
+                  const key = groupFor(s);
+                  if (!key) return;
+                  const amount = Number(s.total_amount) || (Number(s.quantity) || 0) * (Number(s.unit_price) || 0);
+                  const b = bucket(key);
+                  b.revenue += amount;
+                  b.salesCount += 1;
+                  b.salesDetails.push({ date: s.sale_date, buyer: s.buyer, quantity: s.quantity, unit: s.unit, amount });
+                });
+                (purchases as any[]).forEach((p) => {
+                  const key = groupFor(p);
+                  if (!key) return;
+                  const amount = Number(p.total_cost) || (Number(p.quantity) || 0) * (Number(p.unit_cost) || 0);
+                  const b = bucket(key);
+                  b.costs += amount;
+                  b.costDetails.push({ date: p.purchase_date, item: p.item_name, supplier: p.supplier, amount });
+                });
+                const totalRevenue = Object.values(reportData).reduce((s: number, d: any) => s + d.revenue, 0);
+                const totalCosts = Object.values(reportData).reduce((s: number, d: any) => s + d.costs, 0);
+                const totals = { totalRevenue, totalCosts, netProfit: totalRevenue - totalCosts };
                 await exportModulePnLToPDF("livestock", reportData, totals, "all");
                 toast.success("Livestock report downloaded");
               } catch (e) { toast.error("Failed to generate report"); }
@@ -377,7 +416,7 @@ export function Livestock() {
                   <div className="pt-2 border-t">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Purchase Price:</span>
-                      <span className="font-medium">${animal.purchase_price.toLocaleString()}</span>
+                      <span className="font-medium">{formatKES(animal.purchase_price)}</span>
                     </div>
                   </div>
                 )}
