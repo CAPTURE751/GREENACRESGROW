@@ -66,6 +66,8 @@ export function Livestock() {
   const [feedUnit, setFeedUnit] = useState('kg');
   const { livestock, isLoading, createLivestock, updateLivestock, isCreating, isUpdating } = useLivestock();
   const { batches, createBatch, updateBatch, recordMortality, recordFeed, deleteBatch, isCreating: isCreatingBatch } = useLivestockBatches();
+  const { sales } = useSales();
+  const { purchases } = usePurchases();
   const [addMode, setAddMode] = useState<'individual' | 'batch'>('individual');
   const today = new Date().toISOString().split('T')[0];
   const [batchForm, setBatchForm] = useState({
