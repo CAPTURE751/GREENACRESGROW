@@ -62,9 +62,10 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
     // Auto-default quantity to 1 when only a flat amount is entered (prevents 0.00 totals)
     const qtyNum = Number(formData.quantity);
     const priceNum = Number(formData.unit_price);
-    if (transactionType !== 'capital_injection' && (!qtyNum || qtyNum === 0) && priceNum > 0) {
-      formData.quantity = '1';
-    }
+    const effectiveQty =
+      transactionType !== 'capital_injection' && (!qtyNum || qtyNum === 0) && priceNum > 0
+        ? 1
+        : qtyNum;
 
     if (editMode && editData?.id) {
       // UPDATE existing record
@@ -76,7 +77,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
             product_type: formData.product_type,
             buyer: formData.buyer,
             buyer_contact: formData.buyer_contact,
-            quantity: Number(formData.quantity),
+            quantity: effectiveQty,
             unit: formData.unit,
             unit_price: Number(formData.unit_price),
             sale_date: formData.date,
@@ -92,7 +93,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
             category: formData.category,
             supplier: formData.supplier,
             supplier_contact: formData.supplier_contact,
-            quantity: Number(formData.quantity),
+            quantity: effectiveQty,
             unit: formData.unit,
             unit_cost: Number(formData.unit_price),
             purchase_date: formData.date,
@@ -130,7 +131,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
           product_id: linkedRecordId || crypto.randomUUID(),
           buyer: formData.buyer,
           buyer_contact: formData.buyer_contact,
-          quantity: Number(formData.quantity),
+          quantity: effectiveQty,
           unit: formData.unit,
           unit_price: Number(formData.unit_price),
           total_amount: totalAmount,
@@ -145,7 +146,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
           category: formData.category,
           supplier: formData.supplier,
           supplier_contact: formData.supplier_contact,
-          quantity: Number(formData.quantity),
+          quantity: effectiveQty,
           unit: formData.unit,
           unit_cost: Number(formData.unit_price),
           purchase_date: formData.date,
