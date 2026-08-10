@@ -83,7 +83,7 @@ export function useCrops() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('crops-changes')
+      .channel(`crops-changes-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crops' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crops'] });
       })

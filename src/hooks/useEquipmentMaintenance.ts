@@ -71,7 +71,7 @@ export function useEquipmentMaintenance(equipmentId?: string) {
 
   useEffect(() => {
     const ch = supabase
-      .channel(`equip-maint-${Date.now()}`)
+      .channel(`equip-maint-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'equipment_maintenance' }, () => {
         queryClient.invalidateQueries({ queryKey: ['equipment_maintenance'] });
       })

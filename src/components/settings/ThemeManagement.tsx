@@ -65,7 +65,7 @@ export function ThemeManagement() {
       toast({ title: 'Name required', description: 'Enter a name for the theme.', variant: 'destructive' });
       return;
     }
-    const item: SavedTheme = { id: `custom-${Date.now()}`, name, config: cfg };
+    const item: SavedTheme = { id: `custom-${Date.now()}-${Math.random().toString(36).slice(2)}`, name, config: cfg };
     const next = [...saved, item];
     setSaved(next);
     persistSavedThemes(next);

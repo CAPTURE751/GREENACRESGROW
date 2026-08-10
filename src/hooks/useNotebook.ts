@@ -78,7 +78,7 @@ export function useNotebookNotes() {
   });
 
   useEffect(() => {
-    const ch = supabase.channel(`notebook-notes-${Date.now()}`)
+    const ch = supabase.channel(`notebook-notes-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notebook_notes' },
         () => qc.invalidateQueries({ queryKey: ['notebook_notes'] }))
       .subscribe();
@@ -138,7 +138,7 @@ export function useSeasonChallenges() {
   });
 
   useEffect(() => {
-    const ch = supabase.channel(`season-challenges-${Date.now()}`)
+    const ch = supabase.channel(`season-challenges-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'season_challenges' },
         () => qc.invalidateQueries({ queryKey: ['season_challenges'] }))
       .subscribe();

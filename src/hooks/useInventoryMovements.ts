@@ -95,7 +95,7 @@ export function useInventoryMovements(inventoryId?: string) {
 
   useEffect(() => {
     const ch = supabase
-      .channel(`inv-mov-${Date.now()}`)
+      .channel(`inv-mov-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_movements' }, () => {
         queryClient.invalidateQueries({ queryKey: ['inventory_movements'] });
         queryClient.invalidateQueries({ queryKey: ['inventory'] });

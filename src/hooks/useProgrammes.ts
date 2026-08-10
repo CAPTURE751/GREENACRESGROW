@@ -311,7 +311,7 @@ export function useProgrammes() {
   });
 
   useEffect(() => {
-    const ch = supabase.channel(`programmes-${Date.now()}`)
+    const ch = supabase.channel(`programmes-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crop_programmes' },
         () => qc.invalidateQueries({ queryKey: ['crop_programmes'] }))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'programme_activities' },
