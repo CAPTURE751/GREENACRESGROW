@@ -416,7 +416,7 @@ export function Livestock() {
                   <div className="pt-2 border-t">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Purchase Price:</span>
-                      <span className="font-medium">${animal.purchase_price.toLocaleString()}</span>
+                      <span className="font-medium">{formatKES(animal.purchase_price)}</span>
                     </div>
                   </div>
                 )}
