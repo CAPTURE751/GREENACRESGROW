@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useCrops } from "@/hooks/useCrops";
 import { useSales } from "@/hooks/useSales";
+import { usePurchases } from "@/hooks/usePurchases";
 import { CropForm } from "@/components/CropForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { CropTasksDialog } from "@/components/CropTasksDialog";
@@ -39,6 +40,7 @@ export function Crops() {
   const [tasksCrop, setTasksCrop] = useState<any>(null);
   const { crops, isLoading, createCrop, updateCrop, isCreating, isUpdating } = useCrops();
   const { sales } = useSales();
+  const { purchases } = usePurchases();
 
   // Aggregate harvested totals per crop from cumulative sales
   const harvestedByCrop = useMemo(() => {
