@@ -170,6 +170,60 @@ export type Database = {
           },
         ]
       }
+      crop_harvests: {
+        Row: {
+          created_at: string
+          created_by: string
+          crop_id: string
+          farm_id: string | null
+          harvest_date: string
+          id: string
+          notes: string | null
+          quality_grade: string | null
+          quantity: number
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          crop_id: string
+          farm_id?: string | null
+          harvest_date?: string
+          id?: string
+          notes?: string | null
+          quality_grade?: string | null
+          quantity?: number
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          crop_id?: string
+          farm_id?: string | null
+          harvest_date?: string
+          id?: string
+          notes?: string | null
+          quality_grade?: string | null
+          quantity?: number
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crop_harvests_crop_id_fkey"
+            columns: ["crop_id"]
+            isOneToOne: false
+            referencedRelation: "crops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crop_harvests_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crop_programmes: {
         Row: {
           anchor_date: string
@@ -237,23 +291,97 @@ export type Database = {
           },
         ]
       }
+      crop_varieties: {
+        Row: {
+          created_at: string
+          created_by: string
+          crop_name: string
+          establishment_method: string
+          farm_id: string | null
+          field_duration_days: number | null
+          id: string
+          max_duration_days: number | null
+          min_duration_days: number | null
+          notes: string | null
+          nursery_duration_days: number | null
+          total_duration_days: number | null
+          updated_at: string
+          variety: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          crop_name: string
+          establishment_method?: string
+          farm_id?: string | null
+          field_duration_days?: number | null
+          id?: string
+          max_duration_days?: number | null
+          min_duration_days?: number | null
+          notes?: string | null
+          nursery_duration_days?: number | null
+          total_duration_days?: number | null
+          updated_at?: string
+          variety?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          crop_name?: string
+          establishment_method?: string
+          farm_id?: string | null
+          field_duration_days?: number | null
+          id?: string
+          max_duration_days?: number | null
+          min_duration_days?: number | null
+          notes?: string | null
+          nursery_duration_days?: number | null
+          total_duration_days?: number | null
+          updated_at?: string
+          variety?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crop_varieties_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crops: {
         Row: {
           acreage: number | null
+          actual_harvest_date: string | null
+          actual_transplant_date: string | null
           archived: boolean
           archived_at: string | null
           created_at: string
           created_by: string
+          duration_source: string
+          establishment_method: string
+          expected_harvest_date: string | null
+          expected_transplant_date: string | null
           farm_id: string | null
           farm_location: string
+          field_growth_duration_days: number | null
           growth_duration_days: number | null
           harvest_date: string | null
           id: string
           name: string
           notes: string | null
+          nursery_duration_days: number | null
+          nursery_location: string | null
+          nursery_notes: string | null
+          nursery_start_date: string | null
           planting_date: string | null
           season: string | null
+          seed_quantity: number | null
+          seedlings_transplanted: number | null
+          spacing: string | null
           status: string | null
+          transplant_notes: string | null
           type: string
           updated_at: string
           variety: string | null
@@ -262,20 +390,35 @@ export type Database = {
         }
         Insert: {
           acreage?: number | null
+          actual_harvest_date?: string | null
+          actual_transplant_date?: string | null
           archived?: boolean
           archived_at?: string | null
           created_at?: string
           created_by: string
+          duration_source?: string
+          establishment_method?: string
+          expected_harvest_date?: string | null
+          expected_transplant_date?: string | null
           farm_id?: string | null
           farm_location: string
+          field_growth_duration_days?: number | null
           growth_duration_days?: number | null
           harvest_date?: string | null
           id?: string
           name: string
           notes?: string | null
+          nursery_duration_days?: number | null
+          nursery_location?: string | null
+          nursery_notes?: string | null
+          nursery_start_date?: string | null
           planting_date?: string | null
           season?: string | null
+          seed_quantity?: number | null
+          seedlings_transplanted?: number | null
+          spacing?: string | null
           status?: string | null
+          transplant_notes?: string | null
           type: string
           updated_at?: string
           variety?: string | null
@@ -284,20 +427,35 @@ export type Database = {
         }
         Update: {
           acreage?: number | null
+          actual_harvest_date?: string | null
+          actual_transplant_date?: string | null
           archived?: boolean
           archived_at?: string | null
           created_at?: string
           created_by?: string
+          duration_source?: string
+          establishment_method?: string
+          expected_harvest_date?: string | null
+          expected_transplant_date?: string | null
           farm_id?: string | null
           farm_location?: string
+          field_growth_duration_days?: number | null
           growth_duration_days?: number | null
           harvest_date?: string | null
           id?: string
           name?: string
           notes?: string | null
+          nursery_duration_days?: number | null
+          nursery_location?: string | null
+          nursery_notes?: string | null
+          nursery_start_date?: string | null
           planting_date?: string | null
           season?: string | null
+          seed_quantity?: number | null
+          seedlings_transplanted?: number | null
+          spacing?: string | null
           status?: string | null
+          transplant_notes?: string | null
           type?: string
           updated_at?: string
           variety?: string | null
