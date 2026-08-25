@@ -312,20 +312,27 @@ export function Crops() {
                   <p className="text-xs text-muted-foreground text-right">{Math.round(info.progressPercent)}%</p>
                 </div>
 
-                {/* Lifecycle timeline */}
+                {/* Lifecycle timeline (method-aware) */}
                 <div>
                   <div className="flex justify-between items-center">
-                    {lifecycleStages.map((s, i) => (
+                    {stages.map((s, i) => (
                       <div key={s.key} className="flex-1 flex flex-col items-center relative">
                         <div className={`h-3 w-3 rounded-full z-10 ${i <= stageIdx ? "bg-farm-green" : "bg-muted"}`} />
-                        {i < lifecycleStages.length - 1 && (
+                        {i < stages.length - 1 && (
                           <div className={`absolute top-1/2 left-1/2 h-0.5 w-full -translate-y-1/2 ${i < stageIdx ? "bg-farm-green" : "bg-muted"}`} />
                         )}
                         <span className={`mt-1 text-[10px] ${i === stageIdx ? "font-semibold text-farm-green" : "text-muted-foreground"}`}>{s.label}</span>
                       </div>
                     ))}
                   </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground text-center">{info.methodLabel} · {info.countdownLabel}</p>
                 </div>
+
+                {tAlert && (
+                  <div className="flex items-start gap-2 text-xs bg-teal-50 border border-teal-200 text-teal-800 rounded-md p-2">
+                    <Sprout className="h-3.5 w-3.5 mt-0.5" /> {tAlert}
+                  </div>
+                )}
 
                 {alert && (
                   <div className="flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-2">
@@ -343,11 +350,35 @@ export function Crops() {
                   <Button size="sm" variant="outline" onClick={() => { setSelectedCrop(crop); setEditDialogOpen(true); }}>
                     <Pencil className="h-3 w-3 mr-1" /> Edit
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => setHarvestCrop(crop)}>
+                    <Sprout className="h-3 w-3 mr-1" /> Harvest Log
+                  </Button>
+                  {needsTransplant && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="col-span-2 border-teal-300 text-teal-800 hover:bg-teal-50">
+                          <MoveRight className="h-3 w-3 mr-1" /> Mark Transplanted
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirm Transplant</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Stamp today as the actual transplant date for {crop.name}? The harvest schedule will be recalculated from this date.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => confirmTransplant(crop)}>Confirm Transplant</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   {info.status !== "harvested" && info.status !== "archived" ? (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" className="bg-farm-green hover:bg-farm-green/90">
-                          <CheckCircle2 className="h-3 w-3 mr-1" /> Harvest
+                        <Button size="sm" className="bg-farm-green hover:bg-farm-green/90 col-span-2">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Complete & Archive
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -364,11 +395,12 @@ export function Crops() {
                       </AlertDialogContent>
                     </AlertDialog>
                   ) : (
-                    <Badge variant="outline" className="justify-center bg-gray-50 text-gray-600">
+                    <Badge variant="outline" className="justify-center bg-gray-50 text-gray-600 col-span-2">
                       <Archive className="h-3 w-3 mr-1" /> Archived
                     </Badge>
                   )}
                 </div>
+
               </CardContent>
             </Card>
           );
