@@ -11,25 +11,34 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useCrops } from "@/hooks/useCrops";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useCropHarvests, totalsByCrop } from "@/hooks/useCropHarvests";
 import { CropForm } from "@/components/CropForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { CropTasksDialog } from "@/components/CropTasksDialog";
+import { CropHarvestDialog } from "@/components/CropHarvestDialog";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
-import { computeLifecycle, lifecycleStages, currentStageIndex, harvestAlertFor } from "@/lib/crop-lifecycle";
+import { computeLifecycle, stagesFor, currentStageIndex, harvestAlertFor, transplantAlertFor } from "@/lib/crop-lifecycle";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
   Plus, Search, Wheat, Calendar, MapPin, DollarSign, TrendingUp,
-  Sun, Loader2, Download, Pencil, CheckCircle2, Archive, Clock, Bell, ListChecks,
+  Sun, Loader2, Download, Pencil, CheckCircle2, Archive, Clock, Bell, ListChecks, Sprout, MoveRight,
 } from "lucide-react";
 
 const statusColor: Record<string, string> = {
+  planned: "bg-slate-100 text-slate-700 border-slate-200",
   upcoming: "bg-slate-100 text-slate-700 border-slate-200",
+  nursery: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  ready_to_transplant: "bg-teal-100 text-teal-800 border-teal-200",
+  transplanted: "bg-lime-100 text-lime-800 border-lime-200",
   growing: "bg-green-100 text-green-800 border-green-200",
+  maturing: "bg-orange-100 text-orange-800 border-orange-200",
   ready: "bg-amber-100 text-amber-800 border-amber-200",
+  overdue: "bg-red-100 text-red-800 border-red-200",
   harvested: "bg-blue-100 text-blue-800 border-blue-200",
   archived: "bg-gray-100 text-gray-600 border-gray-200",
 };
+
 
 export function Crops() {
   const [searchTerm, setSearchTerm] = useState("");
