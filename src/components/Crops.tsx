@@ -72,26 +72,36 @@ export function Crops() {
     [crops, searchTerm]
   );
 
+  const normalize = (cropData: any) => {
+    const out: any = {};
+    Object.keys(cropData).forEach((key) => {
+      const val = cropData[key];
+      if (val instanceof Date) out[key] = format(val, "yyyy-MM-dd");
+      else if (val !== undefined && val !== "") out[key] = val;
+    });
+    return out;
+  };
+
   const handleCreateCrop = async (cropData: any) => {
-    const formatted: any = { ...cropData };
-    if (formatted.planting_date instanceof Date) formatted.planting_date = formatted.planting_date.toISOString().split("T")[0];
-    if (formatted.harvest_date instanceof Date) formatted.harvest_date = formatted.harvest_date.toISOString().split("T")[0];
-    createCrop(formatted);
+    createCrop(normalize(cropData));
     setIsDialogOpen(false);
   };
 
   const handleUpdateCrop = async (cropData: any) => {
     if (!selectedCrop) return;
-    const updates: any = {};
-    Object.keys(cropData).forEach((key) => {
-      const val = cropData[key];
-      if (val instanceof Date) updates[key] = val.toISOString().split("T")[0];
-      else if (val !== undefined && val !== "") updates[key] = val;
-    });
-    updateCrop({ id: selectedCrop.id, updates });
+    updateCrop({ id: selectedCrop.id, updates: normalize(cropData) });
     setEditDialogOpen(false);
     setSelectedCrop(null);
   };
+
+  const confirmTransplant = (crop: any) => {
+    updateCrop({
+      id: crop.id,
+      updates: { actual_transplant_date: format(new Date(), "yyyy-MM-dd"), status: "growing" } as any,
+    });
+    toast.success(`${crop.name} marked as transplanted today`);
+  };
+
 
   const confirmHarvest = (crop: any) => {
     updateCrop({
