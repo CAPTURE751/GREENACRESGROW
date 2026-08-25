@@ -11,25 +11,34 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useCrops } from "@/hooks/useCrops";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
+import { useCropHarvests, totalsByCrop } from "@/hooks/useCropHarvests";
 import { CropForm } from "@/components/CropForm";
 import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { CropTasksDialog } from "@/components/CropTasksDialog";
+import { CropHarvestDialog } from "@/components/CropHarvestDialog";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
-import { computeLifecycle, lifecycleStages, currentStageIndex, harvestAlertFor } from "@/lib/crop-lifecycle";
+import { computeLifecycle, stagesFor, currentStageIndex, harvestAlertFor, transplantAlertFor, parseSafeDate } from "@/lib/crop-lifecycle";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
   Plus, Search, Wheat, Calendar, MapPin, DollarSign, TrendingUp,
-  Sun, Loader2, Download, Pencil, CheckCircle2, Archive, Clock, Bell, ListChecks,
+  Sun, Loader2, Download, Pencil, CheckCircle2, Archive, Clock, Bell, ListChecks, Sprout, MoveRight,
 } from "lucide-react";
 
 const statusColor: Record<string, string> = {
+  planned: "bg-slate-100 text-slate-700 border-slate-200",
   upcoming: "bg-slate-100 text-slate-700 border-slate-200",
+  nursery: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  ready_to_transplant: "bg-teal-100 text-teal-800 border-teal-200",
+  transplanted: "bg-lime-100 text-lime-800 border-lime-200",
   growing: "bg-green-100 text-green-800 border-green-200",
+  maturing: "bg-orange-100 text-orange-800 border-orange-200",
   ready: "bg-amber-100 text-amber-800 border-amber-200",
+  overdue: "bg-red-100 text-red-800 border-red-200",
   harvested: "bg-blue-100 text-blue-800 border-blue-200",
   archived: "bg-gray-100 text-gray-600 border-gray-200",
 };
+
 
 export function Crops() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,30 +47,15 @@ export function Crops() {
   const [selectedCrop, setSelectedCrop] = useState<any>(null);
   const [financialsCrop, setFinancialsCrop] = useState<any>(null);
   const [tasksCrop, setTasksCrop] = useState<any>(null);
+  const [harvestCrop, setHarvestCrop] = useState<any>(null);
   const { crops, isLoading, createCrop, updateCrop, isCreating, isUpdating } = useCrops();
   const { sales } = useSales();
   const { purchases } = usePurchases();
+  const { harvests } = useCropHarvests();
 
-  // Aggregate harvested totals per crop from cumulative sales
-  const harvestedByCrop = useMemo(() => {
-    const map = new Map<string, { qty: number; unit: string }>();
-    for (const s of sales as any[]) {
-      const qty = Number(s.quantity) || 0;
-      if (!qty) continue;
-      let key: string | null = null;
-      if (s.linked_module === "crop" && s.linked_record_id) key = s.linked_record_id;
-      else {
-        const match = crops.find(c => c.name && s.product_name && c.name.toLowerCase() === String(s.product_name).toLowerCase());
-        if (match) key = match.id;
-      }
-      if (!key) continue;
-      const existing = map.get(key) || { qty: 0, unit: s.unit || "" };
-      existing.qty += qty;
-      if (!existing.unit && s.unit) existing.unit = s.unit;
-      map.set(key, existing);
-    }
-    return map;
-  }, [sales, crops]);
+  // Total harvested per crop, sourced from recorded harvest events
+  const harvestedByCrop = useMemo(() => totalsByCrop(harvests), [harvests]);
+
 
   const matchesSearch = (crop: any) =>
     crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,26 +72,36 @@ export function Crops() {
     [crops, searchTerm]
   );
 
+  const normalize = (cropData: any) => {
+    const out: any = {};
+    Object.keys(cropData).forEach((key) => {
+      const val = cropData[key];
+      if (val instanceof Date) out[key] = format(val, "yyyy-MM-dd");
+      else if (val !== undefined && val !== "") out[key] = val;
+    });
+    return out;
+  };
+
   const handleCreateCrop = async (cropData: any) => {
-    const formatted: any = { ...cropData };
-    if (formatted.planting_date instanceof Date) formatted.planting_date = formatted.planting_date.toISOString().split("T")[0];
-    if (formatted.harvest_date instanceof Date) formatted.harvest_date = formatted.harvest_date.toISOString().split("T")[0];
-    createCrop(formatted);
+    createCrop(normalize(cropData));
     setIsDialogOpen(false);
   };
 
   const handleUpdateCrop = async (cropData: any) => {
     if (!selectedCrop) return;
-    const updates: any = {};
-    Object.keys(cropData).forEach((key) => {
-      const val = cropData[key];
-      if (val instanceof Date) updates[key] = val.toISOString().split("T")[0];
-      else if (val !== undefined && val !== "") updates[key] = val;
-    });
-    updateCrop({ id: selectedCrop.id, updates });
+    updateCrop({ id: selectedCrop.id, updates: normalize(cropData) });
     setEditDialogOpen(false);
     setSelectedCrop(null);
   };
+
+  const confirmTransplant = (crop: any) => {
+    updateCrop({
+      id: crop.id,
+      updates: { actual_transplant_date: format(new Date(), "yyyy-MM-dd"), status: "growing" } as any,
+    });
+    toast.success(`${crop.name} marked as transplanted today`);
+  };
+
 
   const confirmHarvest = (crop: any) => {
     updateCrop({
@@ -208,10 +212,24 @@ export function Crops() {
                 notes: selectedCrop.notes || "",
                 yield_unit: selectedCrop.yield_unit || "",
                 acreage: selectedCrop.acreage || undefined,
+                establishment_method: (selectedCrop.establishment_method as any) || "direct_seed",
+                nursery_location: selectedCrop.nursery_location || "",
+                nursery_duration_days: selectedCrop.nursery_duration_days || undefined,
+                seed_quantity: selectedCrop.seed_quantity || undefined,
+                seedlings_transplanted: selectedCrop.seedlings_transplanted || undefined,
+                spacing: selectedCrop.spacing || "",
+                nursery_notes: selectedCrop.nursery_notes || "",
+                transplant_notes: selectedCrop.transplant_notes || "",
+                field_growth_duration_days:
+                  selectedCrop.field_growth_duration_days || selectedCrop.growth_duration_days || undefined,
                 growth_duration_days: selectedCrop.growth_duration_days || undefined,
-                planting_date: selectedCrop.planting_date ? new Date(selectedCrop.planting_date) : undefined,
-                harvest_date: selectedCrop.harvest_date ? new Date(selectedCrop.harvest_date) : undefined,
+                nursery_start_date: parseSafeDate(selectedCrop.nursery_start_date) ?? undefined,
+                actual_transplant_date: parseSafeDate(selectedCrop.actual_transplant_date) ?? undefined,
+                actual_harvest_date: parseSafeDate(selectedCrop.actual_harvest_date) ?? undefined,
+                planting_date: parseSafeDate(selectedCrop.planting_date) ?? undefined,
+                harvest_date: parseSafeDate(selectedCrop.harvest_date) ?? undefined,
               }}
+
             />
           )}
         </DialogContent>
@@ -264,11 +282,18 @@ export function Crops() {
         const renderCropCard = (crop: any) => {
           const info = computeLifecycle(crop as any);
           const alert = harvestAlertFor(info.daysRemaining);
+          const tAlert = info.transplantIsActual ? null : transplantAlertFor(info.daysToTransplant);
+          const stages = stagesFor(info.method);
           const stageIdx = currentStageIndex(info);
+          const needsTransplant =
+            info.method === "nursery_transplant" &&
+            !info.transplantIsActual &&
+            !["harvested", "archived"].includes(info.status);
           const variety = (crop as any).variety;
           const harvested = harvestedByCrop.get(crop.id);
           return (
             <Card key={crop.id} className={`hover:shadow-lg transition-shadow group flex flex-col ${(crop as any).archived ? "opacity-80" : ""}`}>
+
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
@@ -318,20 +343,27 @@ export function Crops() {
                   <p className="text-xs text-muted-foreground text-right">{Math.round(info.progressPercent)}%</p>
                 </div>
 
-                {/* Lifecycle timeline */}
+                {/* Lifecycle timeline (method-aware) */}
                 <div>
                   <div className="flex justify-between items-center">
-                    {lifecycleStages.map((s, i) => (
+                    {stages.map((s, i) => (
                       <div key={s.key} className="flex-1 flex flex-col items-center relative">
                         <div className={`h-3 w-3 rounded-full z-10 ${i <= stageIdx ? "bg-farm-green" : "bg-muted"}`} />
-                        {i < lifecycleStages.length - 1 && (
+                        {i < stages.length - 1 && (
                           <div className={`absolute top-1/2 left-1/2 h-0.5 w-full -translate-y-1/2 ${i < stageIdx ? "bg-farm-green" : "bg-muted"}`} />
                         )}
                         <span className={`mt-1 text-[10px] ${i === stageIdx ? "font-semibold text-farm-green" : "text-muted-foreground"}`}>{s.label}</span>
                       </div>
                     ))}
                   </div>
+                  <p className="mt-2 text-[11px] text-muted-foreground text-center">{info.methodLabel} · {info.countdownLabel}</p>
                 </div>
+
+                {tAlert && (
+                  <div className="flex items-start gap-2 text-xs bg-teal-50 border border-teal-200 text-teal-800 rounded-md p-2">
+                    <Sprout className="h-3.5 w-3.5 mt-0.5" /> {tAlert}
+                  </div>
+                )}
 
                 {alert && (
                   <div className="flex items-start gap-2 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-2">
@@ -349,11 +381,35 @@ export function Crops() {
                   <Button size="sm" variant="outline" onClick={() => { setSelectedCrop(crop); setEditDialogOpen(true); }}>
                     <Pencil className="h-3 w-3 mr-1" /> Edit
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => setHarvestCrop(crop)}>
+                    <Sprout className="h-3 w-3 mr-1" /> Harvest Log
+                  </Button>
+                  {needsTransplant && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="col-span-2 border-teal-300 text-teal-800 hover:bg-teal-50">
+                          <MoveRight className="h-3 w-3 mr-1" /> Mark Transplanted
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirm Transplant</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Stamp today as the actual transplant date for {crop.name}? The harvest schedule will be recalculated from this date.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => confirmTransplant(crop)}>Confirm Transplant</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   {info.status !== "harvested" && info.status !== "archived" ? (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" className="bg-farm-green hover:bg-farm-green/90">
-                          <CheckCircle2 className="h-3 w-3 mr-1" /> Harvest
+                        <Button size="sm" className="bg-farm-green hover:bg-farm-green/90 col-span-2">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Complete & Archive
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -370,11 +426,12 @@ export function Crops() {
                       </AlertDialogContent>
                     </AlertDialog>
                   ) : (
-                    <Badge variant="outline" className="justify-center bg-gray-50 text-gray-600">
+                    <Badge variant="outline" className="justify-center bg-gray-50 text-gray-600 col-span-2">
                       <Archive className="h-3 w-3 mr-1" /> Archived
                     </Badge>
                   )}
                 </div>
+
               </CardContent>
             </Card>
           );
@@ -437,6 +494,15 @@ export function Crops() {
           crop={tasksCrop}
         />
       )}
+
+      {harvestCrop && (
+        <CropHarvestDialog
+          open={!!harvestCrop}
+          onOpenChange={(open) => { if (!open) setHarvestCrop(null); }}
+          crop={harvestCrop}
+        />
+      )}
+
     </div>
   );
 }
