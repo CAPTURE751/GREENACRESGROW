@@ -47,30 +47,15 @@ export function Crops() {
   const [selectedCrop, setSelectedCrop] = useState<any>(null);
   const [financialsCrop, setFinancialsCrop] = useState<any>(null);
   const [tasksCrop, setTasksCrop] = useState<any>(null);
+  const [harvestCrop, setHarvestCrop] = useState<any>(null);
   const { crops, isLoading, createCrop, updateCrop, isCreating, isUpdating } = useCrops();
   const { sales } = useSales();
   const { purchases } = usePurchases();
+  const { harvests } = useCropHarvests();
 
-  // Aggregate harvested totals per crop from cumulative sales
-  const harvestedByCrop = useMemo(() => {
-    const map = new Map<string, { qty: number; unit: string }>();
-    for (const s of sales as any[]) {
-      const qty = Number(s.quantity) || 0;
-      if (!qty) continue;
-      let key: string | null = null;
-      if (s.linked_module === "crop" && s.linked_record_id) key = s.linked_record_id;
-      else {
-        const match = crops.find(c => c.name && s.product_name && c.name.toLowerCase() === String(s.product_name).toLowerCase());
-        if (match) key = match.id;
-      }
-      if (!key) continue;
-      const existing = map.get(key) || { qty: 0, unit: s.unit || "" };
-      existing.qty += qty;
-      if (!existing.unit && s.unit) existing.unit = s.unit;
-      map.set(key, existing);
-    }
-    return map;
-  }, [sales, crops]);
+  // Total harvested per crop, sourced from recorded harvest events
+  const harvestedByCrop = useMemo(() => totalsByCrop(harvests), [harvests]);
+
 
   const matchesSearch = (crop: any) =>
     crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
