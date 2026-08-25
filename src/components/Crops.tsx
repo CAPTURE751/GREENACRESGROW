@@ -267,8 +267,9 @@ export function Crops() {
             !["harvested", "archived"].includes(info.status);
           const variety = (crop as any).variety;
           const harvested = harvestedByCrop.get(crop.id);
-
+          return (
             <Card key={crop.id} className={`hover:shadow-lg transition-shadow group flex flex-col ${(crop as any).archived ? "opacity-80" : ""}`}>
+
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
