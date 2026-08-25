@@ -212,10 +212,24 @@ export function Crops() {
                 notes: selectedCrop.notes || "",
                 yield_unit: selectedCrop.yield_unit || "",
                 acreage: selectedCrop.acreage || undefined,
+                establishment_method: (selectedCrop.establishment_method as any) || "direct_seed",
+                nursery_location: selectedCrop.nursery_location || "",
+                nursery_duration_days: selectedCrop.nursery_duration_days || undefined,
+                seed_quantity: selectedCrop.seed_quantity || undefined,
+                seedlings_transplanted: selectedCrop.seedlings_transplanted || undefined,
+                spacing: selectedCrop.spacing || "",
+                nursery_notes: selectedCrop.nursery_notes || "",
+                transplant_notes: selectedCrop.transplant_notes || "",
+                field_growth_duration_days:
+                  selectedCrop.field_growth_duration_days || selectedCrop.growth_duration_days || undefined,
                 growth_duration_days: selectedCrop.growth_duration_days || undefined,
-                planting_date: selectedCrop.planting_date ? new Date(selectedCrop.planting_date) : undefined,
-                harvest_date: selectedCrop.harvest_date ? new Date(selectedCrop.harvest_date) : undefined,
+                nursery_start_date: parseSafeDate(selectedCrop.nursery_start_date) ?? undefined,
+                actual_transplant_date: parseSafeDate(selectedCrop.actual_transplant_date) ?? undefined,
+                actual_harvest_date: parseSafeDate(selectedCrop.actual_harvest_date) ?? undefined,
+                planting_date: parseSafeDate(selectedCrop.planting_date) ?? undefined,
+                harvest_date: parseSafeDate(selectedCrop.harvest_date) ?? undefined,
               }}
+
             />
           )}
         </DialogContent>
