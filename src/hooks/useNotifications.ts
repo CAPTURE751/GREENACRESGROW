@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFarm } from '@/contexts/FarmContext';
 import { NOTIFICATION_TYPES } from '@/lib/constants';
-import { computeLifecycle, harvestAlertFor } from '@/lib/crop-lifecycle';
+import { computeLifecycle, harvestAlertFor, transplantAlertFor } from '@/lib/crop-lifecycle';
 
 export interface Notification {
   id: string;
