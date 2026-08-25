@@ -17,7 +17,7 @@ import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { CropTasksDialog } from "@/components/CropTasksDialog";
 import { CropHarvestDialog } from "@/components/CropHarvestDialog";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
-import { computeLifecycle, stagesFor, currentStageIndex, harvestAlertFor, transplantAlertFor } from "@/lib/crop-lifecycle";
+import { computeLifecycle, stagesFor, currentStageIndex, harvestAlertFor, transplantAlertFor, parseSafeDate } from "@/lib/crop-lifecycle";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
