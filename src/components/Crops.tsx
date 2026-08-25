@@ -494,6 +494,15 @@ export function Crops() {
           crop={tasksCrop}
         />
       )}
+
+      {harvestCrop && (
+        <CropHarvestDialog
+          open={!!harvestCrop}
+          onOpenChange={(open) => { if (!open) setHarvestCrop(null); }}
+          crop={harvestCrop}
+        />
+      )}
+
     </div>
   );
 }
