@@ -258,10 +258,16 @@ export function Crops() {
         const renderCropCard = (crop: any) => {
           const info = computeLifecycle(crop as any);
           const alert = harvestAlertFor(info.daysRemaining);
+          const tAlert = info.transplantIsActual ? null : transplantAlertFor(info.daysToTransplant);
+          const stages = stagesFor(info.method);
           const stageIdx = currentStageIndex(info);
+          const needsTransplant =
+            info.method === "nursery_transplant" &&
+            !info.transplantIsActual &&
+            !["harvested", "archived"].includes(info.status);
           const variety = (crop as any).variety;
           const harvested = harvestedByCrop.get(crop.id);
-          return (
+
             <Card key={crop.id} className={`hover:shadow-lg transition-shadow group flex flex-col ${(crop as any).archived ? "opacity-80" : ""}`}>
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start gap-2">
