@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
 import { useCrops } from "@/hooks/useCrops";
+import { upcomingMilestones } from "@/lib/crop-milestones";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
@@ -35,6 +36,7 @@ const LIVESTOCK_COLORS = ['hsl(84, 31%, 44%)', 'hsl(43, 74%, 49%)', 'hsl(25, 65%
 export function Dashboard() {
   const { profile, signOut, hasRole } = useAuth();
   const { crops, isLoading: cropsLoading } = useCrops();
+  const cropMilestones = useMemo(() => upcomingMilestones(crops || [], { windowDays: 30 }).slice(0, 20), [crops]);
   const { livestock, isLoading: livestockLoading } = useLivestock();
   const { sales, analytics, isLoading: salesLoading } = useSales();
   const { purchases } = usePurchases();
