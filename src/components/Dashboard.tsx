@@ -223,6 +223,46 @@ export function Dashboard() {
         </Card>
       </div>
 
+      {/* Upcoming crop milestones */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Upcoming Crop Milestones
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {cropMilestones.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No nursery, transplant or harvest milestones in the next 30 days.</div>
+          ) : (
+            <ScrollArea className="h-[260px] pr-3">
+              <div className="space-y-2">
+                {cropMilestones.map((m, i) => (
+                  <div key={`${m.cropId}-${m.kind}-${i}`} className="flex items-center justify-between gap-3 p-3 rounded-lg border hover:bg-muted/50">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {m.cropName}{m.variety ? ` · ${m.variety}` : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {m.label} · {format(m.date, "dd MMM yyyy")}{m.location ? ` · ${m.location}` : ""}
+                      </p>
+                    </div>
+                    <Badge variant={m.overdue ? "destructive" : m.daysAway <= 3 ? "default" : "secondary"} className="shrink-0">
+                      {m.overdue
+                        ? `${Math.abs(m.daysAway)}d overdue`
+                        : m.daysAway === 0
+                        ? "Today"
+                        : `in ${m.daysAway}d`}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+
+
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
