@@ -69,7 +69,7 @@ export function useNotifications() {
         });
 
         // Crop harvest reminders (30/14/7/3/1 days out + harvest day)
-        let cropQuery: any = supabase.from('crops').select('id, name, planting_date, harvest_date, growth_duration_days, status, archived');
+        let cropQuery: any = supabase.from('crops').select('id, name, planting_date, harvest_date, growth_duration_days, status, archived, establishment_method, nursery_start_date, nursery_duration_days, expected_transplant_date, actual_transplant_date, field_growth_duration_days, expected_harvest_date, actual_harvest_date');
         if (activeFarm?.id) cropQuery = cropQuery.eq('farm_id', activeFarm.id);
         const { data: cropRows } = await cropQuery;
         (cropRows as any[] || []).filter((c) => !c.archived && c.status !== 'harvested').forEach((c: any) => {
@@ -88,6 +88,23 @@ export function useNotifications() {
           }
         });
 
+        // Nursery / transplant milestone alerts
+        (cropRows as any[] || []).filter((c) => !c.archived && c.status !== 'harvested').forEach((c: any) => {
+          const info = computeLifecycle(c);
+          if (info.method !== 'nursery_transplant' || info.transplantIsActual) return;
+          const alert = transplantAlertFor(info.daysToTransplant);
+          if (alert) {
+            sampleNotifications.push({
+              id: `transplant-${c.id}-${info.daysToTransplant}`,
+              type: NOTIFICATION_TYPES.ADMIN_ALERT,
+              title: (info.daysToTransplant ?? 0) < 0 ? 'Transplant Overdue' : 'Transplant Due',
+              message: `${c.name}: ${alert}`,
+              read: false,
+              created_at: new Date().toISOString(),
+              user_id: user.id,
+            });
+          }
+        });
 
         // Admin-specific notifications
         if (hasRole('admin')) {
