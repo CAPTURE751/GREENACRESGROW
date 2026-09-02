@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -22,6 +22,9 @@ import { useTaskNotifications } from "@/hooks/useTaskNotifications";
 import { Trash2, Repeat, Bell, Download } from "lucide-react";
 import { exportCalendarToPDF } from "@/lib/calendar-export";
 import { useToast } from "@/hooks/use-toast";
+import { useCrops } from "@/hooks/useCrops";
+import { upcomingMilestones, milestonesByDate, milestoneDateKey } from "@/lib/crop-milestones";
+import { Sprout } from "lucide-react";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -33,6 +36,15 @@ export default function CalendarPage() {
   const deleteTask = useDeleteTask();
   const { notifications, unreadCount, markRead, markAllRead } = useTaskNotifications();
   const { toast } = useToast();
+  const { crops } = useCrops();
+
+  // Crop lifecycle milestones (nursery sowing, transplant, harvest)
+  const milestones = useMemo(
+    () => upcomingMilestones(crops || [], { windowDays: 365, includeOverdue: true }),
+    [crops]
+  );
+  const milestoneMap = useMemo(() => milestonesByDate(milestones), [milestones]);
+  const getMilestonesForDate = (date: Date) => milestoneMap.get(milestoneDateKey(date)) || [];
   // Convert backend tasks to the format expected by the UI
   const tasks = backendTasks.map(task => ({
     id: parseInt(task.id.slice(-8), 16),
@@ -259,17 +271,57 @@ export default function CalendarPage() {
                 onSelect={setSelectedDate}
                 className="rounded-md border w-full"
                 modifiers={{
-                  hasTask: (date) => getTasksForDate(date).length > 0
+                  hasTask: (date) => getTasksForDate(date).length > 0,
+                  hasMilestone: (date) => getMilestonesForDate(date).some(m => !m.overdue),
+                  hasOverdueMilestone: (date) => getMilestonesForDate(date).some(m => m.overdue),
                 }}
                 modifiersStyles={{
                   hasTask: { 
                     backgroundColor: 'hsl(84 31% 44% / 0.1)',
                     color: 'hsl(84 31% 44%)',
                     fontWeight: 'bold'
-                  }
+                  },
+                  hasMilestone: {
+                    boxShadow: 'inset 0 -3px 0 0 hsl(43 74% 49%)',
+                    fontWeight: 'bold'
+                  },
+                  hasOverdueMilestone: {
+                    boxShadow: 'inset 0 -3px 0 0 hsl(0 72% 51%)',
+                    fontWeight: 'bold'
+                  },
                 }}
               />
               
+              {/* Milestone legend */}
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-sm" style={{ backgroundColor: 'hsl(84 31% 44% / 0.4)' }} /> Tasks</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-sm" style={{ backgroundColor: 'hsl(43 74% 49%)' }} /> Crop milestone</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-sm" style={{ backgroundColor: 'hsl(0 72% 51%)' }} /> Overdue milestone</span>
+              </div>
+
+              {/* Selected Date Crop Milestones */}
+              {selectedDate && getMilestonesForDate(selectedDate).length > 0 && (
+                <div className="mt-6">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Sprout className="h-4 w-4 text-farm-green" />
+                    Crop Milestones
+                  </h3>
+                  <div className="space-y-2">
+                    {getMilestonesForDate(selectedDate).map((m, i) => (
+                      <div key={`${m.cropId}-${m.kind}-${i}`} className="flex items-center justify-between gap-3 p-3 rounded-lg border hover:bg-muted/50">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{m.cropName}{m.variety ? ` · ${m.variety}` : ''}</p>
+                          <p className="text-xs text-muted-foreground">{m.label}{m.location ? ` · ${m.location}` : ''}</p>
+                        </div>
+                        <Badge variant={m.overdue ? 'destructive' : 'secondary'} className="shrink-0">
+                          {m.overdue ? `${Math.abs(m.daysAway)}d overdue` : m.daysAway === 0 ? 'Today' : `in ${m.daysAway}d`}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Selected Date Tasks */}
               {selectedDate && (
                 <div className="mt-6">
