@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import { applyBrandedHeader, applyBrandedFooter } from "@/lib/pdf-branding";
 import { CopilotActionCard, parseCopilotActions } from "@/components/copilot/CopilotActionCard";
+import { IntelligenceReportDialog } from "@/components/copilot/IntelligenceReportDialog";
 
 type Msg = { id: string; role: "user" | "assistant"; content: string; created_at?: string };
 type Thread = { id: string; title: string; updated_at: string };
@@ -286,9 +287,12 @@ export default function FarmCopilot() {
           <Card className="flex flex-col min-h-0">
             <div className="flex items-center justify-between px-4 py-2 border-b">
               <div className="text-sm font-medium truncate">{activeTitle || "Start a new conversation"}</div>
-              <Button size="sm" variant="outline" onClick={exportPDF} className="gap-2">
-                <FileDown className="h-4 w-4" /> Export PDF
-              </Button>
+              <div className="flex items-center gap-2">
+                <IntelligenceReportDialog />
+                <Button size="sm" variant="outline" onClick={exportPDF} className="gap-2">
+                  <FileDown className="h-4 w-4" /> Export PDF
+                </Button>
+              </div>
             </div>
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
