@@ -1,10 +1,19 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Settings, User, Download, Upload, Loader2 } from "lucide-react";
+import { Settings, User, Download, Upload, Loader2, LogOut, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useFarm } from "@/contexts/FarmContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { exportFarmData, downloadBackup, importFarmData } from "@/lib/farm-backup";
 import { saveBackup, pruneBackups } from "@/lib/backup-store";
@@ -12,11 +21,25 @@ import { loadAutoBackupSettings } from "@/hooks/useAutoBackup";
 
 export function Header() {
   const { activeFarm } = useFarm();
+  const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+
+  const displayName = profile?.name || user?.email?.split('@')[0] || 'Farm user';
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'U';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth', { replace: true });
+  };
 
   const farmName = activeFarm?.name || 'My Farm';
   const farmLocation = activeFarm?.location || '';
@@ -101,12 +124,51 @@ export function Header() {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
         />
         <NotificationCenter />
-        <Button variant="ghost" size="icon" onClick={() => navigate('/settings?tab=backup')} title="Backup & Restore settings">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/settings?tab=backup')} title="Backup & Restore settings" aria-label="Backup and restore settings">
           <Settings className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon">
-          <User className="h-5 w-5" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              aria-label="Open user menu"
+              title="User account"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                {initials}
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel className="font-normal">
+              <span className="block truncate font-semibold">{displayName}</span>
+              <span className="block truncate text-xs text-muted-foreground">{user?.email || 'Signed in'}</span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => navigate('/settings')}>
+              <User className="mr-2 h-4 w-4" />
+              My profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate('/settings?tab=security')}>
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Security
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => navigate('/settings?tab=backup')}>
+              <Settings className="mr-2 h-4 w-4" />
+              Backup & Restore
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={handleSignOut}
+              className="text-destructive focus:text-destructive"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
