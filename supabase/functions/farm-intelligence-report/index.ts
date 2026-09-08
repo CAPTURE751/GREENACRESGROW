@@ -10,6 +10,34 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const CHART_SCHEMA = {
+  type: "array",
+  items: {
+    type: "object",
+    additionalProperties: false,
+    required: ["title", "type", "labels", "series"],
+    properties: {
+      title: { type: "string" },
+      type: { type: "string", enum: ["bar", "line", "pie"] },
+      labels: { type: "array", items: { type: "string" } },
+      series: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["name", "values"],
+          properties: {
+            name: { type: "string" },
+            values: { type: "array", items: { type: "number" } },
+          },
+        },
+      },
+      unit: { type: "string" },
+      note: { type: "string" },
+    },
+  },
+};
+
 const REPORT_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -41,6 +69,7 @@ const REPORT_SCHEMA = {
           heading: { type: "string" },
           narrative: { type: "string" },
           bullets: { type: "array", items: { type: "string" } },
+          charts: CHART_SCHEMA,
           table: {
             type: "object",
             additionalProperties: false,
@@ -53,6 +82,7 @@ const REPORT_SCHEMA = {
         },
       },
     },
+    charts: CHART_SCHEMA,
     recommendations: { type: "array", items: { type: "string" } },
     risks: { type: "array", items: { type: "string" } },
   },
@@ -69,6 +99,7 @@ Rules:
 - Every section needs a narrative of 2-5 sentences. Add a table when comparing items (all table cells must be strings; format money as "KSh 1,234").
 - Show the arithmetic behind key figures in plain language.
 - 4-8 KPIs, 4-8 concrete recommendations, and 2-6 risks.
+- Charts: return 2-4 top-level charts covering the headline trends (e.g. monthly revenue vs expenses as a "bar" or "line", revenue share by product as a "pie"). Add a section chart only where it adds meaning. Every chart's labels array and every series values array MUST have the same length, values are plain numbers (no currency symbols, no thousands separators), and the data must come straight from the snapshot.
 - Professional, warm, direct. No markdown syntax inside any field.`;
 
 function sumNum(rows: any[], key: string) {
