@@ -110,10 +110,10 @@ export function CropHarvestDialog({ open, onOpenChange, crop }: CropHarvestDialo
               {harvests.map((h) => (
                 <div key={h.id} className="flex items-center justify-between border rounded-md px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium">
+                    <div className="text-sm font-medium">
                       {h.quantity.toLocaleString()} {h.unit}
                       {h.quality_grade && <Badge variant="outline" className="ml-2">Grade {h.quality_grade}</Badge>}
-                    </p>
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {format(new Date(h.harvest_date + "T00:00:00"), "PPP")}{h.notes ? ` · ${h.notes}` : ""}
                     </p>
