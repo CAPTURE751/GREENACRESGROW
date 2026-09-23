@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { exportVenturePDF } from "@/lib/venture-export";
 import { useVentureBudgets } from "@/hooks/useVentureBudgets";
 import { ventureTemplates, getMonthLabels, type VentureTemplate } from "@/lib/venture-templates";
+import { BudgetCategoryBuilder } from "@/components/budget/BudgetCategoryBuilder";
+import { type BudgetCategory, categoryTotal, lineTotal, ensureCategories, legacyToCategories } from "@/lib/budget-categories";
 import { Checkbox } from "@/components/ui/checkbox";
 import ReactMarkdown from "react-markdown";
 import {
@@ -32,24 +34,7 @@ interface VentureInputs {
   type: string;
   farmSize: number;
   seasonDuration: string;
-  ploughingCost: number;
-  harrowingCost: number;
-  seedType: string;
-  seedQuantity: number;
-  seedCostPerUnit: number;
-  basalFertilizer: number;
-  topDressingFertilizer: number;
-  herbicides: number;
-  pesticides: number;
-  fungicides: number;
-  plantingLabour: number;
-  weedingLabour: number;
-  harvestingLabour: number;
-  waterCost: number;
-  pumpFuel: number;
-  transport: number;
-  packaging: number;
-  storage: number;
+  categories: BudgetCategory[];
   expectedYieldPerAcre: number;
   yieldUnit: string;
   marketPricePerUnit: number;
@@ -57,34 +42,47 @@ interface VentureInputs {
 
 const defaultInputs: VentureInputs = {
   name: "", type: "maize", farmSize: 1, seasonDuration: "3 months",
-  ploughingCost: 0, harrowingCost: 0, seedType: "", seedQuantity: 0, seedCostPerUnit: 0,
-  basalFertilizer: 0, topDressingFertilizer: 0, herbicides: 0, pesticides: 0, fungicides: 0,
-  plantingLabour: 0, weedingLabour: 0, harvestingLabour: 0, waterCost: 0, pumpFuel: 0,
-  transport: 0, packaging: 0, storage: 0, expectedYieldPerAcre: 0, yieldUnit: "bags",
-  marketPricePerUnit: 0,
+  categories: [], expectedYieldPerAcre: 0, yieldUnit: "bags", marketPricePerUnit: 0,
 };
+
+/** Accepts new or legacy saved inputs and returns the category-based shape. */
+function normalizeInputs(raw: any): VentureInputs {
+  return {
+    name: raw?.name ?? "",
+    type: raw?.type ?? "maize",
+    farmSize: Number(raw?.farmSize) || 0,
+    seasonDuration: raw?.seasonDuration ?? "",
+    categories: ensureCategories(raw),
+    expectedYieldPerAcre: Number(raw?.expectedYieldPerAcre) || 0,
+    yieldUnit: raw?.yieldUnit ?? "units",
+    marketPricePerUnit: Number(raw?.marketPricePerUnit) || 0,
+  };
+}
 
 const ventureTypes = [
   { value: "maize", label: "Maize Farming" },
   { value: "beans", label: "Beans Farming" },
   { value: "onions", label: "Onion Farming" },
+  { value: "tomatoes", label: "Tomato Farming" },
+  { value: "capsicum", label: "Capsicum Farming" },
+  { value: "dhania", label: "Dhania Farming" },
   { value: "dairy", label: "Dairy Farming" },
   { value: "poultry", label: "Poultry Farming" },
+  { value: "rabbits", label: "Rabbit Farming" },
+  { value: "livestock", label: "Other Livestock" },
   { value: "greenhouse", label: "Greenhouse Farming" },
   { value: "vegetables", label: "Vegetable Farming" },
   { value: "fruit", label: "Fruit Farming" },
+  { value: "custom", label: "Custom Venture" },
 ];
 
 function calcCosts(inputs: VentureInputs) {
-  const landPrep = inputs.ploughingCost + inputs.harrowingCost;
-  const seeds = inputs.seedQuantity * inputs.seedCostPerUnit;
-  const fertilizer = inputs.basalFertilizer + inputs.topDressingFertilizer;
-  const chemicals = inputs.herbicides + inputs.pesticides + inputs.fungicides;
-  const labour = inputs.plantingLabour + inputs.weedingLabour + inputs.harvestingLabour;
-  const irrigation = inputs.waterCost + inputs.pumpFuel;
-  const other = inputs.transport + inputs.packaging + inputs.storage;
-  const total = landPrep + seeds + fertilizer + chemicals + labour + irrigation + other;
-  return { landPrep, seeds, fertilizer, chemicals, labour, irrigation, other, total };
+  const breakdown = (inputs.categories || []).map((c) => ({
+    id: c.id, name: c.name, total: categoryTotal(c, inputs.farmSize),
+    items: c.items.map((i) => ({ ...i, total: lineTotal(i, inputs.farmSize) })),
+  }));
+  const total = breakdown.reduce((s, b) => s + b.total, 0);
+  return { breakdown, total };
 }
 
 function calcRevenue(inputs: VentureInputs, costs: ReturnType<typeof calcCosts>) {
@@ -93,7 +91,8 @@ function calcRevenue(inputs: VentureInputs, costs: ReturnType<typeof calcCosts>)
   const profit = totalRevenue - costs.total;
   const profitPerAcre = inputs.farmSize > 0 ? profit / inputs.farmSize : 0;
   const breakEvenPrice = totalProduction > 0 ? costs.total / totalProduction : 0;
-  return { totalProduction, totalRevenue, profit, profitPerAcre, breakEvenPrice };
+  const roi = costs.total > 0 ? (profit / costs.total) * 100 : 0;
+  return { totalProduction, totalRevenue, profit, profitPerAcre, breakEvenPrice, roi };
 }
 
 // Seasonal activity templates
@@ -259,15 +258,9 @@ export default function BudgetSimulator() {
     return { activities, numMonths };
   }, [inputs.type]);
 
-  const costChartData = [
-    { name: "Land Prep", value: costs.landPrep },
-    { name: "Seeds", value: costs.seeds },
-    { name: "Fertilizer", value: costs.fertilizer },
-    { name: "Chemicals", value: costs.chemicals },
-    { name: "Labour", value: costs.labour },
-    { name: "Irrigation", value: costs.irrigation },
-    { name: "Other", value: costs.other },
-  ].filter((d) => d.value > 0);
+  const costChartData = costs.breakdown
+    .map((b) => ({ name: b.name.length > 18 ? b.name.slice(0, 17) + "…" : b.name, value: b.total }))
+    .filter((d) => d.value > 0);
 
   const chartColors = [
     "hsl(84 31% 44%)", "hsl(43 74% 66%)", "hsl(31 45% 58%)",
@@ -326,7 +319,7 @@ export default function BudgetSimulator() {
   };
 
   const handleLoad = (budget: any) => {
-    setInputs(budget.inputs);
+    setInputs(normalizeInputs(budget.inputs));
     setActiveBudgetId(budget.id);
     setAiAdvice(budget.ai_advice);
     setSavedDialogOpen(false);
@@ -339,14 +332,8 @@ export default function BudgetSimulator() {
     setInputs({
       ...defaultInputs,
       name: t.name, type: t.type, farmSize: 1, seasonDuration: t.seasonDuration,
-      seedType: t.seedType, yieldUnit: t.yieldUnit,
-      ploughingCost: t.ploughingCost, harrowingCost: t.harrowingCost,
-      seedQuantity: t.seedQuantity, seedCostPerUnit: t.seedCostPerUnit,
-      basalFertilizer: t.basalFertilizer, topDressingFertilizer: t.topDressingFertilizer,
-      herbicides: t.herbicides, pesticides: t.pesticides, fungicides: t.fungicides,
-      plantingLabour: t.plantingLabour, weedingLabour: t.weedingLabour, harvestingLabour: t.harvestingLabour,
-      waterCost: t.waterCost, pumpFuel: t.pumpFuel,
-      transport: t.transport, packaging: t.packaging, storage: t.storage,
+      yieldUnit: t.yieldUnit,
+      categories: legacyToCategories({ ...t, __perAcre: true }),
       expectedYieldPerAcre: t.expectedYieldPerAcre, marketPricePerUnit: t.marketPricePerUnit,
     });
     setActiveBudgetId(null);
@@ -362,8 +349,9 @@ export default function BudgetSimulator() {
 
   const compareData = useMemo(() => {
     return budgets.filter(b => compareIds.includes(b.id)).map(b => {
-      const bCosts = calcCosts(b.inputs);
-      const bRev = calcRevenue(b.inputs, bCosts);
+      const bIn = normalizeInputs(b.inputs);
+      const bCosts = calcCosts(bIn);
+      const bRev = calcRevenue(bIn, bCosts);
       return { name: b.name, cost: bCosts.total, revenue: bRev.totalRevenue, profit: bRev.profit, profitPerAcre: bRev.profitPerAcre, breakEven: bRev.breakEvenPrice };
     });
   }, [compareIds, budgets]);
@@ -397,8 +385,9 @@ export default function BudgetSimulator() {
                 <p className="text-sm text-muted-foreground mb-4">Pre-filled cost estimates for common Kenyan farming ventures (per acre).</p>
                 <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                   {Object.entries(ventureTemplates).map(([key, t]) => {
-                    const c = calcCosts({ ...defaultInputs, ...t, farmSize: 1 } as any);
-                    const r = calcRevenue({ ...defaultInputs, ...t, farmSize: 1 } as any, c);
+                    const tIn = { ...defaultInputs, ...t, farmSize: 1, categories: legacyToCategories({ ...t, __perAcre: true }) } as VentureInputs;
+                    const c = calcCosts(tIn);
+                    const r = calcRevenue(tIn, c);
                     return (
                       <button key={key} onClick={() => handleApplyTemplate(key)} className="w-full p-3 rounded-lg border hover:border-primary/50 hover:bg-accent/50 text-left transition-colors">
                         <div className="flex justify-between items-center">
@@ -561,90 +550,59 @@ export default function BudgetSimulator() {
               </CardContent>
             </Card>
 
+            <BudgetCategoryBuilder
+              categories={inputs.categories}
+              farmSize={inputs.farmSize}
+              onChange={(next) => setInputs((prev) => ({ ...prev, categories: next }))}
+            />
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader><CardTitle className="text-base">Land Preparation</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                  {numField("Ploughing Cost", "ploughingCost")}
-                  {numField("Harrowing Cost", "harrowingCost")}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle className="text-base">Seeds / Planting Materials</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Seed Type</Label>
-                    <Input value={inputs.seedType} onChange={(e) => set("seedType", e.target.value)} placeholder="e.g. H614" className="h-9" />
-                  </div>
-                  {numField("Seed Quantity", "seedQuantity")}
-                  {numField("Cost per Unit", "seedCostPerUnit")}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle className="text-base">Fertilizer</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                  {numField("Basal Fertilizer", "basalFertilizer")}
-                  {numField("Top Dressing", "topDressingFertilizer")}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle className="text-base">Chemicals</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-3 gap-4">
-                  {numField("Herbicides", "herbicides")}
-                  {numField("Pesticides", "pesticides")}
-                  {numField("Fungicides", "fungicides")}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle className="text-base">Labour</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-3 gap-4">
-                  {numField("Planting Labour", "plantingLabour")}
-                  {numField("Weeding Labour", "weedingLabour")}
-                  {numField("Harvesting Labour", "harvestingLabour")}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle className="text-base">Irrigation</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                  {numField("Water Cost", "waterCost")}
-                  {numField("Pump Fuel / Electricity", "pumpFuel")}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader><CardTitle className="text-base">Other Costs</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-3 gap-4">
-                  {numField("Transport", "transport")}
-                  {numField("Packaging", "packaging")}
-                  {numField("Storage", "storage")}
-                </CardContent>
-              </Card>
               <Card className="border-primary/30">
                 <CardHeader><CardTitle className="text-base">Expected Revenue</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-3 gap-4">
-                  {numField("Yield per Acre", "expectedYieldPerAcre")}
+                <CardContent className="grid grid-cols-2 gap-4">
+                  {numField("Yield per Acre / Unit", "expectedYieldPerAcre")}
                   <div className="space-y-1">
                     <Label className="text-xs">Yield Unit</Label>
                     <Input value={inputs.yieldUnit} onChange={(e) => set("yieldUnit", e.target.value)} placeholder="bags" className="h-9" />
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Total Expected Yield</Label>
+                    <div className="h-9 px-3 flex items-center rounded-md border bg-muted/50 text-sm font-medium">
+                      {revenue.totalProduction.toLocaleString("en-KE", { maximumFractionDigits: 2 })} {inputs.yieldUnit}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">{inputs.farmSize} × {inputs.expectedYieldPerAcre}</p>
+                  </div>
                   {numField("Market Price per Unit", "marketPricePerUnit")}
                 </CardContent>
               </Card>
-            </div>
 
-            {hasData && (
-              <Card className="border-2 border-primary/20">
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
-                    <div><p className="text-xs text-muted-foreground">Total Cost</p><p className="text-lg font-bold">{formatKES(costs.total)}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Revenue</p><p className="text-lg font-bold">{formatKES(revenue.totalRevenue)}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Profit</p><p className={`text-lg font-bold ${revenue.profit >= 0 ? "text-green-600" : "text-red-600"}`}>{formatKES(revenue.profit)}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Profit/Acre</p><p className="text-lg font-bold">{formatKES(revenue.profitPerAcre)}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Break-Even Price</p><p className="text-lg font-bold">{formatKES(revenue.breakEvenPrice)}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Production</p><p className="text-lg font-bold">{revenue.totalProduction} {inputs.yieldUnit}</p></div>
+              <Card className={`border-2 ${revenue.profit >= 0 ? "border-green-300" : "border-red-300"}`}>
+                <CardHeader><CardTitle className="text-base">Revenue & Returns Projection</CardTitle></CardHeader>
+                <CardContent className="space-y-1.5 text-sm">
+                  {[
+                    ["Target Yield", `${revenue.totalProduction.toLocaleString("en-KE", { maximumFractionDigits: 2 })} ${inputs.yieldUnit}`],
+                    ["Selling Price", `${formatKES(inputs.marketPricePerUnit)} / ${inputs.yieldUnit || "unit"}`],
+                    ["Gross Revenue", formatKES(revenue.totalRevenue)],
+                    ["Total Investment", formatKES(costs.total)],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-2"><span className="text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>
+                  ))}
+                  <div className="flex justify-between border-t pt-2">
+                    <span className="font-semibold">{revenue.profit < 0 ? "Net Loss" : "Net Profit"}</span>
+                    <span className={`font-bold ${revenue.profit >= 0 ? "text-green-600" : "text-red-600"}`}>{formatKES(revenue.profit)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-semibold">ROI</span>
+                    <span className={`font-bold ${revenue.roi >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {costs.total > 0 ? `${revenue.roi.toFixed(1)}%` : "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground pt-1">
+                    <span>Break-even price</span><span>{formatKES(revenue.breakEvenPrice)}</span>
                   </div>
                 </CardContent>
               </Card>
-            )}
+            </div>
           </TabsContent>
 
           {/* ========== RESULTS TAB ========== */}
