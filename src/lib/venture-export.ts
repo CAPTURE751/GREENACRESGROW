@@ -92,20 +92,24 @@ export async function exportVenturePDF(
   doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(...hc);
   doc.text("1. Cost Breakdown", 14, y); y += 6;
 
-  const costRows = [
-    ["Land Preparation", formatKES(costs.landPrep)],
-    ["Seeds / Planting Materials", formatKES(costs.seeds)],
-    ["Fertilizer", formatKES(costs.fertilizer)],
-    ["Chemicals", formatKES(costs.chemicals)],
-    ["Labour", formatKES(costs.labour)],
-    ["Irrigation", formatKES(costs.irrigation)],
-    ["Other (Transport, Packaging, Storage)", formatKES(costs.other)],
-  ];
+  const costRows: any[] = [];
+  (costs.breakdown || []).forEach((cat: any, ci: number) => {
+    costRows.push([
+      { content: `${ci + 1}. ${cat.name}`, styles: { fontStyle: "bold", fillColor: [240, 245, 235] } },
+      { content: "", styles: { fillColor: [240, 245, 235] } },
+      { content: formatKES(cat.total), styles: { fontStyle: "bold", fillColor: [240, 245, 235] } },
+    ]);
+    (cat.items || []).forEach((it: any) => {
+      const fixed = it.unit === "fixed cost";
+      const calc = fixed ? "Fixed" : `${it.quantity} ${it.unit} x ${formatKES(it.unitCost)}`;
+      costRows.push([`   ${it.name || "(unnamed)"}${it.notes ? ` - ${it.notes}` : ""}`, calc + (it.perAcre ? ` x ${inputs.farmSize} ac` : ""), formatKES(it.total)]);
+    });
+  });
 
   autoTable(doc, {
-    startY: y, head: [["Cost Category", "Amount (KES)"]], body: costRows,
+    startY: y, head: [["Category / Line Item", "Calculation", "Amount (KES)"]], body: costRows,
     theme: "grid", headStyles: { fillColor: hc }, styles: { fontSize: 9 },
-    foot: [["TOTAL COST", formatKES(costs.total)]],
+    foot: [["TOTAL ESTIMATED COST", "", formatKES(costs.total)]],
     footStyles: { fillColor: [240, 245, 235], textColor: [30, 30, 30], fontStyle: "bold" },
   });
   y = (doc as any).lastAutoTable.finalY + 10;
