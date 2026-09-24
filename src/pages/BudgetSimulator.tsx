@@ -361,7 +361,7 @@ export default function BudgetSimulator() {
   const numField = (label: string, field: keyof VentureInputs, placeholder?: string) => (
     <div className="space-y-1">
       <Label className="text-xs">{label}</Label>
-      <Input type="number" min={0} value={inputs[field] || ""} onChange={(e) => numSet(field, e.target.value)} placeholder={placeholder || "0"} className="h-9" />
+      <Input type="number" min={0} value={(inputs[field] as string | number) || ""} onChange={(e) => numSet(field, e.target.value)} placeholder={placeholder || "0"} className="h-9" />
     </div>
   );
 
