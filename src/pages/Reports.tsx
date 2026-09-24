@@ -50,6 +50,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Layout } from "@/components/Layout";
+import { BudgetVsActualReport } from "@/components/reports/BudgetVsActualReport";
 import {
   BarChart,
   Bar,
