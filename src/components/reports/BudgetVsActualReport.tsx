@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,8 +126,8 @@ export function BudgetVsActualReport({ purchases, sales, startDate, endDate }: P
                 <TableHeader><TableRow><TableHead>Item</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Actual</TableHead><TableHead className="text-right">Difference</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {report.categories.map((c) => (
-                    <>
-                      <TableRow key={c.name} className="bg-muted/50 font-semibold">
+                    <Fragment key={c.name}>
+                      <TableRow className="bg-muted/50 font-semibold">
                         <TableCell>{c.name}</TableCell><TableCell className="text-right">{formatKES(c.budget)}</TableCell>
                         <TableCell className="text-right">{formatKES(c.actual)}</TableCell><TableCell className="text-right"><Diff d={c.diff} pct={c.pct} /></TableCell>
                       </TableRow>
@@ -138,7 +138,7 @@ export function BudgetVsActualReport({ purchases, sales, startDate, endDate }: P
                           <TableCell className="text-right"><Diff d={r.diff} pct={r.pct} /></TableCell>
                         </TableRow>
                       ))}
-                    </>
+                    </Fragment>
                   ))}
                   <TableRow className="bg-muted/50 font-semibold"><TableCell colSpan={4}>Unbudgeted Expenses</TableCell></TableRow>
                   {report.unbudgeted.length === 0 && <TableRow><TableCell colSpan={4} className="pl-6 text-muted-foreground">None</TableCell></TableRow>}
