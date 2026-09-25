@@ -540,6 +540,14 @@ export default function Reports() {
           </Card>
         </div>
 
+        {/* Budget vs Actual Spending */}
+        <BudgetVsActualReport
+          purchases={purchases}
+          sales={sales}
+          startDate={reportStartDate ? format(reportStartDate, 'yyyy-MM-dd') : undefined}
+          endDate={reportEndDate ? format(reportEndDate, 'yyyy-MM-dd') : undefined}
+        />
+
         {/* Farm Operations */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Crop Status */}
