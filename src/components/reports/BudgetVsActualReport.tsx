@@ -41,7 +41,7 @@ export function BudgetVsActualReport({ purchases, sales, startDate, endDate }: P
 
   const budget = budgets.find((b) => b.id === budgetId);
   useEffect(() => { if (!budgetId && budgets.length) setBudgetId(budgets[0].id); }, [budgets, budgetId]);
-  useEffect(() => { if (budget) setKeyword(budget.inputs?.type && budget.inputs.type !== "custom" ? budget.inputs.type : budget.name); }, [budget?.id]);
+  useEffect(() => { if (budget) setKeyword((budget.name || "").split(/\s+/)[0] || ""); }, [budget?.id]);
 
   const records = useMemo(() => [
     ...crops.map((c: any) => ({ id: c.id, label: `Crop · ${c.name}${c.variety ? ` (${c.variety})` : ""}` })),
