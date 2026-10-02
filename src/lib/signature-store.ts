@@ -28,7 +28,7 @@ export interface SignatureSettings {
 }
 
 const DEFAULTS: SignatureSettings = {
-  enabled: false,
+  enabled: true,
   image: null,
   signerName: "",
   signerTitle: "",
