@@ -4,6 +4,7 @@ import { getFarmSettings } from "./farm-settings-cache";
 import { getSignatureSettings, isSignatureEnabledFor } from "./signature-store";
 
 const HEADER_COLOR: [number, number, number] = [76, 111, 60];
+const signedDocs = new WeakSet<jsPDF>();
 
 let logoCache: string | null = null;
 let logoCacheKey: string | null = null;
@@ -119,9 +120,9 @@ export async function applyBrandedFooter(doc: jsPDF, reportType?: string) {
  * height, and bottom margin from local signature settings.
  */
 export async function applySignature(doc: jsPDF, reportType?: string) {
-  if (!isSignatureEnabledFor(reportType)) return;
+  if (signedDocs.has(doc) || !isSignatureEnabledFor(reportType)) return;
   const s = getSignatureSettings();
-  if (!s.image) return;
+  signedDocs.add(doc);
 
   const pageCount = doc.getNumberOfPages();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -130,7 +131,7 @@ export async function applySignature(doc: jsPDF, reportType?: string) {
 
   // Compute image dims (preserve aspect ratio via temp Image)
   let aspect = 3; // width/height fallback
-  try {
+  if (s.image) try {
     const img = new Image();
     img.src = s.image;
     await new Promise<void>((res, rej) => {
@@ -141,29 +142,37 @@ export async function applySignature(doc: jsPDF, reportType?: string) {
     if (img.naturalHeight) aspect = img.naturalWidth / img.naturalHeight;
   } catch { /* keep fallback */ }
 
-  const h = Math.max(6, Math.min(60, s.heightMm));
-  const w = h * aspect;
-  const marginBottom = Math.max(20, s.marginBottomMm); // keep clear of footer line
+  const h = s.image ? Math.max(6, Math.min(40, s.heightMm)) : 0;
+  const w = s.image ? Math.min(h * aspect, pageWidth - 28) : 64;
+  const marginBottom = Math.max(40, s.marginBottomMm); // four detail lines above footer
   const baseY = pageHeight - marginBottom - h;
 
   let x = 14;
   if (s.align === "center") x = (pageWidth - w) / 2;
   else if (s.align === "right") x = pageWidth - 14 - w;
 
-  const fmt = s.image.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
-  try { doc.addImage(s.image, fmt, x, baseY, w, h); } catch { /* ignore */ }
+  if (s.image) {
+    const fmt = s.image.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+    try { doc.addImage(s.image, fmt, x, baseY, w, h); } catch { /* ignore */ }
+  }
 
-  // Signer name / title under signature
+  // Signer details and the time this PDF was produced, in the farm's time zone.
   doc.setDrawColor(120, 120, 120); doc.setLineWidth(0.3);
   doc.line(x, baseY + h + 1, x + w, baseY + h + 1);
   doc.setFontSize(8); doc.setFont("helvetica", "bold"); doc.setTextColor(60, 60, 60);
   const labelAlign = s.align === "center" ? "center" : s.align === "right" ? "right" : "left";
   const labelX = s.align === "center" ? x + w / 2 : s.align === "right" ? x + w : x;
-  if (s.signerName) doc.text(s.signerName, labelX, baseY + h + 5, { align: labelAlign as any });
-  if (s.signerTitle) {
-    doc.setFont("helvetica", "italic"); doc.setFontSize(7); doc.setTextColor(110, 110, 110);
-    doc.text(s.signerTitle, labelX, baseY + h + 9, { align: labelAlign as any });
-  }
+  const stamp = new Date();
+  const date = new Intl.DateTimeFormat("en-KE", { timeZone: "Africa/Nairobi", day: "2-digit", month: "2-digit", year: "numeric" }).format(stamp);
+  const time = new Intl.DateTimeFormat("en-KE", { timeZone: "Africa/Nairobi", hour: "2-digit", minute: "2-digit", hour12: false }).format(stamp);
+  const lines = [
+    `Name: ${s.signerName || "____________________"}`,
+    `Role: ${s.signerTitle || "____________________"}`,
+    `Date: ${date}`,
+    `Time: ${time} EAT`,
+  ];
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(60, 60, 60);
+  lines.forEach((line, index) => doc.text(line, labelX, baseY + h + 5 + index * 4, { align: labelAlign }));
 }
 
 export const BRAND_HEADER_COLOR = HEADER_COLOR;
