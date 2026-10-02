@@ -74,8 +74,8 @@ export function SignatureSettings() {
           Signature for PDF Reports
         </CardTitle>
         <CardDescription>
-          Upload a signature image to appear at the end of exported PDF reports. Configure placement
-          and choose which reports include it.
+          Add your name, role, and optional signature image to exported PDF reports. The signing date
+          and time are added automatically. Choose which reports include the signature.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -127,7 +127,7 @@ export function SignatureSettings() {
         {/* Signer details */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="signer-name">Signer name (optional)</Label>
+             <Label htmlFor="signer-name">Signature name</Label>
             <Input
               id="signer-name"
               value={s.signerName}
@@ -136,7 +136,7 @@ export function SignatureSettings() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="signer-title">Signer title (optional)</Label>
+             <Label htmlFor="signer-title">Role</Label>
             <Input
               id="signer-title"
               value={s.signerTitle}
@@ -174,7 +174,7 @@ export function SignatureSettings() {
             <div className="space-y-2">
               <Label>Bottom margin: {s.marginBottomMm} mm</Label>
               <Slider
-                min={20} max={60} step={1}
+                 min={40} max={60} step={1}
                 value={[s.marginBottomMm]}
                 onValueChange={([v]) => update({ marginBottomMm: v })}
               />

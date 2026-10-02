@@ -23,7 +23,7 @@ export interface SignatureSettings {
   signerTitle: string;
   align: SignatureAlign;
   heightMm: number;           // signature image height in mm
-  marginBottomMm: number;     // gap from footer line
+  marginBottomMm: number;     // room for signer details above footer
   perReport: Record<string, boolean>;
 }
 
@@ -34,7 +34,7 @@ const DEFAULTS: SignatureSettings = {
   signerTitle: "",
   align: "right",
   heightMm: 18,
-  marginBottomMm: 22,
+  marginBottomMm: 40,
   perReport: Object.fromEntries(REPORT_TYPES.map((t) => [t, true])),
 };
 
@@ -59,7 +59,7 @@ export function saveSignatureSettings(s: SignatureSettings) {
 
 export function isSignatureEnabledFor(reportType?: string): boolean {
   const s = getSignatureSettings();
-  if (!s.enabled || !s.image) return false;
+  if (!s.enabled) return false;
   if (!reportType) return true;
   return s.perReport[reportType] !== false;
 }

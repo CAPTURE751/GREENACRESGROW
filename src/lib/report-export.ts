@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { formatKES } from "./currency";
 import fallbackLogoUrl from "@/assets/farm-logo.png";
 import { getFarmSettings } from "./farm-settings-cache";
+import { applySignature } from "./pdf-branding";
 
 const DEFAULT_FARM_NAME = "My Farm";
 const DEFAULT_LOCATION = "";
@@ -779,6 +780,7 @@ export async function exportPnLToPDF(report: PnLReport, printedBy?: string, capi
     doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
   }
 
+  await applySignature(doc, 'reports');
   doc.save(await farmFileName('PNL-Statement', 'pdf'));
 }
 
@@ -944,6 +946,7 @@ export async function exportFarmReportToPDF(report: any, printedBy?: string) {
     doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
   }
 
+  await applySignature(doc, 'reports');
   doc.save(await farmFileName('Farm-Report', 'pdf'));
 }
 
@@ -1051,5 +1054,6 @@ export async function exportInventoryAlertsToPDF(alertData: any, printedBy?: str
     doc.rect(0, pageHeight - 3, pageWidth, 3, "F");
   }
 
+  await applySignature(doc, 'inventory');
   doc.save(await farmFileName('Inventory-Check', 'pdf'));
 }
