@@ -17,6 +17,8 @@ import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { CropTasksDialog } from "@/components/CropTasksDialog";
 import { CropHarvestDialog } from "@/components/CropHarvestDialog";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
+import { exportCropsModulePDF } from "@/lib/module-reports";
+import { ModuleReportButton } from "@/components/ModuleReportButton";
 import { computeLifecycle, stagesFor, currentStageIndex, harvestAlertFor, transplantAlertFor, parseSafeDate } from "@/lib/crop-lifecycle";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -176,6 +178,10 @@ export function Crops() {
             <Download className="h-4 w-4 mr-2" />
             Download Report
           </Button>
+          <ModuleReportButton
+            label="Charts PDF"
+            onExport={() => exportCropsModulePDF(crops as any[], harvests as any[], { sales: sales as any[], purchases: purchases as any[] })}
+          />
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-farm-green hover:bg-farm-green/90">
