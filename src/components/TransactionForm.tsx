@@ -10,6 +10,8 @@ import { usePurchases } from "@/hooks/usePurchases";
 import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useCrops } from "@/hooks/useCrops";
 import { useLivestock } from "@/hooks/useLivestock";
+import { useVentureBudgets } from "@/hooks/useVentureBudgets";
+import { ensureCategories } from "@/lib/budget-categories";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TransactionFormProps {
@@ -21,8 +23,10 @@ interface TransactionFormProps {
 
 export function TransactionForm({ onClose, editMode, editType, editData }: TransactionFormProps) {
   const [transactionType, setTransactionType] = useState<'income' | 'expense' | 'capital_injection'>(editType || 'income');
-  const [linkedModule, setLinkedModule] = useState<'none' | 'crop' | 'livestock'>(editData?.linked_module || 'none');
+  const [linkedModule, setLinkedModule] = useState<'none' | 'crop' | 'livestock' | 'budget'>(editData?.linked_module || 'none');
   const [linkedRecordId, setLinkedRecordId] = useState<string>(editData?.linked_record_id || '');
+  const [linkedBudgetCat, setLinkedBudgetCat] = useState<string>('');
+  const [linkedBudgetItem, setLinkedBudgetItem] = useState<string>('');
   const [formData, setFormData] = useState({
     date: editData?.date || new Date().toISOString().split('T')[0],
     notes: editData?.notes || '',
@@ -52,6 +56,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
   const { createInjection, updateInjection, isCreating: isCreatingInjection, isUpdating: isUpdatingInjection } = useCapitalInjections();
   const { crops } = useCrops();
   const { livestock } = useLivestock();
+  const { budgets } = useVentureBudgets();
 
   const isLoading = isCreatingSale || isCreatingPurchase || isCreatingInjection || isUpdatingSale || isUpdatingPurchase || isUpdatingInjection;
   const totalAmount = Number(formData.quantity) * Number(formData.unit_price);
@@ -121,7 +126,9 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         linked_record_id: linkedRecordId,
         linked_record_name: linkedModule === 'crop'
           ? crops.find(c => c.id === linkedRecordId)?.name || ''
-          : livestock.find(l => l.id === linkedRecordId)?.type + (livestock.find(l => l.id === linkedRecordId)?.breed ? ' - ' + livestock.find(l => l.id === linkedRecordId)?.breed : '') || '',
+          : linkedModule === 'budget'
+            ? `${budgets.find(b => b.id === linkedRecordId)?.name || ''} › ${linkedBudgetCat} › ${linkedBudgetItem}`
+            : livestock.find(l => l.id === linkedRecordId)?.type + (livestock.find(l => l.id === linkedRecordId)?.breed ? ' - ' + livestock.find(l => l.id === linkedRecordId)?.breed : '') || '',
       } : {};
 
       if (transactionType === 'income') {
