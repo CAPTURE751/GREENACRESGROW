@@ -23,6 +23,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { exportPnLToCSV, exportPnLToPDF } from "@/lib/report-export";
 import { exportCapitalInjectionsPDF } from "@/lib/capital-injection-export";
+import { exportFinanceModulePDF } from "@/lib/module-reports";
+import { ModuleReportButton } from "@/components/ModuleReportButton";
 import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -350,6 +352,10 @@ export default function Finances() {
                 <Download className="h-4 w-4 mr-2" />
                 Capital Report
               </Button>
+              <ModuleReportButton
+                label="Finance Report"
+                onExport={() => exportFinanceModulePDF({ sales: sales as any[], purchases: purchases as any[] })}
+              />
             </div>
 
             {/* P&L Report Results - Modal */}
