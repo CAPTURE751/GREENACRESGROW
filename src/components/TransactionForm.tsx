@@ -10,6 +10,8 @@ import { usePurchases } from "@/hooks/usePurchases";
 import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useCrops } from "@/hooks/useCrops";
 import { useLivestock } from "@/hooks/useLivestock";
+import { useVentureBudgets } from "@/hooks/useVentureBudgets";
+import { ensureCategories } from "@/lib/budget-categories";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TransactionFormProps {
@@ -21,8 +23,10 @@ interface TransactionFormProps {
 
 export function TransactionForm({ onClose, editMode, editType, editData }: TransactionFormProps) {
   const [transactionType, setTransactionType] = useState<'income' | 'expense' | 'capital_injection'>(editType || 'income');
-  const [linkedModule, setLinkedModule] = useState<'none' | 'crop' | 'livestock'>(editData?.linked_module || 'none');
+  const [linkedModule, setLinkedModule] = useState<'none' | 'crop' | 'livestock' | 'budget'>(editData?.linked_module || 'none');
   const [linkedRecordId, setLinkedRecordId] = useState<string>(editData?.linked_record_id || '');
+  const [linkedBudgetCat, setLinkedBudgetCat] = useState<string>('');
+  const [linkedBudgetItem, setLinkedBudgetItem] = useState<string>('');
   const [formData, setFormData] = useState({
     date: editData?.date || new Date().toISOString().split('T')[0],
     notes: editData?.notes || '',
@@ -52,6 +56,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
   const { createInjection, updateInjection, isCreating: isCreatingInjection, isUpdating: isUpdatingInjection } = useCapitalInjections();
   const { crops } = useCrops();
   const { livestock } = useLivestock();
+  const { budgets } = useVentureBudgets();
 
   const isLoading = isCreatingSale || isCreatingPurchase || isCreatingInjection || isUpdatingSale || isUpdatingPurchase || isUpdatingInjection;
   const totalAmount = Number(formData.quantity) * Number(formData.unit_price);
@@ -121,7 +126,9 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         linked_record_id: linkedRecordId,
         linked_record_name: linkedModule === 'crop'
           ? crops.find(c => c.id === linkedRecordId)?.name || ''
-          : livestock.find(l => l.id === linkedRecordId)?.type + (livestock.find(l => l.id === linkedRecordId)?.breed ? ' - ' + livestock.find(l => l.id === linkedRecordId)?.breed : '') || '',
+          : linkedModule === 'budget'
+            ? `${budgets.find(b => b.id === linkedRecordId)?.name || ''} › ${linkedBudgetCat} › ${linkedBudgetItem}`
+            : livestock.find(l => l.id === linkedRecordId)?.type + (livestock.find(l => l.id === linkedRecordId)?.breed ? ' - ' + livestock.find(l => l.id === linkedRecordId)?.breed : '') || '',
       } : {};
 
       if (transactionType === 'income') {
@@ -195,16 +202,17 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Link to Module</Label>
-            <Select value={linkedModule} onValueChange={(v: 'none' | 'crop' | 'livestock') => { setLinkedModule(v); setLinkedRecordId(''); }} disabled={editMode}>
+            <Select value={linkedModule} onValueChange={(v: 'none' | 'crop' | 'livestock' | 'budget') => { setLinkedModule(v); setLinkedRecordId(''); setLinkedBudgetCat(''); setLinkedBudgetItem(''); }} disabled={editMode}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">General (No link)</SelectItem>
                 <SelectItem value="crop">Crop</SelectItem>
                 <SelectItem value="livestock">Livestock</SelectItem>
+                {transactionType === 'expense' && <SelectItem value="budget">Budget Item</SelectItem>}
               </SelectContent>
             </Select>
           </div>
-          {linkedModule !== 'none' && (
+          {linkedModule !== 'none' && linkedModule !== 'budget' && (
             <div className="space-y-2">
               <Label>Select {linkedModule === 'crop' ? 'Crop' : 'Livestock'} *</Label>
               <Select value={linkedRecordId} onValueChange={setLinkedRecordId}>
@@ -214,6 +222,47 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
                     ? crops.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.type})</SelectItem>)
                     : livestock.map(l => <SelectItem key={l.id} value={l.id}>{l.type}{l.breed ? ` - ${l.breed}` : ''}</SelectItem>)
                   }
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {linkedModule === 'budget' && (
+            <div className="space-y-2">
+              <Label>Select Budget *</Label>
+              <Select value={linkedRecordId} onValueChange={(v) => { setLinkedRecordId(v); setLinkedBudgetCat(''); setLinkedBudgetItem(''); }}>
+                <SelectTrigger><SelectValue placeholder="Choose a saved budget" /></SelectTrigger>
+                <SelectContent>
+                  {budgets.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Budget category + line item pickers */}
+      {transactionType === 'expense' && linkedModule === 'budget' && linkedRecordId && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Budget Category *</Label>
+            <Select value={linkedBudgetCat} onValueChange={(v) => { setLinkedBudgetCat(v); setLinkedBudgetItem(''); }}>
+              <SelectTrigger><SelectValue placeholder="Choose a category" /></SelectTrigger>
+              <SelectContent>
+                {ensureCategories(budgets.find(b => b.id === linkedRecordId)?.inputs || {}).map(c => (
+                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {linkedBudgetCat && (
+            <div className="space-y-2">
+              <Label>Budget Line Item *</Label>
+              <Select value={linkedBudgetItem} onValueChange={(v) => { setLinkedBudgetItem(v); if (!formData.item_name) handleInputChange('item_name', v); }}>
+                <SelectTrigger><SelectValue placeholder="Choose a line item" /></SelectTrigger>
+                <SelectContent>
+                  {(ensureCategories(budgets.find(b => b.id === linkedRecordId)?.inputs || {}).find(c => c.name === linkedBudgetCat)?.items || []).map(i => (
+                    <SelectItem key={i.id} value={i.name}>{i.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

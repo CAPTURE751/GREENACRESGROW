@@ -19,6 +19,8 @@ import { LinkedTransactionDialog } from "@/components/LinkedTransactionDialog";
 import { BirthsDialog } from "@/components/BirthsDialog";
 import { calculateAge } from "@/lib/age-calculator";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
+import { exportLivestockModulePDF } from "@/lib/module-reports";
+import { ModuleReportButton } from "@/components/ModuleReportButton";
 import { toast } from "sonner";
 import {
   Plus, Search, Beef, Calendar, MapPin, Activity, Heart, Scale,
@@ -190,6 +192,10 @@ export function Livestock() {
             <Download className="h-4 w-4 mr-2" />
             Download Report
           </Button>
+          <ModuleReportButton
+            label="Charts PDF"
+            onExport={() => exportLivestockModulePDF(livestock as any[], batches as any[], { sales: sales as any[], purchases: purchases as any[] })}
+          />
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-farm-barn hover:bg-farm-barn/90 text-white">

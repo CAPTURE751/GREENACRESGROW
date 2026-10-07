@@ -13,6 +13,8 @@ import { formatKES } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { exportVenturePDF } from "@/lib/venture-export";
+import { exportBudgetsModulePDF } from "@/lib/module-reports";
+import { ModuleReportButton } from "@/components/ModuleReportButton";
 import { useVentureBudgets } from "@/hooks/useVentureBudgets";
 import { ventureTemplates, getMonthLabels, type VentureTemplate } from "@/lib/venture-templates";
 import { BudgetCategoryBuilder } from "@/components/budget/BudgetCategoryBuilder";
@@ -511,6 +513,11 @@ export default function BudgetSimulator() {
             <Button className="bg-primary hover:bg-primary/90" size="sm" onClick={handleDownloadPDF} disabled={!hasData}>
               <Download className="h-4 w-4 mr-1" /> PDF
             </Button>
+            <ModuleReportButton
+              label="All Budgets PDF"
+              disabled={!budgets.length}
+              onExport={() => exportBudgetsModulePDF(budgets as any[])}
+            />
           </div>
         </div>
 
