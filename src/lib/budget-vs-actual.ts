@@ -61,6 +61,14 @@ export function buildBudgetVsActual(budget: any, purchases: any[], sales: any[],
   for (const p of expenses) {
     const amt = Number(p.total_cost) || 0;
     const label = p.item_name || p.category || "Uncategorised";
+    // 0) explicit budget link from the Finance form (linked_module = 'budget')
+    if (p.linked_module === "budget" && budget?.id && p.linked_record_id === budget.id && p.linked_record_name) {
+      const parts = String(p.linked_record_name).split("›").map((s: string) => s.trim());
+      const itemName = parts[parts.length - 1] || "";
+      const catName = parts[1] || "";
+      const linked = lines.find((l) => nameMatch(l.cat, catName) && nameMatch(l.name, itemName)) || lines.find((l) => nameMatch(l.name, itemName));
+      if (linked) { linked.actual += amt; linked.tx += 1; continue; }
+    }
     // 1) category + item match, 2) item match anywhere
     let line = lines.find((l) => nameMatch(l.cat, p.category || "") && nameMatch(l.name, label));
     if (!line) line = lines.find((l) => nameMatch(l.name, label));
