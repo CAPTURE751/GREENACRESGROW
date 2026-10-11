@@ -1,3 +1,4 @@
+import { ListChecks } from "lucide-react";
 import { FarmSwitcher } from "@/components/FarmSwitcher";
 import { 
   BarChart3, 
@@ -45,6 +46,7 @@ const navigationItems = [
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Budget Simulator", url: "/budget-simulator", icon: Calculator },
+  { title: "Budget Items", url: "/budget-items", icon: ListChecks },
   { title: "Profit Distribution", url: "/profit-distribution", icon: PieChart },
   { title: "Users", url: "/users", icon: Users },
   { title: "Settings", url: "/settings", icon: Settings },

@@ -13,7 +13,7 @@ import { formatKES } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { exportVenturePDF } from "@/lib/venture-export";
-import { exportBudgetsModulePDF } from "@/lib/module-reports";
+import { exportBudgetsModulePDF, exportSingleBudgetPDF } from "@/lib/module-reports";
 import { ModuleReportButton } from "@/components/ModuleReportButton";
 import { useVentureBudgets } from "@/hooks/useVentureBudgets";
 import { ventureTemplates, getMonthLabels, type VentureTemplate } from "@/lib/venture-templates";
@@ -429,6 +429,9 @@ export default function BudgetSimulator() {
                             {" • "}{new Date(b.updated_at).toLocaleDateString()}
                           </p>
                         </button>
+                        <Button variant="ghost" size="icon" title="Download budget PDF" className="h-8 w-8" onClick={async () => { try { await exportSingleBudgetPDF(b as any); toast({ title: "Budget PDF downloaded" }); } catch (e: any) { toast({ variant: "destructive", title: "PDF Error", description: e.message }); } }}>
+                          <Download className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => remove(b.id)} className="h-8 w-8 text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>

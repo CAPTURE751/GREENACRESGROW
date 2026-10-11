@@ -18,6 +18,7 @@ import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import UserManagement from "./pages/UserManagement";
 import Equipment from "./pages/Equipment";
+import BudgetItems from "./pages/BudgetItems";
 import BudgetSimulator from "./pages/BudgetSimulator";
 import Inventory from "./pages/Inventory";
 import Notebook from "./pages/Notebook";
@@ -96,6 +97,7 @@ const App = () => (
                 <BudgetSimulator />
               </ProtectedRoute>
             } />
+            <Route path="/budget-items" element={<ProtectedRoute><BudgetItems /></ProtectedRoute>} />
             <Route path="/notebook" element={
               <ProtectedRoute><Notebook /></ProtectedRoute>
             } />

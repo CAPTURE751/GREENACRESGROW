@@ -279,3 +279,43 @@ export async function exportBudgetsModulePDF(budgets: Row[]) {
 }
 
 export const moduleReportFile = safe;
+
+/** One saved budget: investment, expected revenue, return % and full line-item cost breakdown. */
+export async function exportSingleBudgetPDF(b: Row) {
+  const { ensureCategories, lineTotal } = await import("./budget-categories");
+  const doc = new jsPDF();
+  const pw = doc.internal.pageSize.getWidth();
+  const inputs = b.inputs || {};
+  const farmSize = num(inputs.farmSize);
+  const cats = ensureCategories(inputs);
+  const catTotals = cats.map((c) => ({ c, total: c.items.reduce((s, i) => s + lineTotal(i, farmSize), 0) }));
+  const cost = catTotals.reduce((s, x) => s + x.total, 0) || num(b.costs_total);
+  const rev = num(b.revenue_total);
+  const profit = rev - cost;
+  const roi = cost ? (profit / cost) * 100 : 0;
+  let y = await applyBrandedHeader(doc, { title: `Budget: ${b.name}`, subtitle: `${b.venture_type || "Venture"} • ${farmSize || "-"} acres • ${inputs.seasonDuration || "-"} months` });
+  y = drawKpiRow(doc, y, [
+    { label: "Total investment", value: k(cost) },
+    { label: "Expected revenue", value: k(rev), tone: "good" },
+    { label: "Net return", value: k(profit), tone: profit >= 0 ? "good" : "bad" },
+    { label: "Return %", value: `${roi.toFixed(1)}%`, tone: roi >= 0 ? "good" : "bad" },
+  ]);
+  if (catTotals.some((x) => x.total > 0)) {
+    drawDonutChart(doc, { x: 14, y, w: pw - 28, h: 50, title: "Cost breakdown by category" }, catTotals.map((x) => ({ label: x.c.name, value: x.total })));
+    y += 56;
+  }
+  y = section(doc, y, "Revenue assumptions");
+  autoTable(doc, { ...tableStyle, startY: y, head: [["Yield / acre", "Unit", "Total yield", "Price / unit", "Gross revenue"]],
+    body: [[String(num(inputs.expectedYieldPerAcre)), inputs.yieldUnit || "-", String(num(inputs.expectedYieldPerAcre) * farmSize), k(num(inputs.marketPricePerUnit)), k(rev)]] });
+  y = (doc as any).lastAutoTable.finalY + 8;
+  y = section(doc, y, "Cost breakdown (line items)");
+  const body: any[] = [];
+  for (const { c, total } of catTotals) {
+    body.push([{ content: c.name, colSpan: 4, styles: { fontStyle: "bold", fillColor: [233, 239, 226] } }, { content: k(total), styles: { fontStyle: "bold", halign: "right", fillColor: [233, 239, 226] } }]);
+    for (const i of c.items) body.push([`  ${i.name || "-"}${i.perAcre ? " (per acre)" : ""}`, String(i.quantity ?? ""), i.unit || "", k(num(i.unitCost)), k(lineTotal(i, farmSize))]);
+  }
+  body.push([{ content: "TOTAL ESTIMATED INVESTMENT", colSpan: 4, styles: { fontStyle: "bold" } }, { content: k(cost), styles: { fontStyle: "bold", halign: "right" } }]);
+  autoTable(doc, { ...tableStyle, startY: y, head: [["Item", "Qty", "Unit", "Cost / unit", "Total"]], body,
+    columnStyles: { 1: { halign: "right" }, 3: { halign: "right" }, 4: { halign: "right" } } });
+  await finish(doc, "venture", `Budget_${safe(b.name || "venture")}_${today()}.pdf`);
+}
