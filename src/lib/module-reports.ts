@@ -312,7 +312,7 @@ export async function exportSingleBudgetPDF(b: Row) {
   const body: any[] = [];
   for (const { c, total } of catTotals) {
     body.push([{ content: c.name, colSpan: 4, styles: { fontStyle: "bold", fillColor: [233, 239, 226] } }, { content: k(total), styles: { fontStyle: "bold", halign: "right", fillColor: [233, 239, 226] } }]);
-    for (const i of c.items) body.push([`  ${i.name || "-"}${i.perAcre ? " (per acre)" : ""}`, String(i.quantity ?? ""), i.unit || "", k(num(i.costPerUnit)), k(lineTotal(i, farmSize))]);
+    for (const i of c.items) body.push([`  ${i.name || "-"}${i.perAcre ? " (per acre)" : ""}`, String(i.quantity ?? ""), i.unit || "", k(num(i.unitCost)), k(lineTotal(i, farmSize))]);
   }
   body.push([{ content: "TOTAL ESTIMATED INVESTMENT", colSpan: 4, styles: { fontStyle: "bold" } }, { content: k(cost), styles: { fontStyle: "bold", halign: "right" } }]);
   autoTable(doc, { ...tableStyle, startY: y, head: [["Item", "Qty", "Unit", "Cost / unit", "Total"]], body,
