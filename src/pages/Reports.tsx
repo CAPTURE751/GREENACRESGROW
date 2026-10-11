@@ -1,3 +1,4 @@
+import { BudgetItemsPanel } from "@/components/budget/BudgetItemsPanel";
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -544,6 +545,11 @@ export default function Reports() {
         <BudgetVsActualReport
           purchases={purchases}
           sales={sales}
+          startDate={reportStartDate ? format(reportStartDate, 'yyyy-MM-dd') : undefined}
+          endDate={reportEndDate ? format(reportEndDate, 'yyyy-MM-dd') : undefined}
+        />
+
+        <BudgetItemsPanel
           startDate={reportStartDate ? format(reportStartDate, 'yyyy-MM-dd') : undefined}
           endDate={reportEndDate ? format(reportEndDate, 'yyyy-MM-dd') : undefined}
         />
