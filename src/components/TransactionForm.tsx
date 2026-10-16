@@ -121,7 +121,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
       }
     } else {
       // CREATE new record - resolve linked record name
-      let linkedData = linkedModule !== 'none' && linkedRecordId ? {
+      let linkedData: { linked_module?: string; linked_record_id?: string; linked_record_name?: string } = linkedModule !== 'none' && linkedRecordId ? {
         linked_module: linkedModule,
         linked_record_id: linkedRecordId,
         linked_record_name: linkedModule === 'crop'
