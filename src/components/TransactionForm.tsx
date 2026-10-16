@@ -121,7 +121,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
       }
     } else {
       // CREATE new record - resolve linked record name
-      const linkedData = linkedModule !== 'none' && linkedRecordId ? {
+      let linkedData = linkedModule !== 'none' && linkedRecordId ? {
         linked_module: linkedModule,
         linked_record_id: linkedRecordId,
         linked_record_name: linkedModule === 'crop'
@@ -130,6 +130,28 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
             ? `${budgets.find(b => b.id === linkedRecordId)?.name || ''} › ${linkedBudgetCat} › ${linkedBudgetItem}`
             : livestock.find(l => l.id === linkedRecordId)?.type + (livestock.find(l => l.id === linkedRecordId)?.breed ? ' - ' + livestock.find(l => l.id === linkedRecordId)?.breed : '') || '',
       } : {};
+
+      // Auto-link expenses to a budget line item when the item name matches one
+      if (transactionType === 'expense' && !linkedData.linked_module) {
+        const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        const target = norm(formData.item_name || '');
+        if (target) {
+          for (const b of budgets) {
+            for (const c of ensureCategories(b.inputs || {})) {
+              const match = c.items.find((i) => i.name && norm(i.name) === target);
+              if (match) {
+                linkedData = {
+                  linked_module: 'budget',
+                  linked_record_id: b.id,
+                  linked_record_name: `${b.name} › ${c.name} › ${match.name}`,
+                };
+                break;
+              }
+            }
+            if (linkedData.linked_module) break;
+          }
+        }
+      }
 
       if (transactionType === 'income') {
         createSale({
