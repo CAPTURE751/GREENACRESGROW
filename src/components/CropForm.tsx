@@ -104,6 +104,7 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
       initialData?.field_growth_duration_days ?? initialData?.growth_duration_days,
     planting_date: initialData?.planting_date,
     actual_harvest_date: initialData?.actual_harvest_date,
+    harvest_date: initialData?.harvest_date,
     status: initialData?.status || "planted",
     yield_unit: initialData?.yield_unit || "",
     season: initialData?.season || "",
@@ -277,6 +278,28 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
           <div>
             <p className="text-muted-foreground text-xs">Total Cycle</p>
             <p className="font-medium">{schedule.totalDuration ? `${schedule.totalDuration} days` : "—"}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div className="space-y-1">
+            <Label htmlFor="harvest_date" className="text-xs">Corrected Harvest Date (optional)</Label>
+            <Input
+              id="harvest_date"
+              type="date"
+              value={formData.harvest_date ? format(formData.harvest_date, "yyyy-MM-dd") : ""}
+              onChange={(e) => handleInputChange("harvest_date", e.target.value ? new Date(`${e.target.value}T00:00:00`) : undefined)}
+            />
+            <p className="text-[11px] text-muted-foreground">Overrides the calculated date; clears overdue days.</p>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="actual_harvest_date" className="text-xs">Actual Harvest Date (optional)</Label>
+            <Input
+              id="actual_harvest_date"
+              type="date"
+              value={formData.actual_harvest_date ? format(formData.actual_harvest_date, "yyyy-MM-dd") : ""}
+              onChange={(e) => handleInputChange("actual_harvest_date", e.target.value ? new Date(`${e.target.value}T00:00:00`) : undefined)}
+            />
+            <p className="text-[11px] text-muted-foreground">Set once harvested; marks the crop complete.</p>
           </div>
         </div>
       </div>
