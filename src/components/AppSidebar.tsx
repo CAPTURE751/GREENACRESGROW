@@ -16,7 +16,8 @@ import {
   BookOpen,
   Receipt,
   PieChart,
-  Sparkles
+  Sparkles,
+  FileSignature
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -42,6 +43,7 @@ const navigationItems = [
   { title: "Equipment", url: "/equipment", icon: Wrench },
   { title: "Calendar", url: "/calendar", icon: Calendar },
   { title: "Notebook", url: "/notebook", icon: BookOpen },
+  { title: "Contracts", url: "/contracts", icon: FileSignature },
   { title: "Expenses", url: "/expenses", icon: Receipt },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
