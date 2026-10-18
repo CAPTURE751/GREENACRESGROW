@@ -108,14 +108,16 @@ export function calculateSchedule(crop: CropLike): {
       ? actualTransplant || expectedTransplantDate || planting
       : planting;
 
-  const explicitHarvest =
-    parseSafeDate(crop.actual_harvest_date) ||
-    parseSafeDate(crop.expected_harvest_date) ||
-    parseSafeDate(crop.harvest_date);
+  // Priority: actual harvest date > manually set harvest date > formula > stored expected
+  const actualHarvestDate = parseSafeDate(crop.actual_harvest_date);
+  const manualHarvest = parseSafeDate(crop.harvest_date);
+  const formulaHarvest = fieldStart && fieldDays ? addDays(fieldStart, fieldDays) : null;
 
-  let expectedHarvestDate: Date | null = null;
-  if (fieldStart && fieldDays) expectedHarvestDate = addDays(fieldStart, fieldDays);
-  else expectedHarvestDate = explicitHarvest;
+  const expectedHarvestDate: Date | null =
+    actualHarvestDate ||
+    manualHarvest ||
+    formulaHarvest ||
+    parseSafeDate(crop.expected_harvest_date);
 
   const lifecycleStart =
     method === "nursery_transplant" ? nurseryStart || fieldStart : fieldStart;
@@ -147,7 +149,9 @@ export function computeLifecycle(crop: CropLike): LifecycleInfo {
   const startDate = method === "nursery_transplant" ? nurseryStart || fieldStart : fieldStart;
   const ageDays = startDate ? differenceInCalendarDays(today, startDate) : 0;
   const expectedHarvest = expectedHarvestDate;
-  const daysRemaining = expectedHarvest ? differenceInCalendarDays(expectedHarvest, today) : null;
+  const isDone = !!crop.archived || crop.status === "harvested" || !!actualHarvest;
+  const daysRemaining =
+    expectedHarvest && !isDone ? differenceInCalendarDays(expectedHarvest, today) : null;
   const daysToTransplant =
     !actualTransplant && expectedTransplantDate
       ? differenceInCalendarDays(expectedTransplantDate, today)
