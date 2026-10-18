@@ -126,6 +126,7 @@ export function CropForm({ onSubmit, onCancel, isLoading, initialData }: CropFor
         field_growth_duration_days: formData.field_growth_duration_days ?? null,
         planting_date: toISODate(formData.planting_date ?? null),
         actual_harvest_date: toISODate(formData.actual_harvest_date ?? null),
+        harvest_date: toISODate(formData.harvest_date ?? null),
       }),
     [formData]
   );
