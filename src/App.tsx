@@ -25,6 +25,7 @@ import Notebook from "./pages/Notebook";
 import Expenses from "./pages/Expenses";
 import ProfitDistribution from "./pages/ProfitDistribution";
 import FarmCopilot from "./pages/FarmCopilot";
+import Contracts from "./pages/Contracts";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -37,6 +38,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/contracts" element={<ProtectedRoute><Contracts /></ProtectedRoute>} />
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />
