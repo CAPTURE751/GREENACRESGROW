@@ -19,12 +19,12 @@ import { CropHarvestDialog } from "@/components/CropHarvestDialog";
 import { exportModulePnLToPDF } from "@/lib/pnl-module-export";
 import { exportCropsModulePDF } from "@/lib/module-reports";
 import { ModuleReportButton } from "@/components/ModuleReportButton";
-import { computeLifecycle, stagesFor, currentStageIndex, harvestAlertFor, transplantAlertFor, parseSafeDate } from "@/lib/crop-lifecycle";
+import { computeLifecycle, stagesFor, currentStageIndex, harvestAlertFor, transplantAlertFor, parseSafeDate, getUnarchivedCropUpdates } from "@/lib/crop-lifecycle";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
   Plus, Search, Wheat, Calendar, MapPin, DollarSign, TrendingUp,
-  Sun, Loader2, Download, Pencil, CheckCircle2, Archive, Clock, Bell, ListChecks, Sprout, MoveRight,
+  Sun, Loader2, Download, Pencil, CheckCircle2, Archive, ArchiveRestore, Trash2, Clock, Bell, ListChecks, Sprout, MoveRight,
 } from "lucide-react";
 
 const statusColor: Record<string, string> = {
@@ -50,7 +50,7 @@ export function Crops() {
   const [financialsCrop, setFinancialsCrop] = useState<any>(null);
   const [tasksCrop, setTasksCrop] = useState<any>(null);
   const [harvestCrop, setHarvestCrop] = useState<any>(null);
-  const { crops, isLoading, createCrop, updateCrop, isCreating, isUpdating } = useCrops();
+  const { crops, isLoading, createCrop, updateCrop, deleteCrop, isCreating, isUpdating, isDeleting } = useCrops();
   const { sales } = useSales();
   const { purchases } = usePurchases();
   const { harvests } = useCropHarvests();
@@ -111,6 +111,14 @@ export function Crops() {
       updates: { status: "harvested", archived: true, archived_at: new Date().toISOString() } as any,
     });
     toast.success(`${crop.name} marked as harvested and archived`);
+  };
+
+  const archiveCrop = (crop: any) => {
+    updateCrop({ id: crop.id, updates: { archived: true, archived_at: new Date().toISOString() } as any });
+  };
+
+  const unarchiveCrop = (crop: any) => {
+    updateCrop({ id: crop.id, updates: getUnarchivedCropUpdates(crop) as any });
   };
 
   const activeCrops = crops.filter((c) => !(c as any).archived);
@@ -436,6 +444,39 @@ export function Crops() {
                       <Archive className="h-3 w-3 mr-1" /> Archived
                     </Badge>
                   )}
+                  {(crop as any).archived ? (
+                    <Button size="sm" variant="outline" onClick={() => unarchiveCrop(crop)} disabled={isUpdating}>
+                      <ArchiveRestore className="h-3 w-3 mr-1" /> Unarchive
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => archiveCrop(crop)} disabled={isUpdating}>
+                      <Archive className="h-3 w-3 mr-1" /> Archive
+                    </Button>
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10" disabled={isDeleting}>
+                        <Trash2 className="h-3 w-3 mr-1" /> Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete {crop.name}?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This permanently deletes the crop and its recorded harvest history. Existing Finance transactions stay in place with their saved crop name.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => deleteCrop(crop.id)}
+                        >
+                          Delete Crop
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
 
               </CardContent>

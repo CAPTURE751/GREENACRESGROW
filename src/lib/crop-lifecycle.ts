@@ -28,6 +28,7 @@ export interface CropLike {
   growth_duration_days?: number | null;
   status?: string | null;
   archived?: boolean | null;
+  archived_at?: string | null;
 }
 
 export interface LifecycleInfo {
@@ -247,6 +248,27 @@ export function computeLifecycle(crop: CropLike): LifecycleInfo {
     totalDuration,
     isOverdue: daysRemaining !== null && daysRemaining < 0 && status !== "harvested" && status !== "archived",
     countdownLabel,
+  };
+}
+
+/** Crops that can be selected for new Finance transactions. */
+export function isActiveCropForTransaction(crop: CropLike): boolean {
+  return !crop.archived && crop.status !== "harvested" && !crop.actual_harvest_date;
+}
+
+/** Reopen an archived crop and recalculate its current status from its dates. */
+export function getUnarchivedCropUpdates(crop: CropLike) {
+  const reopened: CropLike = {
+    ...crop,
+    archived: false,
+    status: "growing",
+    actual_harvest_date: null,
+  };
+  return {
+    archived: false,
+    archived_at: null,
+    actual_harvest_date: null,
+    status: computeLifecycle(reopened).status,
   };
 }
 

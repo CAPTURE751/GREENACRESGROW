@@ -9,6 +9,7 @@ import { useSales } from "@/hooks/useSales";
 import { usePurchases } from "@/hooks/usePurchases";
 import { useCapitalInjections } from "@/hooks/useCapitalInjections";
 import { useCrops } from "@/hooks/useCrops";
+import { isActiveCropForTransaction } from "@/lib/crop-lifecycle";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useVentureBudgets } from "@/hooks/useVentureBudgets";
 import { ensureCategories } from "@/lib/budget-categories";
@@ -55,6 +56,10 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
   const { createPurchase, updatePurchase, isCreating: isCreatingPurchase, isUpdating: isUpdatingPurchase } = usePurchases();
   const { createInjection, updateInjection, isCreating: isCreatingInjection, isUpdating: isUpdatingInjection } = useCapitalInjections();
   const { crops } = useCrops();
+  const activeCrops = crops.filter(isActiveCropForTransaction);
+  const historicalCrop = editMode && linkedModule === 'crop'
+    ? crops.find(c => c.id === linkedRecordId && !isActiveCropForTransaction(c))
+    : undefined;
   const { livestock } = useLivestock();
   const { budgets } = useVentureBudgets();
 
@@ -241,7 +246,14 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
                 <SelectTrigger><SelectValue placeholder={`Choose a ${linkedModule}`} /></SelectTrigger>
                 <SelectContent>
                   {linkedModule === 'crop'
-                    ? crops.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.type})</SelectItem>)
+                    ? <>
+                        {activeCrops.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.type})</SelectItem>)}
+                        {historicalCrop && (
+                          <SelectItem key={historicalCrop.id} value={historicalCrop.id} disabled>
+                            {historicalCrop.name} ({historicalCrop.type}) · Historical link
+                          </SelectItem>
+                        )}
+                      </>
                     : livestock.map(l => <SelectItem key={l.id} value={l.id}>{l.type}{l.breed ? ` - ${l.breed}` : ''}</SelectItem>)
                   }
                 </SelectContent>
