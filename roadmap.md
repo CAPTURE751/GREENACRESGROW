@@ -10,6 +10,7 @@
 - Budget line items in Finance: link a Finance expense to a saved budget's category + line item so actual spending maps to the Budget vs Actual report
   - TransactionForm: optional budget → category → item picker on expenses
   - budget-vs-actual.ts: also match purchases linked to the budget (linked_record_id = budget.id)
+- Crops and Finance: add confirmed crop deletion, restore archived crops to a date-appropriate status, and exclude harvested/archived crops from new transaction choices while retaining historical labels
 
 ## Open / later
 - 7 older export files bypass branded helpers (no signature stamp): report-generators, analytics-export, calendar-export, venture-export, capital-injection-export, pnl-module-export, disbursement-export, notebook-export, inventory-export, EquipmentMaintenanceDialog, Expenses
