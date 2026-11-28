@@ -1,19 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
+import { buildInventoryBulkChange } from "../_shared/security-input-guards.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
-
-interface BulkUpdateItem {
-  id?: string;
-  quantity?: number;
-  unit_cost?: number;
-  min_threshold?: number;
-  location?: string;
-  supplier?: string;
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -93,13 +85,15 @@ serve(async (req) => {
     for (let i = 0; i < updates.length; i += batchSize) {
       const batch = updates.slice(i, i + batchSize);
       
-      const batchPromises = batch.map(async (update: BulkUpdateItem) => {
+      const batchPromises = batch.map(async (rawUpdate: unknown) => {
+        const update = buildInventoryBulkChange(rawUpdate);
+        if (!update) return { success: false, error: 'Invalid update' };
+
         try {
           const updateData = {
-            ...update,
+            ...update.changes,
             last_updated: new Date().toISOString(),
           };
-          delete updateData.id;
 
           const { data, error } = await supabase
             .from('inventory')

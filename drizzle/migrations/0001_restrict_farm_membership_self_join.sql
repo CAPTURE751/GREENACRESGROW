@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Users can insert themselves as members" ON public.farm_members;

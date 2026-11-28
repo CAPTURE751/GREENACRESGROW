@@ -3,6 +3,7 @@
 // our simple client reader.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { normalizeCopilotMessages } from "../_shared/security-input-guards.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -154,9 +155,17 @@ Deno.serve(async (req: Request) => {
     const user = userRes?.user;
     if (!user) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
-    const body = await req.json();
-    const { messages, farmId } = body as { messages: { role: string; content: string }[]; farmId: string };
-    if (!farmId) return new Response("farmId required", { status: 400, headers: corsHeaders });
+    const body: unknown = await req.json();
+    if (typeof body !== "object" || body === null || Array.isArray(body)) {
+      return new Response("Invalid request", { status: 400, headers: corsHeaders });
+    }
+    const requestBody = body as Record<string, unknown>;
+    const messages = normalizeCopilotMessages(requestBody.messages);
+    const farmId = requestBody.farmId;
+    if (!messages) return new Response("Invalid messages", { status: 400, headers: corsHeaders });
+    if (typeof farmId !== "string" || !farmId) {
+      return new Response("farmId required", { status: 400, headers: corsHeaders });
+    }
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: member } = await admin

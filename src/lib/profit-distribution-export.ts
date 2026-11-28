@@ -108,7 +108,9 @@ export function exportProjectsCSV(projects: ProjectMetrics[]) {
     p.revenue.toFixed(2), p.expenses.toFixed(2), p.profit.toFixed(2),
     p.margin.toFixed(2), p.roi.toFixed(2),
   ]);
-  const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const csv = [headers, ...rows]
+    .map((r) => r.map((cell, index) => escapeCsvCell(cell, index < 3)).join(","))
+    .join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -116,6 +118,14 @@ export function exportProjectsCSV(projects: ProjectMetrics[]) {
   a.download = `profit-projects-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+export function escapeCsvCell(value: unknown, isUserText = false): string {
+  let text = String(value ?? "");
+  if (isUserText && (/^[\t\r\n]/.test(text) || /^[\u0000-\u0020]*[=+\-@]/.test(text))) {
+    text = `'${text}`;
+  }
+  return `"${text.replace(/"/g, '""')}"`;
 }
 
 export async function exportProjectDistributionPDF(opts: {
