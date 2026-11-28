@@ -7,9 +7,9 @@
 - Signature (name/role/date/time EAT) on all branded PDFs
 
 ## In progress
-- Budget line items in Finance: link a Finance expense to a saved budget's category + line item so actual spending maps to the Budget vs Actual report
-  - TransactionForm: optional budget → category → item picker on expenses
-  - budget-vs-actual.ts: also match purchases linked to the budget (linked_record_id = budget.id)
+- Budget Simulator ↔ Actual Crop Reports: preserve crop links while allowing expense entries to select a saved budget category + line item; compare each line with actual crop spending and show increase/decrease plus a budget-adherence comment
+  - TransactionForm and crop expense dialog: category/activity presets plus optional budget → category → item selectors
+  - Budget vs Actual report and PDF: exact line-item matching, explicit variance labels, and adherence commentary
 - Crops and Finance: add confirmed crop deletion, restore archived crops to a date-appropriate status, and exclude harvested/archived crops from new transaction choices while retaining historical labels
 
 ## Open / later

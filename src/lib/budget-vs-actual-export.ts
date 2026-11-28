@@ -1,10 +1,13 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { applyBrandedHeader, applyBrandedFooter, applySignature, BRAND_HEADER_COLOR } from "./pdf-branding";
-import type { BvaReport } from "./budget-vs-actual";
+import { getBudgetVariance, type BvaReport } from "./budget-vs-actual";
 
 const ks = (n: number) => `KSh ${Math.round(n).toLocaleString("en-KE")}`;
-const diffTxt = (d: number) => (d > 0 ? `${ks(d)} UP (saving)` : d < 0 ? `${ks(-d)} DOWN (over)` : "On budget");
+const diffTxt = (d: number) => {
+  const variance = getBudgetVariance(d);
+  return variance.type === "decrease" ? `Decrease ${ks(variance.amount)}` : variance.type === "increase" ? `Increase ${ks(variance.amount)}` : "On budget";
+};
 const GREEN: [number, number, number] = [46, 125, 50];
 const RED: [number, number, number] = [198, 40, 40];
 const GREY: [number, number, number] = [110, 110, 110];
@@ -32,6 +35,7 @@ export async function exportBudgetVsActualPDF(r: BvaReport) {
       ["Budget Utilisation", `${r.utilisation.toFixed(1)}%`], ["Budget Items", String(r.budgetItems)],
       ["Under Budget Items", String(r.underItems)], ["Over Budget Items", String(r.overItems)],
       ["Unbudgeted Expenses", `${r.unbudgeted.length} (${ks(r.unbudgetedTotal)})`],
+      ["Budget Adherence", r.adherencePct === null ? "Not available" : `${r.adherencePct.toFixed(1)}%`],
     ],
     headStyles: { fillColor: BRAND_HEADER_COLOR }, styles: { fontSize: 9 }, margin: { left: 14, right: 14 },
     didParseCell: (d) => { if (d.section === "body" && d.row.index === 2 && d.column.index === 1) d.cell.styles.textColor = color(r.difference); },
@@ -48,7 +52,7 @@ export async function exportBudgetVsActualPDF(r: BvaReport) {
   body.push([{ content: "TOTAL (budgeted items)", styles: { fontStyle: "bold" } }, ks(r.totalBudget), ks(r.totalActual - r.unbudgetedTotal), diffTxt(r.totalBudget - (r.totalActual - r.unbudgetedTotal)), ""]);
   diffs.push(r.totalBudget - (r.totalActual - r.unbudgetedTotal));
   autoTable(doc, {
-    startY: y + 3, head: [["Item", "Budget", "Actual", "Difference", "Diff %"]], body,
+    startY: y + 3, head: [["Item", "Budget", "Actual", "Increase / Decrease", "Variance %"]], body,
     headStyles: { fillColor: BRAND_HEADER_COLOR }, styles: { fontSize: 8 }, margin: { left: 14, right: 14 },
     didParseCell: colorDiffCol(3, diffs),
   });
@@ -92,6 +96,16 @@ export async function exportBudgetVsActualPDF(r: BvaReport) {
     });
     y = last() + 8;
   }
+
+  if (y > 245) { doc.addPage(); y = 20; }
+  doc.setFontSize(12); doc.setTextColor(...BRAND_HEADER_COLOR); doc.text("Budget Adherence Comment", 14, y);
+  autoTable(doc, {
+    startY: y + 3,
+    body: [["Adherence score", r.adherencePct === null ? "Not available" : `${r.adherencePct.toFixed(1)}%`], ["Management comment", r.adherenceComment]],
+    styles: { fontSize: 9, cellWidth: "wrap" }, columnStyles: { 0: { cellWidth: 42, fontStyle: "bold" } },
+    margin: { left: 14, right: 14 },
+  });
+  y = last() + 8;
 
   if (y > 240) { doc.addPage(); y = 20; }
   doc.setFontSize(12); doc.setTextColor(...BRAND_HEADER_COLOR); doc.text("Recommendation & Management Analysis", 14, y);

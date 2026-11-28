@@ -16,13 +16,20 @@ export interface BvaReport {
   unbudgeted: BvaRow[];
   totalBudget: number; totalActual: number; difference: number; utilisation: number;
   budgetItems: number; underItems: number; overItems: number; onItems: number; unbudgetedTotal: number;
-  implementedBudget: number; implementationPct: number;
+  implementedBudget: number; implementationPct: number; adherencePct: number | null; adherenceComment: string;
   revenue: { target: number; actual: number; diff: number; totalCost: number; netProfit: number; roi: number; plannedProfit: number };
   recommendations: string[];
 }
 
 const norm = (s: any) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+const exactNameMatch = (a: string, b: string) => Boolean(norm(a) && norm(a) === norm(b));
 const pctOf = (diff: number, budget: number) => (budget > 0 ? (diff / budget) * 100 : diff === 0 ? 0 : -100);
+
+export function getBudgetVariance(diff: number): { type: "increase" | "decrease" | "on_budget"; amount: number } {
+  if (diff < 0) return { type: "increase", amount: Math.abs(diff) };
+  if (diff > 0) return { type: "decrease", amount: diff };
+  return { type: "on_budget", amount: 0 };
+}
 
 function inPeriod(date: string | null | undefined, f: EntityFilter) {
   if (!date) return true;
@@ -66,13 +73,17 @@ export function buildBudgetVsActual(budget: any, purchases: any[], sales: any[],
       const parts = String(p.linked_record_name).split("›").map((s: string) => s.trim());
       const itemName = parts[parts.length - 1] || "";
       const catName = parts[1] || "";
-      const linked = lines.find((l) => nameMatch(l.cat, catName) && nameMatch(l.name, itemName)) || lines.find((l) => nameMatch(l.name, itemName));
+      const linked = lines.find((l) => exactNameMatch(l.cat, catName) && exactNameMatch(l.name, itemName))
+        || lines.find((l) => exactNameMatch(l.name, itemName))
+        || lines.find((l) => nameMatch(l.cat, catName) && nameMatch(l.name, itemName))
+        || lines.find((l) => nameMatch(l.name, itemName));
       if (linked) { linked.actual += amt; linked.tx += 1; continue; }
     }
-    // 1) category + item match, 2) item match anywhere
-    let line = lines.find((l) => nameMatch(l.cat, p.category || "") && nameMatch(l.name, label));
+    // Match exact category + item first, then exact item; use legacy fuzzy matches only as a fallback.
+    let line = lines.find((l) => exactNameMatch(l.cat, p.category || "") && exactNameMatch(l.name, label));
+    if (!line) line = lines.find((l) => exactNameMatch(l.name, label));
+    if (!line) line = lines.find((l) => nameMatch(l.cat, p.category || "") && nameMatch(l.name, label));
     if (!line) line = lines.find((l) => nameMatch(l.name, label));
-    if (!line && p.category) line = lines.find((l) => nameMatch(l.name, p.category));
     if (line) { line.actual += amt; line.tx += 1; continue; }
     const key = `${p.category || "Other"} · ${label}`;
     unb[key] ??= { name: key, budget: 0, actual: 0, diff: 0, pct: 0, txCount: 0 };
@@ -95,6 +106,8 @@ export function buildBudgetVsActual(budget: any, purchases: any[], sales: any[],
   const budgetedActual = categories.reduce((s, c) => s + c.actual, 0);
   const totalActual = budgetedActual + unbudgetedTotal;
   const implementedBudget = allRows.reduce((s, r) => s + Math.min(r.actual, r.budget), 0);
+  const varianceExposure = allRows.reduce((sum, row) => sum + Math.abs(row.diff), 0) + unbudgetedTotal;
+  const adherencePct = totalBudget > 0 ? Math.max(0, 100 - (varianceExposure / totalBudget) * 100) : null;
 
   const target = (Number(inputs.expectedYieldPerAcre) || 0) * farmSize * (Number(inputs.marketPricePerUnit) || 0) || Number(budget?.revenue_total) || 0;
   const actualRev = revenueTx.reduce((s, x) => s + (Number(x.total_amount) || 0), 0);
@@ -112,7 +125,8 @@ export function buildBudgetVsActual(budget: any, purchases: any[], sales: any[],
     overItems: allRows.filter((r) => r.diff < 0).length,
     onItems: allRows.filter((r) => r.diff === 0).length,
     unbudgetedTotal,
-    implementedBudget,
+    implementedBudget, adherencePct,
+    adherenceComment: buildAdherenceComment(adherencePct, totalBudget, totalActual, categories, unbudgetedTotal),
     implementationPct: totalBudget > 0 ? (implementedBudget / totalBudget) * 100 : 0,
     revenue: {
       target, actual: actualRev, diff: actualRev - target, totalCost: totalActual, netProfit,
@@ -127,12 +141,37 @@ export function buildBudgetVsActual(budget: any, purchases: any[], sales: any[],
 
 const k = (n: number) => `KSh ${Math.round(Math.abs(n)).toLocaleString("en-KE")}`;
 
+function buildAdherenceComment(
+  adherencePct: number | null,
+  totalBudget: number,
+  totalActual: number,
+  categories: BvaCategory[],
+  unbudgetedTotal: number,
+): string {
+  if (adherencePct === null) return "No budget-adherence score is available because this budget has no costed line items.";
+  const overall = totalActual > totalBudget
+    ? `Actual spending was ${k(totalActual - totalBudget)} above the planned total.`
+    : totalActual < totalBudget
+      ? `Actual spending was ${k(totalBudget - totalActual)} below the planned total.`
+      : "Actual spending matched the planned total.";
+  const rows = categories.flatMap((category) => category.rows);
+  const largestIncrease = rows.filter((row) => row.diff < 0).sort((a, b) => a.diff - b.diff)[0];
+  const largestDecrease = rows.filter((row) => row.diff > 0 && row.actual > 0).sort((a, b) => b.diff - a.diff)[0];
+  const details = [
+    largestIncrease ? `Largest increase: ${largestIncrease.name} by ${k(largestIncrease.diff)}.` : "",
+    largestDecrease ? `Largest decrease: ${largestDecrease.name} by ${k(largestDecrease.diff)}.` : "",
+    unbudgetedTotal > 0 ? `Unbudgeted purchases add ${k(unbudgetedTotal)}.` : "",
+  ].filter(Boolean).join(" ");
+  return `Budget adherence is ${adherencePct.toFixed(1)}%. ${overall}${details ? ` ${details}` : ""}`;
+}
+
 function buildRecommendations(r: BvaReport): string[] {
   const out: string[] = [];
   if (r.totalBudget === 0) {
     out.push("This budget has no costed line items. Add categories and items in the Budget Simulator to enable a meaningful comparison.");
     return out;
   }
+  out.push(r.adherenceComment);
   out.push(`Budget implementation stands at ${r.implementationPct.toFixed(1)}% (${k(r.implementedBudget)} of ${k(r.totalBudget)} planned spending has been executed against budgeted items). Overall utilisation including unbudgeted spend is ${r.utilisation.toFixed(1)}%.`);
   if (r.difference > 0) out.push(`Total spending is ${k(r.difference)} under budget. Confirm whether savings are genuine efficiencies or activities not yet carried out.`);
   else if (r.difference < 0) out.push(`Total spending exceeds the budget by ${k(r.difference)}. Review cost drivers before committing further funds.`);

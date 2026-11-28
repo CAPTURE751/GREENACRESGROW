@@ -13,6 +13,7 @@ import { isActiveCropForTransaction } from "@/lib/crop-lifecycle";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useVentureBudgets } from "@/hooks/useVentureBudgets";
 import { ensureCategories } from "@/lib/budget-categories";
+import { activitiesForExpenseCategory, CROP_EXPENSE_CATEGORIES, OTHER_EXPENSE_CATEGORIES } from "@/lib/crop-expense-taxonomy";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TransactionFormProps {
@@ -28,6 +29,9 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
   const [linkedRecordId, setLinkedRecordId] = useState<string>(editData?.linked_record_id || '');
   const [linkedBudgetCat, setLinkedBudgetCat] = useState<string>('');
   const [linkedBudgetItem, setLinkedBudgetItem] = useState<string>('');
+  const [cropBudgetId, setCropBudgetId] = useState<string>('');
+  const [cropBudgetCat, setCropBudgetCat] = useState<string>('');
+  const [cropBudgetItem, setCropBudgetItem] = useState<string>('');
   const [formData, setFormData] = useState({
     date: editData?.date || new Date().toISOString().split('T')[0],
     notes: editData?.notes || '',
@@ -62,6 +66,8 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
     : undefined;
   const { livestock } = useLivestock();
   const { budgets } = useVentureBudgets();
+  const cropBudgetCategories = ensureCategories(budgets.find((b) => b.id === cropBudgetId)?.inputs || {});
+  const expenseCategoryOptions = [...CROP_EXPENSE_CATEGORIES.map((category) => category.name), ...OTHER_EXPENSE_CATEGORIES];
 
   const isLoading = isCreatingSale || isCreatingPurchase || isCreatingInjection || isUpdatingSale || isUpdatingPurchase || isUpdatingInjection;
   const totalAmount = Number(formData.quantity) * Number(formData.unit_price);
@@ -229,7 +235,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Link to Module</Label>
-            <Select value={linkedModule} onValueChange={(v: 'none' | 'crop' | 'livestock' | 'budget') => { setLinkedModule(v); setLinkedRecordId(''); setLinkedBudgetCat(''); setLinkedBudgetItem(''); }} disabled={editMode}>
+            <Select value={linkedModule} onValueChange={(v: 'none' | 'crop' | 'livestock' | 'budget') => { setLinkedModule(v); setLinkedRecordId(''); setLinkedBudgetCat(''); setLinkedBudgetItem(''); setCropBudgetId(''); setCropBudgetCat(''); setCropBudgetItem(''); }} disabled={editMode}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">General (No link)</SelectItem>
@@ -274,6 +280,53 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
         </div>
       )}
 
+      {transactionType === 'expense' && linkedModule === 'crop' && (
+        <div className="space-y-3 rounded-md border p-3">
+          <div>
+            <Label>Saved budget line for this crop (optional)</Label>
+            <p className="text-xs text-muted-foreground">Choose the planned category and item to compare this crop expense against.</p>
+          </div>
+          {budgets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Save a budget in Budget Simulator to choose planned line items here.</p>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Budget</Label>
+                <Select value={cropBudgetId || 'none'} onValueChange={(value) => { setCropBudgetId(value === 'none' ? '' : value); setCropBudgetCat(''); setCropBudgetItem(''); }}>
+                  <SelectTrigger><SelectValue placeholder="Choose a saved budget" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No budget line</SelectItem>
+                    {budgets.map((budget) => <SelectItem key={budget.id} value={budget.id}>{budget.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {cropBudgetId && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Budget Category</Label>
+                    <Select value={cropBudgetCat} onValueChange={(value) => { setCropBudgetCat(value); setCropBudgetItem(''); }}>
+                      <SelectTrigger><SelectValue placeholder="Choose a category" /></SelectTrigger>
+                      <SelectContent>{cropBudgetCategories.map((category) => <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  {cropBudgetCat && (
+                    <div className="space-y-2">
+                      <Label>Budget Line Item</Label>
+                      <Select value={cropBudgetItem} onValueChange={(value) => { setCropBudgetItem(value); handleInputChange('category', cropBudgetCat); handleInputChange('item_name', value); }}>
+                        <SelectTrigger><SelectValue placeholder="Choose a budget item" /></SelectTrigger>
+                        <SelectContent>
+                          {(cropBudgetCategories.find((category) => category.name === cropBudgetCat)?.items || []).map((item) => <SelectItem key={item.id} value={item.name}>{item.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Budget category + line item pickers */}
       {transactionType === 'expense' && linkedModule === 'budget' && linkedRecordId && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -291,7 +344,7 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
           {linkedBudgetCat && (
             <div className="space-y-2">
               <Label>Budget Line Item *</Label>
-              <Select value={linkedBudgetItem} onValueChange={(v) => { setLinkedBudgetItem(v); if (!formData.item_name) handleInputChange('item_name', v); }}>
+              <Select value={linkedBudgetItem} onValueChange={(v) => { setLinkedBudgetItem(v); handleInputChange('category', linkedBudgetCat); handleInputChange('item_name', v); }}>
                 <SelectTrigger><SelectValue placeholder="Choose a line item" /></SelectTrigger>
                 <SelectContent>
                   {(ensureCategories(budgets.find(b => b.id === linkedRecordId)?.inputs || {}).find(c => c.name === linkedBudgetCat)?.items || []).map(i => (
@@ -397,23 +450,23 @@ export function TransactionForm({ onClose, editMode, editType, editData }: Trans
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+              <Select value={formData.category} onValueChange={(value) => { handleInputChange('category', value); handleInputChange('item_name', ''); setCropBudgetCat(''); setCropBudgetItem(''); }}>
                 <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="seeds">Seeds</SelectItem>
-                  <SelectItem value="fertilizer">Fertilizer</SelectItem>
-                  <SelectItem value="pesticides">Pesticides</SelectItem>
-                  <SelectItem value="feed">Animal Feed</SelectItem>
-                  <SelectItem value="medicine">Medicine</SelectItem>
-                  <SelectItem value="equipment">Equipment</SelectItem>
-                  <SelectItem value="labor">Labor</SelectItem>
-                  <SelectItem value="fuel">Fuel</SelectItem>
-                  <SelectItem value="transport">Transport</SelectItem>
-                  <SelectItem value="utilities">Utilities</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {formData.category && !expenseCategoryOptions.includes(formData.category) && <SelectItem value={formData.category}>{formData.category}</SelectItem>}
+                  {expenseCategoryOptions.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
+            {activitiesForExpenseCategory(formData.category).length > 0 && (
+              <div className="space-y-2 md:col-span-2">
+                <Label>Common activity</Label>
+                <Select value={activitiesForExpenseCategory(formData.category).includes(formData.item_name) ? formData.item_name : ''} onValueChange={(value) => handleInputChange('item_name', value)}>
+                  <SelectTrigger><SelectValue placeholder="Choose an activity or type a custom item above" /></SelectTrigger>
+                  <SelectContent>{activitiesForExpenseCategory(formData.category).map((activity) => <SelectItem key={activity} value={activity}>{activity}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="supplier">Supplier</Label>
               <Input id="supplier" value={formData.supplier} onChange={(e) => handleInputChange('supplier', e.target.value)} placeholder="Supplier name (optional)" />

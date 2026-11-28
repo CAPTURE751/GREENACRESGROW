@@ -10,7 +10,7 @@ import { useVentureBudgets } from "@/hooks/useVentureBudgets";
 import { useCrops } from "@/hooks/useCrops";
 import { useLivestock } from "@/hooks/useLivestock";
 import { useLivestockBatches } from "@/hooks/useLivestockBatches";
-import { buildBudgetVsActual } from "@/lib/budget-vs-actual";
+import { buildBudgetVsActual, getBudgetVariance } from "@/lib/budget-vs-actual";
 import { exportBudgetVsActualPDF } from "@/lib/budget-vs-actual-export";
 import { formatKES } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
@@ -19,11 +19,12 @@ import { cn } from "@/lib/utils";
 interface Props { purchases: any[]; sales: any[]; startDate?: string; endDate?: string }
 
 function Diff({ d, pct }: { d: number; pct?: number }) {
-  const cls = d > 0 ? "text-farm-green" : d < 0 ? "text-destructive" : "text-muted-foreground";
-  const sym = d > 0 ? "▲" : d < 0 ? "▼" : "→";
+  const variance = getBudgetVariance(d);
+  const cls = variance.type === "decrease" ? "text-farm-green" : variance.type === "increase" ? "text-destructive" : "text-muted-foreground";
+  const label = variance.type === "decrease" ? "Decrease" : variance.type === "increase" ? "Increase" : "On budget";
   return (
     <span className={cn("font-medium whitespace-nowrap", cls)}>
-      {sym} {formatKES(Math.abs(d))}{pct !== undefined && <span className="text-xs ml-1">({pct.toFixed(1)}%)</span>}
+      {variance.type === "on_budget" ? label : `${label} ${formatKES(variance.amount)}`}{pct !== undefined && variance.type !== "on_budget" && <span className="text-xs ml-1">({Math.abs(pct).toFixed(1)}%)</span>}
     </span>
   );
 }
@@ -67,7 +68,7 @@ export function BudgetVsActualReport({ purchases, sales, startDate, endDate }: P
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Scale className="h-5 w-5 text-farm-green" />Budget vs Actual Spending</CardTitle>
-        <CardDescription>Planned spending from the Budget Simulator compared automatically with Finance records. Uses the date range above.</CardDescription>
+        <CardDescription>Compare a saved budget with Finance records, including expenses linked to an individual crop. Select a crop to see its actual spending against every planned line item.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         {budgets.length === 0 ? (
@@ -123,7 +124,7 @@ export function BudgetVsActualReport({ purchases, sales, startDate, endDate }: P
 
             <div className="overflow-x-auto rounded-lg border">
               <Table>
-                <TableHeader><TableRow><TableHead>Item</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Actual</TableHead><TableHead className="text-right">Difference</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Item</TableHead><TableHead className="text-right">Budget</TableHead><TableHead className="text-right">Actual</TableHead><TableHead className="text-right">Increase / Decrease</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {report.categories.map((c) => (
                     <Fragment key={c.name}>
@@ -154,6 +155,17 @@ export function BudgetVsActualReport({ purchases, sales, startDate, endDate }: P
                   </TableRow>
                 </TableBody>
               </Table>
+            </div>
+
+            <div className="rounded-md border p-4 bg-muted/30">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="font-semibold">Budget adherence comment</h3>
+                <span className={cn("text-lg font-semibold", report.adherencePct === null ? "text-muted-foreground" : report.adherencePct >= 80 ? "text-farm-green" : "text-destructive")}>
+                  {report.adherencePct === null ? "Not available" : `${report.adherencePct.toFixed(1)}% aligned`}
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">{report.adherenceComment}</p>
+              <p className="mt-2 text-xs text-muted-foreground">Adherence reflects how closely actual spending matches the plan; both increases and decreases affect the score.</p>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
